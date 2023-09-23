@@ -1,6 +1,7 @@
 package persisted_operations
 
 import (
+	"context"
 	"errors"
 )
 
@@ -24,6 +25,13 @@ func determineLoader(cfg Config) (PersistedOperationsLoader, error) {
 			return nil, errors.New("unable to instantiate DirLoader")
 		}
 
+		return loader, nil
+	}
+	if cfg.Store.GcpBucket != "" {
+		loader, err := NewGcpStorageLoader(context.Background(), cfg.Store.GcpBucket)
+		if err != nil {
+			return nil, errors.New("unable to instantiate GcpBucketLoader")
+		}
 		return loader, nil
 	}
 	return nil, ErrNoLoaderSpecified
