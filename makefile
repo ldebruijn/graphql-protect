@@ -1,12 +1,17 @@
 
+SHORT_HASH = $(shell git rev-parse --short HEAD)
+
+META_PKG = main
+LDFLAGS += -X '$(META_PKG).build=$(SHORT_HASH)'
+LDFLAGS += -s -w
+
 .PHONY: dev.setup
 dev.setup:
 	go mod tidy
 
 .PHONY: build
 build:
-	# build flags
-	go build ./...
+	go build -ldflags "$(LDFLAGS)" ./cmd/main.go
 
 .PHONY: run_container
 build_container:

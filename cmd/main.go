@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
+	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
+	log2 "log"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
@@ -34,9 +37,12 @@ func run(ctx context.Context, log *slog.Logger) error {
 	// cfg
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Error("Error loading application configuration", "err", err)
+		log.Error("ErrorPayload loading application configuration", "err", err)
 		return nil
 	}
+	cfgAsString, _ := conf.String(cfg)
+	log2.Println(cfgAsString)
+
 	log.Info("Starting service", "version", build)
 
 	shutdown := make(chan os.Signal, 1)
@@ -46,7 +52,7 @@ func run(ctx context.Context, log *slog.Logger) error {
 
 	pxy, err := proxy.NewProxy(cfg.Target)
 	if err != nil {
-		log.Error("Error creating proxy", "err", err)
+		log.Error("ErrorPayload creating proxy", "err", err)
 		return nil
 	}
 
@@ -97,10 +103,13 @@ func middleware(log *slog.Logger, cfg *config.Config) func(next http.Handler) ht
 		// handle better
 		log.Error("Unable to determine loading strategy for persisted operations", "err", err)
 	}
+
+	rec := middleware2.Recover(log)
 	po, _ := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, poLoader)
+	// handle nil po
 
 	fn := func(next http.Handler) http.Handler {
-		return po.Execute(next)
+		return rec(po.Execute(next))
 	}
 
 	return fn

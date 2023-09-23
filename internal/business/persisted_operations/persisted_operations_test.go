@@ -13,7 +13,7 @@ import (
 func TestNewPersistedOperations(t *testing.T) {
 	type args struct {
 		cfg     Config
-		payload Payload
+		payload RequestPayload
 		cache   map[string]string
 	}
 	tests := []struct {
@@ -42,10 +42,10 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Allows unpersisted requests if configured",
 			args: args{
 				cfg: Config{
-					Enabled:                  true,
-					AllowUnPersistedRequests: true,
+					Enabled:                    true,
+					AllowUnPersistedOperations: true,
 				},
-				payload: Payload{
+				payload: RequestPayload{
 					Query: "query { foo }",
 				},
 			},
@@ -53,7 +53,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				fn := func(w http.ResponseWriter, r *http.Request) {
 					decoder := json.NewDecoder(r.Body)
 
-					var payload Payload
+					var payload RequestPayload
 					err := decoder.Decode(&payload)
 					assert.NoError(t, err)
 
@@ -69,12 +69,12 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Returns error if no hash match is found and unpersisted operations are not allowed",
 			args: args{
 				cfg: Config{
-					Enabled:                  true,
-					AllowUnPersistedRequests: false,
+					Enabled:                    true,
+					AllowUnPersistedOperations: false,
 				},
-				payload: Payload{
+				payload: RequestPayload{
 					Extensions: Extensions{
-						PersistedQuery: PersistedQuery{
+						PersistedQuery: &PersistedQuery{
 							Sha256Hash: "foobar",
 						},
 					},
@@ -92,7 +92,7 @@ func TestNewPersistedOperations(t *testing.T) {
 
 				decoder := json.NewDecoder(res.Body)
 
-				var payload Error
+				var payload ErrorPayload
 				err := decoder.Decode(&payload)
 				assert.NoError(t, err)
 
@@ -100,15 +100,15 @@ func TestNewPersistedOperations(t *testing.T) {
 			},
 		},
 		{
-			name: "Swaps in query payload if hash operation is known",
+			name: "Swaps in query payload if hash operation is known, updates content length accordingly",
 			args: args{
 				cfg: Config{
-					Enabled:                  true,
-					AllowUnPersistedRequests: false,
+					Enabled:                    true,
+					AllowUnPersistedOperations: false,
 				},
-				payload: Payload{
+				payload: RequestPayload{
 					Extensions: Extensions{
-						PersistedQuery: PersistedQuery{
+						PersistedQuery: &PersistedQuery{
 							Sha256Hash: "foobar",
 						},
 					},
@@ -121,11 +121,15 @@ func TestNewPersistedOperations(t *testing.T) {
 				fn := func(w http.ResponseWriter, r *http.Request) {
 					decoder := json.NewDecoder(r.Body)
 
-					var payload Payload
+					var payload RequestPayload
 					err := decoder.Decode(&payload)
 					assert.NoError(t, err)
 
 					assert.Equal(t, "query { foobar }", payload.Query)
+					assert.Equal(t, int64(82), r.ContentLength)
+
+					length, err := json.Marshal(payload)
+					assert.Equal(t, 82, len(length))
 				}
 				return http.HandlerFunc(fn)
 			},
