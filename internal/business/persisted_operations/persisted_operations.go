@@ -116,7 +116,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 		query, ok := p.cache[hash]
 		if !ok {
 			// hash not found, fail
-			p.log.Warn("Unknown hash, persisted operation not found ", "err", err)
+			p.log.Warn("Unknown hash, persisted operation not found ", "hash", hash)
 			res, _ := json.Marshal(buildErrorResponse("PersistedOperationNotFound"))
 			http.Error(w, string(res), 200)
 			return

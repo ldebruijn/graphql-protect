@@ -12,7 +12,7 @@ var ErrNoLoaderSpecified = errors.New("no loaders specified")
 func DetermineLoaderFromConfig(cfg Config) (PersistedOperationsLoader, error) {
 	loader, err := determineLoader(cfg)
 	if err != nil {
-		return nil, err
+		return loader, err
 	}
 	return loader, nil
 }
@@ -34,5 +34,5 @@ func determineLoader(cfg Config) (PersistedOperationsLoader, error) {
 		}
 		return loader, nil
 	}
-	return nil, ErrNoLoaderSpecified
+	return newMemoryLoader(map[string]string{}), ErrNoLoaderSpecified
 }
