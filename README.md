@@ -5,6 +5,8 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 
 [![Go](https://github.com/ldebruijn/go-graphql-armor/actions/workflows/go.yml/badge.svg)](https://github.com/ldebruijn/go-graphql-armor/actions/workflows/go.yml)
 
+<!-- TOC -->
+
 ## Features
 
 * Persisted Operations
@@ -12,22 +14,26 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 
 ## Installation
 
-```makefile
+Build & Test
+```make
     make build
+    make test
 ```
 
-```makefile
-    make build_container
+Run Container
+```make
     make run_container
 ```
 
 ## Documentation
 
-[//]: # (todo)
+[Documentation](docs/README.md)
 
 ## Configuration
 
 We recommend configuring the binary using a yaml file, place a file called `armor.yml` in the same directory as you're running the binary.
+
+For all the configuration options check out the [Configuration Documentation](docs/configuration.md)
 
 ```yaml
 web:
@@ -45,7 +51,6 @@ target:
 
 persisted_operations:
   enabled: true
-  allow_unpersisted_operations: false
   fail_unknown_operations: true
   store:
     # Only one store will be used

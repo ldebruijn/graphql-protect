@@ -42,8 +42,8 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Allows unpersisted requests if configured",
 			args: args{
 				cfg: Config{
-					Enabled:                    true,
-					AllowUnPersistedOperations: true,
+					Enabled:               true,
+					FailUnknownOperations: true,
 				},
 				payload: RequestPayload{
 					Query: "query { foo }",
@@ -69,8 +69,8 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Returns error if no hash match is found and unpersisted operations are not allowed",
 			args: args{
 				cfg: Config{
-					Enabled:                    true,
-					AllowUnPersistedOperations: false,
+					Enabled:               true,
+					FailUnknownOperations: false,
 				},
 				payload: RequestPayload{
 					Extensions: Extensions{
@@ -103,8 +103,8 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Swaps in query payload if hash operation is known, updates content length accordingly",
 			args: args{
 				cfg: Config{
-					Enabled:                    true,
-					AllowUnPersistedOperations: false,
+					Enabled:               true,
+					FailUnknownOperations: false,
 				},
 				payload: RequestPayload{
 					Extensions: Extensions{

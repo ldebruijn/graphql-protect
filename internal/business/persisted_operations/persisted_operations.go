@@ -39,8 +39,7 @@ type Config struct {
 		GcpBucket string `conf:"gs://something/foo" yaml:"gcp_bucket"`
 		Dir       string `conf:"" yaml:"dir"`
 	}
-	FailUnknownOperations      bool `conf:"default:true" yaml:"fail_unknown_operations"`
-	AllowUnPersistedOperations bool `conf:"default:false" yaml:"allow_unpersisted_operations"`
+	FailUnknownOperations bool `conf:"default:false" yaml:"fail_unknown_operations"`
 }
 
 var ErrNoLoaderSupplied = errors.New("no loader supplied")
@@ -101,7 +100,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 			return
 		}
 
-		if p.cfg.AllowUnPersistedOperations && payload.Query != "" {
+		if !p.cfg.FailUnknownOperations && payload.Query != "" {
 			next.ServeHTTP(w, r)
 			return
 		}
