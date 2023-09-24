@@ -13,6 +13,10 @@ dev.setup:
 build:
 	go build -ldflags "$(LDFLAGS)" ./cmd/main.go
 
+.PHONY: test
+test:
+	go test -v ./...
+
 .PHONY: run_container
 build_container:
 	docker build github.com/ldebruijn/go-graphql-armor -t go-graphql-armor .
