@@ -62,6 +62,7 @@ persisted_operations:
 
 field_suggestions:
   enabled: true
+  mask: [redacted]
 ```
 
 Alternatively go-graphql-armor can be configured using environment variables or command line arguments.
