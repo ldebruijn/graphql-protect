@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/conf/v3/yaml"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
 	"os"
@@ -24,6 +25,7 @@ type Config struct {
 	}
 	Target              proxy.Config                `yaml:"target"`
 	PersistedOperations persisted_operations.Config ` yaml:"persisted_operations"`
+	FieldSuggestions    field_suggestions.Config    `yaml:"field_suggestions"`
 }
 
 func NewConfig() (*Config, error) {

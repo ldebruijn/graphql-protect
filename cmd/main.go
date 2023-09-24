@@ -50,7 +50,7 @@ func run(ctx context.Context, log *slog.Logger) error {
 
 	log.Info("Starting proxy", "target", cfg.Target.Host)
 
-	pxy, err := proxy.NewProxy(cfg.Target)
+	pxy, err := proxy.NewProxy(cfg.Target, cfg.FieldSuggestions)
 	if err != nil {
 		log.Error("ErrorPayload creating proxy", "err", err)
 		return nil
