@@ -18,4 +18,4 @@ block_field_suggestions:
 
 ## How does it work?
 
-We scan each `errors[].message` field and replace the message with a mask when we encounter a field suggestion.
+We scan each `errors[].message` field in the responses and replace the message with a mask when we encounter a field suggestion.

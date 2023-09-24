@@ -53,3 +53,11 @@ We follow the [APQ specification](https://github.com/apollographql/apollo-link-p
 
 > **Important:**
 > While we use the specification for APQ, be aware that _automatically_ persisting unknown operations is **NOT** supported.
+
+## Why we don't support APQ
+
+Automated Persisted Queries/Operations is essentially the same as Persisted Operations, except a client can send arbitrary operations which will be remembered by the server.
+
+This completely removes the security benefit of Persisted Operations as any client can stills end arbitrary operations. In fact, security is reduced since a malicious user could spam your endpoint with persisted operation registrations which would overflow your store and affect reliability.
+
+For this reason we do not deem APQ a good practice, and have chosen not to support it.
