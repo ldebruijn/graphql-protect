@@ -46,6 +46,9 @@ persisted_operations:
     dir: "./my-dir"
     # Armor will look at all objects in the bucket and try to load persisted operations from any `.json` file
     gcp_bucket: "gs://somebucket"
+
+field_suggestions:
+  enabled: true
 ```
 
 Alternatively go-graphql-armor can be configured using environment variables or command line arguments.
@@ -60,8 +63,4 @@ To set up your project, make sure you run the `make dev.setup` script.
 git clone git@github.com:ldebruijn/go-graphql-armor.git
 cd go-graphql-armor
 make dev.setup
-```
-
-```http request
-curl -v -X POST -d "{ \"extensions\": { \"persistedQuery\": { \"sha256Hash\": \"foobar\"}}  }" -H "content-type: application/json" http://localhost:8080/graphql
 ```
