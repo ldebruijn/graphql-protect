@@ -3,10 +3,6 @@
 This is repository inspired by the great work of the ![original JS GraphQL Armor]https://github.com/Escape-Technologies/graphql-armor
 It is dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway.
 
-![GraphQL-Armor banner](https://raw.githubusercontent.com/Escape-Technologies/graphql-armor/main/services/docs/static/img/banner.png)
-
-[![CI](https://github.com/Escape-Technologies/graphql-armor/actions/workflows/ci.yaml/badge.svg)](https://github.com/Escape-Technologies/graphql-armor/actions/workflows/ci.yaml) [![release](https://github.com/Escape-Technologies/graphql-armor/actions/workflows/release.yaml/badge.svg)](https://github.com/Escape-Technologies/graphql-armor/actions/workflows/release.yaml) [![e2e](https://github.com/Escape-Technologies/graphql-armor/actions/workflows/e2e.yaml/badge.svg)](https://github.com/Escape-Technologies/graphql-armor/actions/workflows/e2e.yaml) ![npm](https://img.shields.io/npm/v/@escape.tech/graphql-armor) [![codecov](https://codecov.io/gh/Escape-Technologies/graphql-armor/branch/main/graph/badge.svg)](https://codecov.io/gh/Escape-Technologies/graphql-armor)
-
 ## Installation
 
 ```makefile
@@ -20,8 +16,7 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 
 ## Documentation
 
-[//]: # ( github pages)
-[https://escape.tech/graphql-armor/docs/getting-started](https://escape.tech/graphql-armor/docs/getting-started)
+[//]: # (todo)
 
 ## Configuration
 
