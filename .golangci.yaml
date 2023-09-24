@@ -1,0 +1,9 @@
+---
+# See https://golangci-lint.run/ for linters to enable and configure
+linters:
+  enable:
+    - gofmt
+
+run:
+  go: "1.21"
+  timeout: 3m
