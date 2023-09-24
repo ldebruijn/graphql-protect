@@ -3,6 +3,11 @@
 This is repository inspired by the great work of the ![original JS GraphQL Armor]https://github.com/Escape-Technologies/graphql-armor
 It is dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway.
 
+## Features
+
+* Persisted Operations
+* Field Suggestions Redaction
+
 ## Installation
 
 ```makefile
@@ -55,7 +60,7 @@ Alternatively go-graphql-armor can be configured using environment variables or 
 
 ## Contributing
 
-Ensure you have read the [Contributing Guide](https://github.com/Escape-Technologies/graphql-armor/blob/main/CONTRIBUTING.md) before contributing.
+Ensure you have read the [Contributing Guide](https://github.com/ldebruijn/go-graphql-armor/blob/main/CONTRIBUTING.md) before contributing.
 
 To set up your project, make sure you run the `make dev.setup` script.
 
