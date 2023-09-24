@@ -1,4 +1,4 @@
-package field_suggestions
+package block_field_suggestions
 
 import (
 	"reflect"

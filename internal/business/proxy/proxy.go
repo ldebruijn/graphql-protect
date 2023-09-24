@@ -3,7 +3,7 @@ package proxy
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/field_suggestions"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"io"
 	"net"
 	"net/http"
@@ -19,7 +19,7 @@ type Config struct {
 	Path      string        `conf:"default:/graphql" yaml:"path"`
 }
 
-func NewProxy(cfg Config, fsCfg field_suggestions.Config) (*httputil.ReverseProxy, error) {
+func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler) (*httputil.ReverseProxy, error) {
 	target, err := url.Parse(cfg.Host)
 	target.Path = cfg.Path
 	if err != nil {
@@ -34,7 +34,7 @@ func NewProxy(cfg Config, fsCfg field_suggestions.Config) (*httputil.ReverseProx
 		}).DialContext,
 	}
 	proxy.ModifyResponse = func(res *http.Response) error {
-		if !fsCfg.Enabled {
+		if !blockFieldSuggestions.Enabled() {
 			return nil
 		}
 
@@ -47,7 +47,7 @@ func NewProxy(cfg Config, fsCfg field_suggestions.Config) (*httputil.ReverseProx
 			return nil
 		}
 
-		modified := field_suggestions.ProcessBody(response)
+		modified := blockFieldSuggestions.ProcessBody(response)
 		bts, err := json.Marshal(modified)
 		if err != nil {
 			// if we cannot marshall just return
