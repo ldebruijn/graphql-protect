@@ -9,8 +9,9 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 
 ## Features
 
-* Persisted Operations
-* Field Suggestions Redaction
+* [Persisted Operations](docs/persisted_operations.md)
+* [Block Field Suggestions](docs/block_field_suggestions.md)
+* More to come!
 
 ## Installation
 
