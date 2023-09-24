@@ -86,6 +86,10 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 		}
 
 		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
 		// Replace the body with a new reader after reading from the original
 		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
