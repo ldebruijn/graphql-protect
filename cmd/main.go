@@ -25,20 +25,11 @@ func main() {
 
 	log := slog.Default()
 
-	if err := run(ctx, log); err != nil {
-		log.Error("startup", "msg", err)
-		os.Exit(1)
-	}
-}
-
-func run(ctx context.Context, log *slog.Logger) error {
-	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
-
 	// cfg
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Error("ErrorPayload loading application configuration", "err", err)
-		return nil
+		log.Error("Error loading application configuration", "err", err)
+		os.Exit(1)
 	}
 	cfgAsString, _ := conf.String(cfg)
 	log2.Println(cfgAsString)
@@ -47,6 +38,15 @@ func run(ctx context.Context, log *slog.Logger) error {
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+
+	if err := run(ctx, log, cfg, shutdown); err != nil {
+		log.Error("startup", "msg", err)
+		os.Exit(1)
+	}
+}
+
+func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
+	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	log.Info("Starting proxy", "target", cfg.Target.Host)
 
