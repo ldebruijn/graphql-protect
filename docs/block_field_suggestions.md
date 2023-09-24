@@ -14,8 +14,6 @@ You can configure `go-graphql-armor` to remove field suggestions from your API.
 block_field_suggestions:
   # Enable the feature, this will remove any field suggestions on your API
   enable: true
-  # The mask to use instead.
-  mask: [redacted]
 ```
 
 ## How does it work?

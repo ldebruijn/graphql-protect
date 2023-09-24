@@ -6,6 +6,7 @@ import (
 
 type Config struct {
 	Enabled bool `conf:"default:true" yaml:"enabled"`
+	//Mask    string `conf:"default:[redacted]" yaml:"redacted"`
 }
 
 type FieldSuggestionsHandler struct {
