@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/conf/v3/yaml"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/field_suggestions"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
 	"os"
@@ -23,9 +23,9 @@ type Config struct {
 		Path string `conf:"default:/graphql" yaml:"path"`
 		//DebugHost       string        `conf:"default:0.0.0.0:4000"`
 	}
-	Target              proxy.Config                `yaml:"target"`
-	PersistedOperations persisted_operations.Config ` yaml:"persisted_operations"`
-	FieldSuggestions    field_suggestions.Config    `yaml:"field_suggestions"`
+	Target                proxy.Config                   `yaml:"target"`
+	PersistedOperations   persisted_operations.Config    ` yaml:"persisted_operations"`
+	BlockFieldSuggestions block_field_suggestions.Config `yaml:"block_field_suggestions"`
 }
 
 func NewConfig() (*Config, error) {

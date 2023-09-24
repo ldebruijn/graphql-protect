@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
@@ -50,7 +51,9 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 
 	log.Info("Starting proxy", "target", cfg.Target.Host)
 
-	pxy, err := proxy.NewProxy(cfg.Target, cfg.FieldSuggestions)
+	blockFieldSuggestions := block_field_suggestions.NewBlockFieldSuggestionsHandler(cfg.BlockFieldSuggestions)
+
+	pxy, err := proxy.NewProxy(cfg.Target, blockFieldSuggestions)
 	if err != nil {
 		log.Error("ErrorPayload creating proxy", "err", err)
 		return nil
@@ -100,13 +103,11 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 func middleware(log *slog.Logger, cfg *config.Config) func(next http.Handler) http.Handler {
 	poLoader, err := persisted_operations.DetermineLoaderFromConfig(cfg.PersistedOperations)
 	if err != nil {
-		// handle better
 		log.Error("Unable to determine loading strategy for persisted operations", "err", err)
 	}
 
 	rec := middleware2.Recover(log)
 	po, _ := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, poLoader)
-	// handle nil po
 
 	fn := func(next http.Handler) http.Handler {
 		return rec(po.Execute(next))
