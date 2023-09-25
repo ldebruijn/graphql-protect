@@ -22,9 +22,9 @@ test:
 lint:
 	golangci-lint run --timeout 3m
 
-.PHONY: run_container
+.PHONY: build_container
 build_container: build
-	docker build github.com/ldebruijn/go-graphql-armor -t go-graphql-armor .
+	docker build github.com/ldebruijn/go-graphql-armor -t go-graphql-armor
 
 .PHONY: run_container
 run_container: build_container
