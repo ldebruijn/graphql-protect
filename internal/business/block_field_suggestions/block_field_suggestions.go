@@ -31,18 +31,18 @@ func (b *BlockFieldSuggestionsHandler) ProcessBody(payload map[string]interface{
 }
 
 func (b *BlockFieldSuggestionsHandler) processErrors(payload interface{}) interface{} {
-	switch payload.(type) {
+	switch payload := payload.(type) {
 	case []map[string]interface{}:
-		for _, err := range payload.([]map[string]interface{}) {
-			err = b.processError(err)
+		for _, err := range payload {
+			_ = b.processError(err)
 		}
 	case []interface{}:
-		for _, err := range payload.([]interface{}) {
+		for _, err := range payload {
 			e, ok2 := err.(map[string]interface{})
 			if !ok2 {
 				continue
 			}
-			e = b.processError(e)
+			_ = b.processError(e)
 		}
 	}
 	return payload
