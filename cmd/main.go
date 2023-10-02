@@ -22,8 +22,6 @@ import (
 var build = "develop"
 
 func main() {
-	ctx := context.Background()
-
 	log := slog.Default()
 
 	// cfg
@@ -40,13 +38,13 @@ func main() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	if err := run(ctx, log, cfg, shutdown); err != nil {
+	if err := run(log, cfg, shutdown); err != nil {
 		log.Error("startup", "msg", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
+func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	log.Info("Starting proxy", "target", cfg.Target.Host)
@@ -59,12 +57,12 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 		return nil
 	}
 
-	poLoader, err := persisted_operations.RemoteLoaderFromConfig(cfg.PersistedOperations)
+	remoteLoader, err := persisted_operations.RemoteLoaderFromConfig(cfg.PersistedOperations)
 	if err != nil {
-		log.Error("Unable to determine loading strategy for persisted operations", "err", err)
+		log.Warn("Error initializing remote loader", "err", err)
 	}
 
-	po, err := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations), poLoader)
+	po, err := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations), remoteLoader)
 	if err != nil {
 		log.Error("Error creating Persisted Operations", "err", err)
 		return nil

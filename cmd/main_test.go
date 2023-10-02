@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/stretchr/testify/assert"
@@ -181,7 +180,7 @@ func TestHttpServerIntegration(t *testing.T) {
 
 				_, _ = w.Write(bts)
 			}))
-			//defer mockServer.Close()
+			defer mockServer.Close()
 
 			shutdown := make(chan os.Signal, 1)
 
@@ -192,7 +191,7 @@ func TestHttpServerIntegration(t *testing.T) {
 			cfg.Target.Host = mockServer.URL
 
 			go func() {
-				_ = run(context.Background(), slog.Default(), cfg, shutdown)
+				_ = run(slog.Default(), cfg, shutdown)
 			}()
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
