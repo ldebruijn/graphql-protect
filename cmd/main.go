@@ -64,7 +64,11 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 		log.Error("Unable to determine loading strategy for persisted operations", "err", err)
 	}
 
-	po, _ := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations), poLoader)
+	po, err := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations), poLoader)
+	if err != nil {
+		log.Error("Error creating Persisted Operations", "err", err)
+		return nil
+	}
 
 	mux := http.NewServeMux()
 

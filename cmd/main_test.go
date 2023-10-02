@@ -63,7 +63,8 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				assert.Equal(t, string(ex), string(actual))
 			},
@@ -107,7 +108,9 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+
 				ac := string(actual)
 				ac = strings.TrimSuffix(ac, "\n")
 
@@ -178,7 +181,7 @@ func TestHttpServerIntegration(t *testing.T) {
 
 				_, _ = w.Write(bts)
 			}))
-			defer mockServer.Close()
+			//defer mockServer.Close()
 
 			shutdown := make(chan os.Signal, 1)
 
@@ -195,7 +198,7 @@ func TestHttpServerIntegration(t *testing.T) {
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
 			if err != nil {
-				assert.NoError(t, err)
+				assert.NoError(t, err, tt.name)
 			}
 
 			tt.want(t, res)

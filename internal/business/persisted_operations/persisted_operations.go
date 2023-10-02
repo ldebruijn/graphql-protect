@@ -50,6 +50,7 @@ type Config struct {
 
 var ErrNoLoaderSupplied = errors.New("no remoteLoader supplied")
 var ErrNoHashFound = errors.New("no hash found")
+var ErrReloadIntervalTooShort = errors.New("reload interval cannot be less than 10 seconds")
 
 type PersistedOperationsHandler struct {
 	log *slog.Logger
@@ -81,12 +82,16 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		}
 	}
 
-	if cfg.Reload.Interval < 10*time.Second {
-		cfg.Reload.Interval = 10 * time.Second
-		log.Warn("Reload interval cannot be less than every 10 seconds, manually overwrote to 10 seconds")
+	if cfg.Reload.Enabled && cfg.Reload.Interval < 10*time.Second {
+		return nil, ErrReloadIntervalTooShort
 	}
 
-	refreshTicker := time.NewTicker(cfg.Reload.Interval)
+	refreshTicker := func() *time.Ticker {
+		if !cfg.Reload.Enabled {
+			return nil
+		}
+		return time.NewTicker(cfg.Reload.Interval)
+	}()
 	done := make(chan bool)
 
 	cache, err := loader.Load(context.Background())
