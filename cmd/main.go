@@ -59,9 +59,16 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 		return nil
 	}
 
+	poLoader, err := persisted_operations.RemoteLoaderFromConfig(cfg.PersistedOperations)
+	if err != nil {
+		log.Error("Unable to determine loading strategy for persisted operations", "err", err)
+	}
+
+	po, _ := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations), poLoader)
+
 	mux := http.NewServeMux()
 
-	mid := middleware(log, cfg)
+	mid := middleware(log, cfg, po)
 	mux.Handle(cfg.Web.Path, mid(Handler(pxy)))
 
 	api := http.Server{
@@ -91,6 +98,8 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
+		po.Shutdown()
+
 		if err := api.Shutdown(ctx); err != nil {
 			_ = api.Close()
 			return fmt.Errorf("could not stop server gracefully: %w", err)
@@ -100,14 +109,8 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 	return nil
 }
 
-func middleware(log *slog.Logger, cfg *config.Config) func(next http.Handler) http.Handler {
-	poLoader, err := persisted_operations.DetermineLoaderFromConfig(cfg.PersistedOperations)
-	if err != nil {
-		log.Error("Unable to determine loading strategy for persisted operations", "err", err)
-	}
-
+func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
 	rec := middleware2.Recover(log)
-	po, _ := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, poLoader)
 
 	fn := func(next http.Handler) http.Handler {
 		return rec(po.Execute(next))
