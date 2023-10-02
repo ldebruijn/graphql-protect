@@ -72,7 +72,7 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 
 	mux := http.NewServeMux()
 
-	mid := middleware(log, cfg, po)
+	mid := middleware(log, po)
 	mux.Handle(cfg.Web.Path, mid(Handler(pxy)))
 
 	api := http.Server{
@@ -113,7 +113,7 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 	return nil
 }
 
-func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
+func middleware(log *slog.Logger, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
 	rec := middleware2.Recover(log)
 
 	fn := func(next http.Handler) http.Handler {
