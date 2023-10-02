@@ -95,17 +95,10 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 	// buffered in case we dont have reloading enabled
 	done := make(chan bool, 1)
 
-	cache, err := loader.Load(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	log.Info("Loaded persisted operations", "amount", len(cache))
-
 	poh := &PersistedOperationsHandler{
 		log:           log,
 		cfg:           cfg,
-		cache:         cache,
+		cache:         map[string]string{},
 		remoteLoader:  remoteLoader,
 		dirLoader:     loader,
 		refreshTicker: refreshTicker,
@@ -114,7 +107,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 	}
 
 	poh.reloadFromRemote()
-	err = poh.reloadFromLocalDir()
+	err := poh.reloadFromLocalDir()
 	if err != nil {
 		return nil, err
 	}
