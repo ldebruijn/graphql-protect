@@ -112,6 +112,12 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		lock:          sync.RWMutex{},
 	}
 
+	poh.reloadFromRemote()
+	err = poh.reloadFromLocalDir()
+	if err != nil {
+		return nil, err
+	}
+
 	// start reloader
 	poh.reload()
 
@@ -188,12 +194,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 }
 
 func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
-	dirLoader := NewLocalDirLoader(p.cfg)
-	if dirLoader == nil {
-		return errors.New("dir loader is nil")
-	}
-
-	cache, err := dirLoader.Load(context.Background())
+	cache, err := p.dirLoader.Load(context.Background())
 	if err != nil {
 		return err
 	}
@@ -218,23 +219,25 @@ func (p *PersistedOperationsHandler) reload() {
 				return
 			case _ = <-p.refreshTicker.C:
 				p.reloadFromRemote()
+				err := p.reloadFromLocalDir()
+				if err != nil {
+					p.log.Warn("Error loading from local dir", "err", err)
+				}
 			}
 		}
 	}()
 }
 
 func (p *PersistedOperationsHandler) reloadFromRemote() {
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
-	err := p.remoteLoader.Load(ctx)
-	cancel()
-	if err != nil {
+	if p.remoteLoader == nil {
 		return
 	}
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
+	defer cancel()
 
-	err = p.reloadFromLocalDir()
+	err := p.remoteLoader.Load(ctx)
 	if err != nil {
-		p.log.Error("Error loading from local dir", "err", err)
 		return
 	}
 }
