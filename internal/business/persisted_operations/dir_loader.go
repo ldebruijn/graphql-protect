@@ -16,9 +16,9 @@ type DirLoader struct {
 	path string
 }
 
-func newDirLoader(cfg Config) *DirLoader {
+func NewLocalDirLoader(cfg Config) *DirLoader {
 	return &DirLoader{
-		path: cfg.Store.Dir,
+		path: cfg.Store,
 	}
 }
 

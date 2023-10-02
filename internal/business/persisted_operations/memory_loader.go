@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// MemoryLoader is a loader for testing purposes
+// MemoryLoader is a remoteLoader for testing purposes
 // It allows the user to specify operations in memory
 type MemoryLoader struct {
 	store map[string]string

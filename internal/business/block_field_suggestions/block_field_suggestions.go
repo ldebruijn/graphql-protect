@@ -51,13 +51,13 @@ func (b *BlockFieldSuggestionsHandler) processErrors(payload interface{}) interf
 func (b *BlockFieldSuggestionsHandler) processError(err map[string]interface{}) map[string]interface{} {
 	if msg, ok4 := err["message"]; ok4 {
 		if message, ok := msg.(string); ok {
-			err["message"] = b.ReplaceSuggestions(message)
+			err["message"] = b.replaceSuggestions(message)
 		}
 	}
 	return err
 }
 
-func (b *BlockFieldSuggestionsHandler) ReplaceSuggestions(message string) string {
+func (b *BlockFieldSuggestionsHandler) replaceSuggestions(message string) string {
 	if strings.HasPrefix(message, "Did you mean") {
 		return b.cfg.Mask
 	}

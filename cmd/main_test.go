@@ -41,6 +41,7 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -85,6 +86,7 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -127,6 +129,8 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.FailUnknownOperations = false
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -160,7 +164,8 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				assert.Equal(t, string(ex), string(actual))
 			},
