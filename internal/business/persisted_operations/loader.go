@@ -28,7 +28,7 @@ func RemoteLoaderFromConfig(cfg Config) (RemoteLoader, error) {
 // load loads persisted operations from various sources
 func determineLoader(cfg Config) (RemoteLoader, error) {
 	if cfg.Remote.GcpBucket != "" {
-		loader, err := NewGcpStorageLoader(context.Background(), cfg.Remote.GcpBucket, cfg)
+		loader, err := NewGcpStorageLoader(context.Background(), cfg.Remote.GcpBucket, cfg.Store)
 		if err != nil {
 			return nil, errors.New("unable to instantiate GcpBucketLoader")
 		}

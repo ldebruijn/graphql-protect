@@ -92,7 +92,8 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		}
 		return time.NewTicker(cfg.Reload.Interval)
 	}()
-	done := make(chan bool)
+	// buffered in case we dont have reloading enabled
+	done := make(chan bool, 1)
 
 	cache, err := loader.Load(context.Background())
 	if err != nil {

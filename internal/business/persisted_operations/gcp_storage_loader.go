@@ -8,6 +8,7 @@ import (
 	"google.golang.org/api/iterator"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -17,9 +18,10 @@ import (
 type GcpStorageLoader struct {
 	client *storage.Client
 	bucket string
+	store  string
 }
 
-func NewGcpStorageLoader(ctx context.Context, bucket string, cfg Config) (*GcpStorageLoader, error) {
+func NewGcpStorageLoader(ctx context.Context, bucket string, store string) (*GcpStorageLoader, error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -28,6 +30,7 @@ func NewGcpStorageLoader(ctx context.Context, bucket string, cfg Config) (*GcpSt
 	return &GcpStorageLoader{
 		client: client,
 		bucket: bucket,
+		store:  store,
 	}, nil
 }
 func (g *GcpStorageLoader) Load(ctx context.Context) error {
@@ -47,8 +50,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 
 		ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 
-		// include path
-		f, err := os.Create(attrs.Name)
+		f, err := os.Create(filepath.Join(g.store, attrs.Name))
 		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("os.Create: %w", err))
