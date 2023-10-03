@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
@@ -58,13 +59,13 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 	}
 
 	remoteLoader, err := persisted_operations.RemoteLoaderFromConfig(cfg.PersistedOperations)
-	if err != nil {
+	if err != nil && !errors.Is(err, persisted_operations.ErrNoRemoteLoaderSpecified) {
 		log.Warn("Error initializing remote loader", "err", err)
 	}
 
 	po, err := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations), remoteLoader)
 	if err != nil {
-		log.Error("Error creating Persisted Operations", "err", err)
+		log.Error("Error initializing Persisted Operations", "err", err)
 		return nil
 	}
 
