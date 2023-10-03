@@ -72,3 +72,9 @@ Automated Persisted Queries/Operations is essentially the same as Persisted Oper
 This completely removes the security benefit of Persisted Operations as any client can stills end arbitrary operations. In fact, security is reduced since a malicious user could spam your endpoint with persisted operation registrations which would overflow your store and affect reliability.
 
 For this reason we do not deem APQ a good practice, and have chosen not to support it.
+
+## Generating Persisted Operations from the Client
+
+In order to utilize this feature you need to generate the persisted operations that each client can perform.
+
+[GraphQL Code Generator](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#persisted-documents)
