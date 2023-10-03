@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/stretchr/testify/assert"
@@ -41,6 +40,7 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -62,7 +62,8 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				assert.Equal(t, string(ex), string(actual))
 			},
@@ -85,6 +86,7 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -105,7 +107,9 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+
 				ac := string(actual)
 				ac = strings.TrimSuffix(ac, "\n")
 
@@ -127,6 +131,8 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.FailUnknownOperations = false
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -160,7 +166,8 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				assert.Equal(t, string(ex), string(actual))
 			},
@@ -184,13 +191,13 @@ func TestHttpServerIntegration(t *testing.T) {
 			cfg.Target.Host = mockServer.URL
 
 			go func() {
-				_ = run(context.Background(), slog.Default(), cfg, shutdown)
+				_ = run(slog.Default(), cfg, shutdown)
 			}()
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
 			if err != nil {
-				assert.NoError(t, err)
+				assert.NoError(t, err, tt.name)
 			}
 
 			tt.want(t, res)

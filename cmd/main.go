@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
@@ -22,8 +23,6 @@ import (
 var build = "develop"
 
 func main() {
-	ctx := context.Background()
-
 	log := slog.Default()
 
 	// cfg
@@ -40,13 +39,13 @@ func main() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	if err := run(ctx, log, cfg, shutdown); err != nil {
+	if err := run(log, cfg, shutdown); err != nil {
 		log.Error("startup", "msg", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
+func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	log.Info("Starting proxy", "target", cfg.Target.Host)
@@ -59,9 +58,20 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 		return nil
 	}
 
+	remoteLoader, err := persisted_operations.RemoteLoaderFromConfig(cfg.PersistedOperations)
+	if err != nil && !errors.Is(err, persisted_operations.ErrNoRemoteLoaderSpecified) {
+		log.Warn("Error initializing remote loader", "err", err)
+	}
+
+	po, err := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations), remoteLoader)
+	if err != nil {
+		log.Error("Error initializing Persisted Operations", "err", err)
+		return nil
+	}
+
 	mux := http.NewServeMux()
 
-	mid := middleware(log, cfg)
+	mid := middleware(log, po)
 	mux.Handle(cfg.Web.Path, mid(Handler(pxy)))
 
 	api := http.Server{
@@ -91,6 +101,8 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.Web.ShutdownTimeout)
 		defer cancel()
 
+		po.Shutdown()
+
 		if err := api.Shutdown(ctx); err != nil {
 			_ = api.Close()
 			return fmt.Errorf("could not stop server gracefully: %w", err)
@@ -100,14 +112,8 @@ func run(ctx context.Context, log *slog.Logger, cfg *config.Config, shutdown cha
 	return nil
 }
 
-func middleware(log *slog.Logger, cfg *config.Config) func(next http.Handler) http.Handler {
-	poLoader, err := persisted_operations.DetermineLoaderFromConfig(cfg.PersistedOperations)
-	if err != nil {
-		log.Error("Unable to determine loading strategy for persisted operations", "err", err)
-	}
-
+func middleware(log *slog.Logger, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
 	rec := middleware2.Recover(log)
-	po, _ := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, poLoader)
 
 	fn := func(next http.Handler) http.Handler {
 		return rec(po.Execute(next))

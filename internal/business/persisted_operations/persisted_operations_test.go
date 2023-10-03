@@ -141,7 +141,7 @@ func TestNewPersistedOperations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			log := slog.Default()
-			po, _ := NewPersistedOperations(log, tt.args.cfg, newMemoryLoader(tt.args.cache))
+			po, _ := NewPersistedOperations(log, tt.args.cfg, newMemoryLoader(tt.args.cache), nil)
 			po.cache = tt.args.cache
 
 			bts, err := json.Marshal(&tt.args.payload)
