@@ -24,6 +24,7 @@ persisted_operations:
   store: "./store"
   reload:
     enabled: true
+    # The interval in which the local store dir is read and refreshes the internal state
     interval: 5m
     # The timeout for the remote operation
     timeout: 10s
@@ -37,7 +38,7 @@ persisted_operations:
 
 ## How it works
 
-`go-graphql-armor` looks at the store location on local disk to find any `*.json` files it can parse for persisted operations. 
+`go-graphql-armor` looks at the `store` location on local disk to find any `*.json` files it can parse for persisted operations. 
 
 It can be configured to look at this directory and reload based on the files on local disk.
 
