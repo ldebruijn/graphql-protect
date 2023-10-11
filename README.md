@@ -13,6 +13,8 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 * [Block Field Suggestions](docs/block_field_suggestions.md)
 * More to come!
 
+Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
+
 ## Installation
 
 Build & Test
