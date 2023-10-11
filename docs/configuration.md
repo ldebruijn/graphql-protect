@@ -25,13 +25,21 @@ target:
   keep_alive: 180s
 
 persisted_operations:
+  # Enable or disable the feature, enabled by default
   enabled: true
+  # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
   fail_unknown_operations: true
-  store:
-    # Only one store will be used
-    # Armor will look at all files in the dir and try to load persisted operations from any `.json` file
-    dir: "./my-dir"
-    # Armor will look at all objects in the bucket and try to load persisted operations from any `.json` file
+  # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
+  store: "./store"
+  reload:
+    enabled: true
+    # The interval in which the local store dir is read and refreshes the internal state
+    interval: 5m
+    # The timeout for the remote operation
+    timeout: 10s
+  remote:
+    # Load persisted operations from a GCP Cloud Storage bucket.
+    # Will look at all the objects in the bucket and try to load any object with a `.json` extension
     gcp_bucket: "gs://somebucket"
 
 field_suggestions:
