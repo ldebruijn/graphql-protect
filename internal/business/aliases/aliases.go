@@ -20,13 +20,14 @@ type MaxAliasesRule struct {
 	cfg Config
 }
 
-func NewMaxAliases() (*MaxAliasesRule, error) {
-
+func NewMaxAliases(cfg Config) (*MaxAliasesRule, error) {
+	rule := MaxAliasesRule{
+		cfg: cfg,
+	}
 	addRule.Do(func() {
-		r := MaxAliasesRule{}
-		graphql.SpecifiedRules = append(graphql.SpecifiedRules, r.validate)
+		graphql.SpecifiedRules = append(graphql.SpecifiedRules, rule.validate)
 	})
-	return nil, nil
+	return &rule, nil
 }
 
 func (a *MaxAliasesRule) validate(context *graphql.ValidationContext) *graphql.ValidationRuleInstance {
@@ -68,7 +69,7 @@ func (i *maxAliasesRuleInstance) onOperationDefinitionEnter(p visitor.VisitFuncP
 	aliases := i.countAliases(p.Node)
 
 	if aliases > i.cfg.max {
-		err := fmt.Sprintf("syntax Error: Aliases limit of %d exceeded, found %d", i.cfg.max, aliases)
+		err := fmt.Sprintf("syntax error: Aliases limit of %d exceeded, found %d", i.cfg.max, aliases)
 
 		i.validationContext.ReportError(gqlerrors.NewError(err, []ast.Node{od}, "", nil, []int{}, nil))
 	}
@@ -79,18 +80,23 @@ func (i *maxAliasesRuleInstance) countAliases(node interface{}) int {
 	aliases := 0
 
 	switch node.(type) {
-	case ast.Field:
-		if node.(ast.Field).Alias != nil {
+	case *ast.Field:
+		if node.(*ast.Field).Alias != nil {
 			aliases++
 		}
-	case ast.SelectionSet:
-		for _, child := range node.(ast.SelectionSet).Selections {
-			aliases += i.countAliases(child)
-		}
-	case ast.FragmentSpread:
-		value := node.(ast.FragmentSpread).Name.Value
-		if val, ok := i.visitedFragments[value]; ok {
-			return val
+		aliases += i.countSelectionSet(node.(*ast.Field).SelectionSet)
+	case *ast.InlineFragment:
+		aliases += i.countSelectionSet(node.(*ast.InlineFragment).SelectionSet)
+	case *ast.FragmentDefinition:
+		aliases += i.countSelectionSet(node.(*ast.FragmentDefinition).SelectionSet)
+	case *ast.SelectionSet:
+		aliases += i.countSelectionSet(node.(*ast.SelectionSet))
+	case *ast.OperationDefinition:
+		aliases += i.countSelectionSet(node.(*ast.OperationDefinition).SelectionSet)
+	case *ast.FragmentSpread:
+		value := node.(*ast.FragmentSpread).Name.Value
+		if _, ok := i.visitedFragments[value]; ok {
+			return i.visitedFragments[value]
 		} else {
 			i.visitedFragments[value] = -1
 		}
@@ -105,4 +111,15 @@ func (i *maxAliasesRuleInstance) countAliases(node interface{}) int {
 	}
 
 	return aliases
+}
+
+func (i *maxAliasesRuleInstance) countSelectionSet(set *ast.SelectionSet) int {
+	if set == nil {
+		return 0
+	}
+	count := 0
+	for _, child := range set.Selections {
+		count += i.countAliases(child)
+	}
+	return count
 }
