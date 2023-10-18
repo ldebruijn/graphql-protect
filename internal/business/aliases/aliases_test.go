@@ -5,7 +5,6 @@ import (
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
-	"github.com/graphql-go/graphql/language/visitor"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -139,22 +138,18 @@ query {
 					3,
 				},
 			},
-			want: fmt.Errorf("cannot spread fragment %s within itself via %s", "A", "B"),
+			want: fmt.Errorf("Cannot spread fragment \"%s\" within itself via %s.", "A", "B"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			astDoc := parseQuery(t, tt.args.query)
 			schema, _ := graphql.NewSchema(graphql.SchemaConfig{Query: graphql.NewObject(tt.args.schema)})
-			typeInfo := graphql.NewTypeInfo(&graphql.TypeInfoConfig{Schema: &schema})
-			ctx := graphql.NewValidationContext(&schema, astDoc, typeInfo)
 
 			ma, _ := NewMaxAliases(tt.args.cfg)
-			mai := ma.newMaxRuleInstance(ma.cfg, ctx)
-			visitor.Visit(astDoc, mai.visitorOptions(), nil)
 
-			errs := mai.validationContext.Errors()
-
+			vr := graphql.ValidateDocument(&schema, astDoc, []graphql.ValidationRuleFn{graphql.NoFragmentCyclesRule, ma.validate})
+			errs := vr.Errors
 			if tt.want != nil {
 				assert.Equal(t, tt.want.Error(), errs[0].Message)
 			}
