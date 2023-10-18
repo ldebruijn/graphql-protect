@@ -11,7 +11,11 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 
 * [Persisted Operations](docs/persisted_operations.md)
 * [Block Field Suggestions](docs/block_field_suggestions.md)
-* More to come!
+* _Max Aliases (coming soon)_
+* _Max Depth (coming soon)_
+* _Max Directives (coming soon)_
+* _Max Tokens (coming soon)_
+* _Cost Limit (coming soon)_
 
 ## Installation
 
