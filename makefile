@@ -1,7 +1,7 @@
 
 SHORT_HASH = $(shell git rev-parse --short HEAD)
 BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
-VERSION = 1.0.0
+VERSION = develop
 
 META_PKG = main
 LDFLAGS += -X '$(META_PKG).build=$(SHORT_HASH)'
