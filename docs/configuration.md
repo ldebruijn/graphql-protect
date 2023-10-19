@@ -42,6 +42,11 @@ persisted_operations:
     # Will look at all the objects in the bucket and try to load any object with a `.json` extension
     gcp_bucket: "gs://somebucket"
 
+max_aliases:
+  enabled: true
+  # Maximum number of aliases allowed within a single request
+  max: 15
+
 field_suggestions:
   enabled: true
   mask: [redacted]
