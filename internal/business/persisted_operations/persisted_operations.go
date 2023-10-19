@@ -5,25 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	"io"
 	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 )
-
-type RequestPayload struct {
-	//OperationName string      `json:"operationName"`
-	Variables  interface{} `json:"variables"`
-	Query      string      `json:"query"`
-	Extensions Extensions  `json:"extensions"`
-}
-type Extensions struct {
-	PersistedQuery *PersistedQuery `json:"persistedQuery"`
-}
-type PersistedQuery struct {
-	Sha256Hash string `json:"sha256Hash"`
-}
 
 type ErrorPayload struct {
 	Errors []struct {
@@ -106,14 +94,16 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		lock:          sync.RWMutex{},
 	}
 
-	poh.reloadFromRemote()
-	err := poh.reloadFromLocalDir()
-	if err != nil {
-		return nil, err
-	}
+	if cfg.Enabled {
+		poh.reloadFromRemote()
+		err := poh.reloadFromLocalDir()
+		if err != nil {
+			return nil, err
+		}
 
-	// start reloader
-	poh.reload()
+		// start reloader
+		poh.reload()
+	}
 
 	return poh, nil
 }
@@ -127,16 +117,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 			return
 		}
 
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			next.ServeHTTP(w, r)
-			return
-		}
-		// Replace the body with a new reader after reading from the original
-		r.Body = io.NopCloser(bytes.NewBuffer(body))
-
-		var payload RequestPayload
-		err = json.Unmarshal(body, &payload)
+		payload, err := gql.ParseRequestPayload(r)
 		if err != nil {
 			p.log.Warn("error decoding payload", "err", err)
 			next.ServeHTTP(w, r)
@@ -211,7 +192,7 @@ func (p *PersistedOperationsHandler) reload() {
 			select {
 			case <-p.done:
 				return
-			case _ = <-p.refreshTicker.C:
+			case <-p.refreshTicker.C:
 				p.reloadFromRemote()
 				err := p.reloadFromLocalDir()
 				if err != nil {
@@ -240,7 +221,7 @@ func (p *PersistedOperationsHandler) Shutdown() {
 	p.done <- true
 }
 
-func hashFromPayload(payload RequestPayload) (string, error) {
+func hashFromPayload(payload gql.RequestPayload) (string, error) {
 	if payload.Extensions.PersistedQuery == nil {
 		return "", ErrNoHashFound
 	}

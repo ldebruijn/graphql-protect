@@ -3,6 +3,7 @@ package persisted_operations
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 func TestNewPersistedOperations(t *testing.T) {
 	type args struct {
 		cfg     Config
-		payload RequestPayload
+		payload gql.RequestPayload
 		cache   map[string]string
 	}
 	tests := []struct {
@@ -45,7 +46,7 @@ func TestNewPersistedOperations(t *testing.T) {
 					Enabled:               true,
 					FailUnknownOperations: true,
 				},
-				payload: RequestPayload{
+				payload: gql.RequestPayload{
 					Query: "query { foo }",
 				},
 			},
@@ -53,7 +54,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				fn := func(w http.ResponseWriter, r *http.Request) {
 					decoder := json.NewDecoder(r.Body)
 
-					var payload RequestPayload
+					var payload gql.RequestPayload
 					err := decoder.Decode(&payload)
 					assert.NoError(t, err)
 
@@ -72,9 +73,9 @@ func TestNewPersistedOperations(t *testing.T) {
 					Enabled:               true,
 					FailUnknownOperations: false,
 				},
-				payload: RequestPayload{
-					Extensions: Extensions{
-						PersistedQuery: &PersistedQuery{
+				payload: gql.RequestPayload{
+					Extensions: gql.Extensions{
+						PersistedQuery: &gql.PersistedQuery{
 							Sha256Hash: "foobar",
 						},
 					},
@@ -106,9 +107,9 @@ func TestNewPersistedOperations(t *testing.T) {
 					Enabled:               true,
 					FailUnknownOperations: false,
 				},
-				payload: RequestPayload{
-					Extensions: Extensions{
-						PersistedQuery: &PersistedQuery{
+				payload: gql.RequestPayload{
+					Extensions: gql.Extensions{
+						PersistedQuery: &gql.PersistedQuery{
 							Sha256Hash: "foobar",
 						},
 					},
@@ -121,7 +122,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				fn := func(w http.ResponseWriter, r *http.Request) {
 					decoder := json.NewDecoder(r.Body)
 
-					var payload RequestPayload
+					var payload gql.RequestPayload
 					err := decoder.Decode(&payload)
 					assert.NoError(t, err)
 

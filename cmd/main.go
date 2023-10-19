@@ -2,11 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
+	"github.com/graphql-go/graphql"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
@@ -71,7 +75,7 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 
 	mux := http.NewServeMux()
 
-	mid := middleware(log, po)
+	mid := middleware(log, cfg, po)
 	mux.Handle(cfg.Web.Path, mid(Handler(pxy)))
 
 	api := http.Server{
@@ -112,14 +116,41 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 	return nil
 }
 
-func middleware(log *slog.Logger, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
+func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
 	rec := middleware2.Recover(log)
+	_ = aliases.NewMaxAliasesRule(cfg.MaxAliases)
+	vr := ValidationRules()
 
 	fn := func(next http.Handler) http.Handler {
-		return rec(po.Execute(next))
+		return rec(po.Execute(vr(next)))
 	}
 
 	return fn
+}
+
+func ValidationRules() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			payload, err := gql.ParseRequestPayload(r)
+			if err != nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+			params := graphql.Params{
+				RequestString: payload.Query,
+				Context:       r.Context(),
+			}
+			result := graphql.Do(params)
+
+			if result.HasErrors() {
+				_ = json.NewEncoder(w).Encode(result)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
 }
 
 func Handler(p *httputil.ReverseProxy) http.Handler {
