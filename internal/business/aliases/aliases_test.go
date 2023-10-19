@@ -54,7 +54,7 @@ func Test_MaxAliasesRule(t *testing.T) {
 				query:  query,
 				schema: queryType,
 				cfg: Config{
-					max: 15,
+					Max: 15,
 				},
 			},
 			want: nil,
@@ -63,7 +63,7 @@ func Test_MaxAliasesRule(t *testing.T) {
 			name: "produces error when counted aliases are more than configured maximum",
 			args: args{
 				cfg: Config{
-					1,
+					Max: 1,
 				},
 				query:  query,
 				schema: queryType,
@@ -86,7 +86,7 @@ query A {
 `,
 				schema: queryType,
 				cfg: Config{
-					1,
+					Max: 1,
 				},
 			},
 			want: fmt.Errorf("syntax error: Aliases limit of %d exceeded, found %d", 1, 2),
@@ -135,7 +135,7 @@ query {
 					return queryType
 				}(),
 				cfg: Config{
-					3,
+					Max: 3,
 				},
 			},
 			want: fmt.Errorf("Cannot spread fragment \"%s\" within itself via %s.", "A", "B"),
@@ -146,9 +146,9 @@ query {
 			astDoc := parseQuery(t, tt.args.query)
 			schema, _ := graphql.NewSchema(graphql.SchemaConfig{Query: graphql.NewObject(tt.args.schema)})
 
-			ma, _ := NewMaxAliases(tt.args.cfg)
+			ma := NewMaxAliasesRule(tt.args.cfg)
 
-			vr := graphql.ValidateDocument(&schema, astDoc, []graphql.ValidationRuleFn{graphql.NoFragmentCyclesRule, ma.validate})
+			vr := graphql.ValidateDocument(&schema, astDoc, []graphql.ValidationRuleFn{graphql.NoFragmentCyclesRule, ma.Validate})
 			errs := vr.Errors
 			if tt.want != nil {
 				assert.Equal(t, tt.want.Error(), errs[0].Message)

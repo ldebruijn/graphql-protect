@@ -31,7 +31,7 @@ func TestHttpServerIntegration(t *testing.T) {
 			args: args{
 				request: func() *http.Request {
 					body := map[string]interface{}{
-						"query": "query { product(id: 1) { id name } }",
+						"query": "query Foo { product(id: 1) { id name } }",
 					}
 
 					bts, _ := json.Marshal(body)
@@ -122,7 +122,7 @@ func TestHttpServerIntegration(t *testing.T) {
 			args: args{
 				request: func() *http.Request {
 					body := map[string]interface{}{
-						"query": "query { product(id: 1) { id name } }",
+						"query": "query Foo { product(id: 1) { id name } }",
 					}
 
 					bts, _ := json.Marshal(body)
