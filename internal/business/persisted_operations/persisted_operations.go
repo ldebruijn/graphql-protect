@@ -94,14 +94,16 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		lock:          sync.RWMutex{},
 	}
 
-	poh.reloadFromRemote()
-	err := poh.reloadFromLocalDir()
-	if err != nil {
-		return nil, err
-	}
+	if cfg.Enabled {
+		poh.reloadFromRemote()
+		err := poh.reloadFromLocalDir()
+		if err != nil {
+			return nil, err
+		}
 
-	// start reloader
-	poh.reload()
+		// start reloader
+		poh.reload()
+	}
 
 	return poh, nil
 }
