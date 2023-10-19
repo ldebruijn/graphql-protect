@@ -11,7 +11,13 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 
 * [Persisted Operations](docs/persisted_operations.md)
 * [Block Field Suggestions](docs/block_field_suggestions.md)
-* More to come!
+* [Max Aliases](docs/max_aliases.md)
+* _Max Depth (coming soon)_
+* _Max Directives (coming soon)_
+* _Max Tokens (coming soon)_
+* _Cost Limit (coming soon)_
+
+Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
 
 ## Installation
 
@@ -35,35 +41,6 @@ Run Container
 We recommend configuring the binary using a yaml file, place a file called `armor.yml` in the same directory as you're running the binary.
 
 For all the configuration options check out the [Configuration Documentation](docs/configuration.md)
-
-```yaml
-web:
-  read_timeout: 5s
-  write_timeout: 10s
-  idle_timeout: 120s
-  shutdown_timeout: 20s
-  host: 0.0.0.0:8080
-  path: /graphql
-
-target:
-  host: http://localhost:8081
-  timeout: 10s
-  keep_alive: 180s
-
-persisted_operations:
-  enabled: true
-  fail_unknown_operations: true
-  store:
-    # Only one store will be used
-    # Armor will look at all files in the dir and try to load persisted operations from any `.json` file
-    dir: "./my-dir"
-    # Armor will look at all objects in the bucket and try to load persisted operations from any `.json` file
-    gcp_bucket: "gs://somebucket"
-
-field_suggestions:
-  enabled: true
-  mask: [redacted]
-```
 
 Alternatively go-graphql-armor can be configured using environment variables or command line arguments.
 

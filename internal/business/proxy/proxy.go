@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -39,6 +40,7 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 		}
 
 		decoder := json.NewDecoder(res.Body)
+		defer res.Body.Close()
 
 		var response map[string]interface{}
 		err := decoder.Decode(&response)
@@ -55,8 +57,9 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 		}
 
 		buffer := bytes.NewBuffer(bts)
-		res.Body = io.NopCloser(buffer)
 		res.ContentLength = int64(buffer.Len())
+		res.Header.Set("Content-Length", strconv.Itoa(buffer.Len()))
+		res.Body = io.NopCloser(buffer)
 
 		return nil
 	}

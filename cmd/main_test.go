@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +31,7 @@ func TestHttpServerIntegration(t *testing.T) {
 			args: args{
 				request: func() *http.Request {
 					body := map[string]interface{}{
-						"query": "query { product(id: 1) { id name } }",
+						"query": "query Foo { product(id: 1) { id name } }",
 					}
 
 					bts, _ := json.Marshal(body)
@@ -41,6 +40,7 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -62,7 +62,8 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				assert.Equal(t, string(ex), string(actual))
 			},
@@ -85,6 +86,7 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -105,7 +107,9 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+
 				ac := string(actual)
 				ac = strings.TrimSuffix(ac, "\n")
 
@@ -118,7 +122,7 @@ func TestHttpServerIntegration(t *testing.T) {
 			args: args{
 				request: func() *http.Request {
 					body := map[string]interface{}{
-						"query": "query { product(id: 1) { id name } }",
+						"query": "query Foo { product(id: 1) { id name } }",
 					}
 
 					bts, _ := json.Marshal(body)
@@ -127,6 +131,8 @@ func TestHttpServerIntegration(t *testing.T) {
 				}(),
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.FailUnknownOperations = false
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -160,9 +166,69 @@ func TestHttpServerIntegration(t *testing.T) {
 					},
 				}
 				ex, _ := json.Marshal(expected)
-				actual, _ := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				assert.Equal(t, string(ex), string(actual))
+			},
+		},
+		{
+			name: "blocks requests with too many aliases",
+			args: args{
+				request: func() *http.Request {
+					body := map[string]interface{}{
+						"query": `
+query Foo { 
+	a1: uploadImage(image: $image)
+	a2: uploadImage(image: $image)
+	a3: uploadImage(image: $image)
+	a4: uploadImage(image: $image)
+	a5: uploadImage(image: $image)
+	a6: uploadImage(image: $image)
+	a7: uploadImage(image: $image)
+	a8: uploadImage(image: $image)
+	a9: uploadImage(image: $image)
+	a10: uploadImage(image: $image)
+}`,
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.MaxAliases.Enabled = true
+					cfg.MaxAliases.Max = 3
+					return cfg
+				},
+				mockResponse: map[string]interface{}{
+					"data": map[string]interface{}{
+						"a1":  "Yes",
+						"a2":  "Yes",
+						"a3":  "Yes",
+						"a4":  "Yes",
+						"a5":  "Yes",
+						"a6":  "Yes",
+						"a7":  "Yes",
+						"a8":  "Yes",
+						"a9":  "Yes",
+						"a10": "Yes",
+					},
+				},
+			},
+			want: func(t *testing.T, response *http.Response) {
+				expected := map[string]interface{}{
+					"errors": []map[string]interface{}{
+						{
+							"message": "syntax error: Aliases limit of 3 exceeded, found 10",
+						},
+					},
+				}
+				_, _ = json.Marshal(expected)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				// perform string comparisons as map[string]interface seems incomparable
+				assert.True(t, errorsContainsMessage("syntax error: Aliases limit of 3 exceeded, found 10", actual))
 			},
 		},
 	}
@@ -184,13 +250,13 @@ func TestHttpServerIntegration(t *testing.T) {
 			cfg.Target.Host = mockServer.URL
 
 			go func() {
-				_ = run(context.Background(), slog.Default(), cfg, shutdown)
+				_ = run(slog.Default(), cfg, shutdown)
 			}()
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
 			if err != nil {
-				assert.NoError(t, err)
+				assert.NoError(t, err, tt.name)
 			}
 
 			tt.want(t, res)
@@ -199,4 +265,23 @@ func TestHttpServerIntegration(t *testing.T) {
 			shutdown <- syscall.SIGINT
 		})
 	}
+}
+
+func errorsContainsMessage(msg string, bytes []byte) bool {
+	var payload map[string]interface{}
+	err := json.Unmarshal(bytes, &payload)
+	if err != nil {
+		return false
+	}
+
+	if errors, ok := payload["errors"]; ok {
+		for _, err := range errors.([]interface{}) {
+			if errMsg, ok := err.(map[string]interface{})["message"]; ok {
+				if msg == errMsg {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
