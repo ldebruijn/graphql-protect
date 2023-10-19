@@ -1,5 +1,7 @@
 
 SHORT_HASH = $(shell git rev-parse --short HEAD)
+BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+VERSION = 1.0.0
 
 META_PKG = main
 LDFLAGS += -X '$(META_PKG).build=$(SHORT_HASH)'
@@ -24,7 +26,7 @@ lint:
 
 .PHONY: build_container
 build_container: build
-	docker build github.com/ldebruijn/go-graphql-armor -t go-graphql-armor
+	docker build . -t go-graphql-armor --build-arg BUILD_DATE=$(BUILD_DATE) --build-arg VERSION=$(VERSION) --build-arg REVISION=$(SHORT_HASH)
 
 .PHONY: run_container
 run_container: build_container
