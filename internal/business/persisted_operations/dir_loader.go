@@ -25,7 +25,11 @@ func NewLocalDirLoader(cfg Config) *DirLoader {
 func (d *DirLoader) Load(ctx context.Context) (map[string]string, error) {
 	files, err := os.ReadDir(d.path)
 	if err != nil {
-		return nil, err
+		// if we can't read the dir, try creating it
+		err := os.Mkdir(d.path, 0750)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var result map[string]string

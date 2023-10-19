@@ -31,7 +31,7 @@ func TestHttpServerIntegration(t *testing.T) {
 			args: args{
 				request: func() *http.Request {
 					body := map[string]interface{}{
-						"query": "query { product(id: 1) { id name } }",
+						"query": "query Foo { product(id: 1) { id name } }",
 					}
 
 					bts, _ := json.Marshal(body)
@@ -122,7 +122,7 @@ func TestHttpServerIntegration(t *testing.T) {
 			args: args{
 				request: func() *http.Request {
 					body := map[string]interface{}{
-						"query": "query { product(id: 1) { id name } }",
+						"query": "query Foo { product(id: 1) { id name } }",
 					}
 
 					bts, _ := json.Marshal(body)
@@ -172,6 +172,65 @@ func TestHttpServerIntegration(t *testing.T) {
 				assert.Equal(t, string(ex), string(actual))
 			},
 		},
+		{
+			name: "blocks requests with too many aliases",
+			args: args{
+				request: func() *http.Request {
+					body := map[string]interface{}{
+						"query": `
+query Foo { 
+	a1: uploadImage(image: $image)
+	a2: uploadImage(image: $image)
+	a3: uploadImage(image: $image)
+	a4: uploadImage(image: $image)
+	a5: uploadImage(image: $image)
+	a6: uploadImage(image: $image)
+	a7: uploadImage(image: $image)
+	a8: uploadImage(image: $image)
+	a9: uploadImage(image: $image)
+	a10: uploadImage(image: $image)
+}`,
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.MaxAliases.Enabled = true
+					cfg.MaxAliases.Max = 3
+					return cfg
+				},
+				mockResponse: map[string]interface{}{
+					"data": map[string]interface{}{
+						"a1":  "Yes",
+						"a2":  "Yes",
+						"a3":  "Yes",
+						"a4":  "Yes",
+						"a5":  "Yes",
+						"a6":  "Yes",
+						"a7":  "Yes",
+						"a8":  "Yes",
+						"a9":  "Yes",
+						"a10": "Yes",
+					},
+				},
+			},
+			want: func(t *testing.T, response *http.Response) {
+				expected := map[string]interface{}{
+					"errors": []map[string]interface{}{
+						{
+							"message": "syntax error: Aliases limit of 3 exceeded, found 10",
+						},
+					},
+				}
+				_, _ = json.Marshal(expected)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				// perform string comparisons as map[string]interface seems incomparable
+				assert.True(t, errorsContainsMessage("syntax error: Aliases limit of 3 exceeded, found 10", actual))
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -206,4 +265,23 @@ func TestHttpServerIntegration(t *testing.T) {
 			shutdown <- syscall.SIGINT
 		})
 	}
+}
+
+func errorsContainsMessage(msg string, bytes []byte) bool {
+	var payload map[string]interface{}
+	err := json.Unmarshal(bytes, &payload)
+	if err != nil {
+		return false
+	}
+
+	if errors, ok := payload["errors"]; ok {
+		for _, err := range errors.([]interface{}) {
+			if errMsg, ok := err.(map[string]interface{})["message"]; ok {
+				if msg == errMsg {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }

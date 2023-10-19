@@ -11,7 +11,11 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 
 * [Persisted Operations](docs/persisted_operations.md)
 * [Block Field Suggestions](docs/block_field_suggestions.md)
-* More to come!
+* [Max Aliases](docs/max_aliases.md)
+* _Max Depth (coming soon)_
+* _Max Directives (coming soon)_
+* _Max Tokens (coming soon)_
+* _Cost Limit (coming soon)_
 
 Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
 
