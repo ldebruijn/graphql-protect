@@ -11,7 +11,7 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 
 * [Persisted Operations](docs/persisted_operations.md)
 * [Block Field Suggestions](docs/block_field_suggestions.md)
-* _Max Aliases (coming soon)_
+* [Max Aliases](docs/max_aliases.md)
 * _Max Depth (coming soon)_
 * _Max Directives (coming soon)_
 * _Max Tokens (coming soon)_
