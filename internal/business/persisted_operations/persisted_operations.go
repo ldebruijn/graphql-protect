@@ -5,23 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	"io"
 	"log/slog"
 	"net/http"
+	"sync"
+	"time"
 )
-
-type RequestPayload struct {
-	//OperationName string      `json:"operationName"`
-	Variables  interface{} `json:"variables"`
-	Query      string      `json:"query"`
-	Extensions Extensions  `json:"extensions"`
-}
-type Extensions struct {
-	PersistedQuery *PersistedQuery `json:"persistedQuery"`
-}
-type PersistedQuery struct {
-	Sha256Hash string `json:"sha256Hash"`
-}
 
 type ErrorPayload struct {
 	Errors []struct {
@@ -29,21 +19,26 @@ type ErrorPayload struct {
 	} `json:"errors"`
 }
 
-type PersistedOperationsLoader interface {
-	Load(ctx context.Context) (map[string]string, error)
-}
-
 type Config struct {
 	Enabled bool `conf:"default:false" yaml:"enabled"`
-	Store   struct {
+	// The location on which persisted operations are stored
+	Store string `conf:"./store" yaml:"store"`
+	// Configuration for auto-reloading persisted operations
+	Reload struct {
+		Enabled  bool          `conf:"default:false" yaml:"enabled"`
+		Interval time.Duration `conf:"default:5m" yaml:"interval"`
+		Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
+	}
+	// Remote strategies for fetching persisted operations
+	Remote struct {
 		GcpBucket string `conf:"gs://something/foo" yaml:"gcp_bucket"`
-		Dir       string `conf:"" yaml:"dir"`
 	}
 	FailUnknownOperations bool `conf:"default:false" yaml:"fail_unknown_operations"`
 }
 
-var ErrNoLoaderSupplied = errors.New("no loader supplied")
+var ErrNoLoaderSupplied = errors.New("no remoteLoader supplied")
 var ErrNoHashFound = errors.New("no hash found")
+var ErrReloadIntervalTooShort = errors.New("reload interval cannot be less than 10 seconds")
 
 type PersistedOperationsHandler struct {
 	log *slog.Logger
@@ -51,28 +46,66 @@ type PersistedOperationsHandler struct {
 	// this has the opportunity to grow indefinitely, might wat to replace with a fixed-cap cache
 	// or something like an LRU with a TTL
 	cache map[string]string
-	// not sure if keeping a reference to this is required, might be nice for refreshing during runtime
-	loader PersistedOperationsLoader
+	// Strategy for loading persisted operations from a remote location
+	remoteLoader  RemoteLoader
+	refreshTicker *time.Ticker
+
+	dirLoader LocalLoader
+	done      chan bool
+	lock      sync.RWMutex
 }
 
-func NewPersistedOperations(log *slog.Logger, cfg Config, loader PersistedOperationsLoader) (*PersistedOperationsHandler, error) {
+func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
 	if loader == nil {
 		return nil, ErrNoLoaderSupplied
 	}
 
-	cache, err := loader.Load(context.Background())
-	if err != nil {
-		return nil, err
+	if remoteLoader != nil {
+		ctx := context.Background()
+		ctx, cancel := context.WithTimeout(ctx, cfg.Reload.Timeout)
+		defer cancel()
+		err := remoteLoader.Load(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	log.Info("Loaded persisted operations", "amount", len(cache))
+	if cfg.Reload.Enabled && cfg.Reload.Interval < 10*time.Second {
+		return nil, ErrReloadIntervalTooShort
+	}
 
-	return &PersistedOperationsHandler{
-		log:    log,
-		cfg:    cfg,
-		cache:  cache,
-		loader: loader,
-	}, nil
+	refreshTicker := func() *time.Ticker {
+		if !cfg.Reload.Enabled {
+			return nil
+		}
+		return time.NewTicker(cfg.Reload.Interval)
+	}()
+	// buffered in case we dont have reloading enabled
+	done := make(chan bool, 1)
+
+	poh := &PersistedOperationsHandler{
+		log:           log,
+		cfg:           cfg,
+		cache:         map[string]string{},
+		remoteLoader:  remoteLoader,
+		dirLoader:     loader,
+		refreshTicker: refreshTicker,
+		done:          done,
+		lock:          sync.RWMutex{},
+	}
+
+	if cfg.Enabled {
+		poh.reloadFromRemote()
+		err := poh.reloadFromLocalDir()
+		if err != nil {
+			return nil, err
+		}
+
+		// start reloader
+		poh.reload()
+	}
+
+	return poh, nil
 }
 
 // Execute runs of the persisted operations handler
@@ -84,16 +117,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 			return
 		}
 
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			next.ServeHTTP(w, r)
-			return
-		}
-		// Replace the body with a new reader after reading from the original
-		r.Body = io.NopCloser(bytes.NewBuffer(body))
-
-		var payload RequestPayload
-		err = json.Unmarshal(body, &payload)
+		payload, err := gql.ParseRequestPayload(r)
 		if err != nil {
 			p.log.Warn("error decoding payload", "err", err)
 			next.ServeHTTP(w, r)
@@ -113,7 +137,10 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 			return
 		}
 
+		p.lock.RLock()
 		query, ok := p.cache[hash]
+		p.lock.RUnlock()
+
 		if !ok {
 			// hash not found, fail
 			p.log.Warn("Unknown hash, persisted operation not found ", "hash", hash)
@@ -141,7 +168,60 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func hashFromPayload(payload RequestPayload) (string, error) {
+func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
+	cache, err := p.dirLoader.Load(context.Background())
+	if err != nil {
+		return err
+	}
+	p.lock.Lock()
+	p.cache = cache
+	p.lock.Unlock()
+
+	p.log.Info("Loaded persisted operations", "amount", len(cache))
+
+	return nil
+}
+
+func (p *PersistedOperationsHandler) reload() {
+	if !p.cfg.Reload.Enabled {
+		return
+	}
+
+	go func() {
+		for {
+			select {
+			case <-p.done:
+				return
+			case <-p.refreshTicker.C:
+				p.reloadFromRemote()
+				err := p.reloadFromLocalDir()
+				if err != nil {
+					p.log.Warn("Error loading from local dir", "err", err)
+				}
+			}
+		}
+	}()
+}
+
+func (p *PersistedOperationsHandler) reloadFromRemote() {
+	if p.remoteLoader == nil {
+		return
+	}
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
+	defer cancel()
+
+	err := p.remoteLoader.Load(ctx)
+	if err != nil {
+		return
+	}
+}
+
+func (p *PersistedOperationsHandler) Shutdown() {
+	p.done <- true
+}
+
+func hashFromPayload(payload gql.RequestPayload) (string, error) {
 	if payload.Extensions.PersistedQuery == nil {
 		return "", ErrNoHashFound
 	}

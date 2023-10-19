@@ -20,18 +20,29 @@ persisted_operations:
   enabled: true
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
   fail_unknown_operations: true
-  # Determines the strategy for loading the supported operations.
-  # Only one store will be used
-  store:
-    # Load persisted operations from a directory on the local filesystem. 
-    # Will look at all files in the directory and attempt to load any file with a `.json` extension
-    dir: "./my-dir"
+  # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
+  store: "./store"
+  reload:
+    enabled: true
+    # The interval in which the local store dir is read and refreshes the internal state
+    interval: 5m
+    # The timeout for the remote operation
+    timeout: 10s
+  remote:
     # Load persisted operations from a GCP Cloud Storage bucket.
     # Will look at all the objects in the bucket and try to load any object with a `.json` extension
     gcp_bucket: "gs://somebucket"
 
 # ...
 ```
+
+## How it works
+
+`go-graphql-armor` looks at the `store` location on local disk to find any `*.json` files it can parse for persisted operations. 
+
+It can be configured to look at this directory and reload based on the files on local disk.
+
+Additionally, it can be configured to fetch operations from a remote location onto the local disk.
 
 ## Parsing Structure
 
@@ -61,3 +72,9 @@ Automated Persisted Queries/Operations is essentially the same as Persisted Oper
 This completely removes the security benefit of Persisted Operations as any client can stills end arbitrary operations. In fact, security is reduced since a malicious user could spam your endpoint with persisted operation registrations which would overflow your store and affect reliability.
 
 For this reason we do not deem APQ a good practice, and have chosen not to support it.
+
+## Generating Persisted Operations from the Client
+
+In order to utilize this feature you need to generate the persisted operations that each client can perform.
+
+[GraphQL Code Generator](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#persisted-documents)

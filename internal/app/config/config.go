@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/conf/v3/yaml"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
@@ -26,6 +27,7 @@ type Config struct {
 	Target                proxy.Config                   `yaml:"target"`
 	PersistedOperations   persisted_operations.Config    ` yaml:"persisted_operations"`
 	BlockFieldSuggestions block_field_suggestions.Config `yaml:"block_field_suggestions"`
+	MaxAliases            aliases.Config                 `yaml:"max_aliases"`
 }
 
 func NewConfig() (*Config, error) {
