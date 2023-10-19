@@ -21,21 +21,27 @@ Curious why you need these features? Check out this [Excellent talk on GraphQL s
 
 ## Installation
 
-Run as container
-```
+## As Container
+```shell
 docker pull ghcr.io/ldebruijn/go-graphql-armor:latest
 docker run -p 8080:8080 -v $(pwd)/armor.yml:/app/armor.yml ghcr.io/ldebruijn/go-graphql-armor:latest
 ```
 Make sure to portforward the right ports for your supplied configuration
 
+## Source code
+
+```shell
+git clone git@github.com:ldebruijn/go-graphql-armor.git
+```
+
 Build & Test
-```make
+```shell
     make build
     make test
 ```
 
 Run Container
-```make
+```shell
     make run_container
 ```
 
