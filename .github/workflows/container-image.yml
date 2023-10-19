@@ -1,9 +1,6 @@
-name: Docker Image CI
+name: Container Image CI
 
 on:
-  pull_request:
-    branches:
-      - main #tmp
   release:
     types: [published]
 
