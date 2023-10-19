@@ -7,30 +7,29 @@ import (
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/graphql-go/graphql/language/visitor"
-	"sync"
 )
 
 type Config struct {
-	max int `conf:"default:15" yaml:"max"`
+	Enabled bool `conf:"default:true" yaml:"enabled"`
+	Max     int  `conf:"default:15" yaml:"max"`
 }
-
-var addRule sync.Once
 
 type MaxAliasesRule struct {
 	cfg Config
 }
 
-func NewMaxAliases(cfg Config) (*MaxAliasesRule, error) {
+func NewMaxAliasesRule(cfg Config) *MaxAliasesRule {
 	rule := MaxAliasesRule{
 		cfg: cfg,
 	}
-	addRule.Do(func() {
-		graphql.SpecifiedRules = append(graphql.SpecifiedRules, rule.validate)
-	})
-	return &rule, nil
+
+	if cfg.Enabled {
+		graphql.SpecifiedRules = append(graphql.SpecifiedRules, rule.Validate)
+	}
+	return &rule
 }
 
-func (a *MaxAliasesRule) validate(context *graphql.ValidationContext) *graphql.ValidationRuleInstance {
+func (a *MaxAliasesRule) Validate(context *graphql.ValidationContext) *graphql.ValidationRuleInstance {
 	instance := a.newMaxRuleInstance(a.cfg, context)
 	return &graphql.ValidationRuleInstance{VisitorOpts: instance.visitorOptions()}
 }
@@ -68,8 +67,8 @@ func (i *maxAliasesRuleInstance) onOperationDefinitionEnter(p visitor.VisitFuncP
 
 	aliases := i.countAliases(p.Node)
 
-	if aliases > i.cfg.max {
-		err := fmt.Sprintf("syntax error: Aliases limit of %d exceeded, found %d", i.cfg.max, aliases)
+	if aliases > i.cfg.Max {
+		err := fmt.Sprintf("syntax error: Aliases limit of %d exceeded, found %d", i.cfg.Max, aliases)
 
 		i.validationContext.ReportError(gqlerrors.NewError(err, []ast.Node{od}, "", nil, []int{}, nil))
 	}
@@ -79,22 +78,22 @@ func (i *maxAliasesRuleInstance) onOperationDefinitionEnter(p visitor.VisitFuncP
 func (i *maxAliasesRuleInstance) countAliases(node interface{}) int {
 	aliases := 0
 
-	switch node.(type) {
+	switch node := node.(type) {
 	case *ast.Field:
-		if node.(*ast.Field).Alias != nil {
+		if node.Alias != nil {
 			aliases++
 		}
-		aliases += i.countSelectionSet(node.(*ast.Field).SelectionSet)
+		aliases += i.countSelectionSet(node.SelectionSet)
 	case *ast.InlineFragment:
-		aliases += i.countSelectionSet(node.(*ast.InlineFragment).SelectionSet)
+		aliases += i.countSelectionSet(node.SelectionSet)
 	case *ast.FragmentDefinition:
-		aliases += i.countSelectionSet(node.(*ast.FragmentDefinition).SelectionSet)
+		aliases += i.countSelectionSet(node.SelectionSet)
 	case *ast.SelectionSet:
-		aliases += i.countSelectionSet(node.(*ast.SelectionSet))
+		aliases += i.countSelectionSet(node)
 	case *ast.OperationDefinition:
-		aliases += i.countSelectionSet(node.(*ast.OperationDefinition).SelectionSet)
+		aliases += i.countSelectionSet(node.SelectionSet)
 	case *ast.FragmentSpread:
-		value := node.(*ast.FragmentSpread).Name.Value
+		value := node.Name.Value
 		if _, ok := i.visitedFragments[value]; ok {
 			return i.visitedFragments[value]
 		} else {
