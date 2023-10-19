@@ -1,7 +1,17 @@
 package block_field_suggestions
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"strings"
+)
+
+var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Namespace: "go_graphql_armor",
+	Subsystem: "block_field_suggestions",
+	Name:      "results",
+	Help:      "The results of the block field suggestions rule",
+},
+	[]string{"result"},
 )
 
 type Config struct {
@@ -11,6 +21,10 @@ type Config struct {
 
 type BlockFieldSuggestionsHandler struct {
 	cfg Config
+}
+
+func init() {
+	prometheus.MustRegister(resultCounter)
 }
 
 func NewBlockFieldSuggestionsHandler(cfg Config) *BlockFieldSuggestionsHandler {
@@ -59,7 +73,9 @@ func (b *BlockFieldSuggestionsHandler) processError(err map[string]interface{}) 
 
 func (b *BlockFieldSuggestionsHandler) replaceSuggestions(message string) string {
 	if strings.HasPrefix(message, "Did you mean") {
+		resultCounter.WithLabelValues("masked").Inc()
 		return b.cfg.Mask
 	}
+	resultCounter.WithLabelValues("unmasked").Inc()
 	return message
 }

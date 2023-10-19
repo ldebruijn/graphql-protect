@@ -7,6 +7,16 @@ import (
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/graphql-go/graphql/language/visitor"
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Namespace: "go_graphql_armor",
+	Subsystem: "max_aliases",
+	Name:      "results",
+	Help:      "The results of the max aliases rule",
+},
+	[]string{"result"},
 )
 
 type Config struct {
@@ -16,6 +26,10 @@ type Config struct {
 
 type MaxAliasesRule struct {
 	cfg Config
+}
+
+func init() {
+	prometheus.MustRegister(resultCounter)
 }
 
 func NewMaxAliasesRule(cfg Config) *MaxAliasesRule {
@@ -71,6 +85,9 @@ func (i *maxAliasesRuleInstance) onOperationDefinitionEnter(p visitor.VisitFuncP
 		err := fmt.Sprintf("syntax error: Aliases limit of %d exceeded, found %d", i.cfg.Max, aliases)
 
 		i.validationContext.ReportError(gqlerrors.NewError(err, []ast.Node{od}, "", nil, []int{}, nil))
+		resultCounter.WithLabelValues("exceeded").Inc()
+	} else {
+		resultCounter.WithLabelValues("allowed").Inc()
 	}
 	return visitor.ActionNoChange, nil
 }
