@@ -3,7 +3,7 @@ name: Docker Image CI
 on:
   pull_request:
     branches:
-      - containerimage #tmp
+      - main #tmp
   release:
     types: [published]
 
