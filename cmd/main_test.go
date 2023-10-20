@@ -261,6 +261,7 @@ query Foo {
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
 
 			assert.NoError(t, err, tt.name)
+			assert.NotNil(t, res, "response was nil", tt.name)
 
 			tt.want(t, res)
 
