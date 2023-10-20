@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -240,7 +241,6 @@ query Foo {
 
 				_, _ = w.Write(bts)
 			}))
-			defer mockServer.Close()
 
 			shutdown := make(chan os.Signal, 1)
 
@@ -272,9 +272,10 @@ query Foo {
 			tt.want(t, res)
 
 			// cleanup
-			defer func() {
-				//shutdown <- syscall.SIGINT
-			}()
+			t.Cleanup(func() {
+				mockServer.Close()
+				shutdown <- syscall.SIGINT
+			})
 		})
 	}
 }
