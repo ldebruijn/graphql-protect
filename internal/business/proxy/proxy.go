@@ -17,12 +17,10 @@ type Config struct {
 	Timeout   time.Duration `conf:"default:10s" yaml:"timeout"`
 	KeepAlive time.Duration `conf:"default:180s" yaml:"keepAlive"`
 	Host      string        `conf:"default:http://localhost:8081" yaml:"host"`
-	Path      string        `conf:"default:/graphql" yaml:"path"`
 }
 
 func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler) (*httputil.ReverseProxy, error) {
 	target, err := url.Parse(cfg.Host)
-	target.Path = cfg.Path
 	if err != nil {
 		return nil, err
 	}
