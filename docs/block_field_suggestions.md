@@ -21,3 +21,20 @@ block_field_suggestions:
 ## How does it work?
 
 We scan each `errors[].message` field in the responses and replace the message with a mask when we encounter a field suggestion.
+
+## Metrics
+
+
+## Metrics
+
+This rule produces metrics to help you gain insights into the behavior of the rule.
+
+```
+go_graphql_armor_block_field_suggestions_results{result}
+```
+
+`result`:
+`masked` means the rule found suggestions and masked the error message
+`unmasked` means the rule found no suggestions and did not alter the response
+
+No metrics are produced when the rule is disabled.

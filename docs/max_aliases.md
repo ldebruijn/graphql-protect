@@ -17,4 +17,21 @@ max_aliases:
   enable: true
   # The maximum number of allowed aliases within a single request.
   max: 15
+  # Reject the request when the rule fails. Disable this to allow the request
+  reject_on_failure: true
 ```
+
+## Metrics
+
+This rule produces metrics to help you gain insights into the behavior of the rule.
+
+```
+go_graphql_armor_max_aliases_results{result}
+```
+
+`result`:
+`rejected` means the rule condition failed and the request was rejected
+`failed` means the rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false`
+`allowd` means the rule condition succeeded
+
+No metrics are produced when the rule is disabled.
