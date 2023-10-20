@@ -88,21 +88,26 @@ This rule produces metrics to help you gain insights into the behavior of the ru
 go_graphql_armor_persisted_operations_results{state, result}
 ```
 
-`state`:
-`unknown` means the rule was not able to do its job. This happens either when `fail_unknown_operations` is set to `false` or the rule was not able to deserialize the request.
-`errored` means the rule caught an error during request body mutation.
-`known` means the rule received a hash for which it had a known operation
+| `state`    | Description                                                                                                                                                   |
+|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `unknown`   | The rule was not able to do its job. This happens either when `fail_unknown_operations` is set to `false` or the rule was not able to deserialize the request. |
+| `errored` | The rule caught an error during request body mutation.                                                                                                        |
+| `known` | The rule received a hash for which it had a known operation                                                                                                   |
 
-`result`:
-`allowed` means the rule allowed the request
-`rejected` means the rule rejected the request
+
+| `result`  | Description                   |
+|---------|-------------------------------|
+| `allowed` | The rule allowed the request  |
+| `rejected` | The rule rejected the request |
 
 ```
 go_graphql_armor_persisted_operations_reload{system}
 ```
 
-`system`:
-`local` means the system reloaded its state from local storage
-`remote` means the system reloaded the remote state onto local file storage. This does not refresh the local state on its own.
+
+| `system` | Description                                                                                           |
+|--------|-------------------------------------------------------------------------------------------------------|
+| `local`  | The rule reloaded its state from local storage                                                        |
+| `remote` | The rule reloaded the remote state onto local disk. This does not refresh the local state on its own. |
 
 No metrics are produced when the rule is disabled.

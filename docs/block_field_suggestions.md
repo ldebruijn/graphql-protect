@@ -33,8 +33,10 @@ This rule produces metrics to help you gain insights into the behavior of the ru
 go_graphql_armor_block_field_suggestions_results{result}
 ```
 
-`result`:
-`masked` means the rule found suggestions and masked the error message
-`unmasked` means the rule found no suggestions and did not alter the response
+| `result`   | Description                                                         |
+|----------|---------------------------------------------------------------------|
+| `masked`   | The rule found suggestions and masked the error message             |
+| `unmasked` | means the rule found no suggestions and did not alter the response  |
+
 
 No metrics are produced when the rule is disabled.

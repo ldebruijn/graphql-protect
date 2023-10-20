@@ -29,9 +29,11 @@ This rule produces metrics to help you gain insights into the behavior of the ru
 go_graphql_armor_max_aliases_results{result}
 ```
 
-`result`:
-`rejected` means the rule condition failed and the request was rejected
-`failed` means the rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false`
-`allowd` means the rule condition succeeded
+
+| `result`  | Description                                                                                                  |
+|---------|--------------------------------------------------------------------------------------------------------------|
+| `allowed` | The rule condition succeeded                                                                                 |
+| `rejected` | The rule condition failed and the request was rejected                                                       |
+| `failed` | The rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false` |
 
 No metrics are produced when the rule is disabled.
