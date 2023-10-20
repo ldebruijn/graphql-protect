@@ -14,6 +14,7 @@ import (
 	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log2 "log"
 	"log/slog"
@@ -23,9 +24,32 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 )
 
-var build = "develop"
+var (
+	build       = "develop"
+	httpCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "go_graphql_armor",
+		Subsystem: "http",
+		Name:      "count",
+		Help:      "HTTP request counts",
+	},
+		[]string{"route"},
+	)
+	httpDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "go_graphql_armor",
+		Subsystem: "http",
+		Name:      "duration",
+		Help:      "HTTP duration",
+	},
+		[]string{"route"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(httpCounter, httpDuration)
+}
 
 func main() {
 	log := slog.Default()
@@ -121,14 +145,30 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 
 func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
 	rec := middleware2.Recover(log)
+	httpInstrumentation := HttpInstrumentation()
+
 	_ = aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	vr := ValidationRules()
 
 	fn := func(next http.Handler) http.Handler {
-		return rec(po.Execute(vr(next)))
+		return rec(httpInstrumentation(po.Execute(vr(next))))
 	}
 
 	return fn
+}
+
+func HttpInstrumentation() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			httpCounter.WithLabelValues(r.URL.Path).Inc()
+
+			next.ServeHTTP(w, r)
+
+			httpDuration.WithLabelValues(r.URL.Path).Observe(time.Since(start).Seconds())
+		}
+		return http.HandlerFunc(fn)
+	}
 }
 
 func ValidationRules() func(next http.Handler) http.Handler {
