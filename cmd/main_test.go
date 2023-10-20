@@ -256,8 +256,6 @@ query Foo {
 
 			// block test case until server has started
 			blockUntilStarted(httptest.NewRequest("GET", "/", nil), 1*time.Second)
-			//tiny sleep to make sure HTTP server has started
-			//time.Sleep(100 * time.Millisecond)
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
