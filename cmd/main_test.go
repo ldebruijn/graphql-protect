@@ -261,7 +261,7 @@ query Foo {
 
 			blockUntilStarted(httptest.NewRequest("GET", "/", nil), 1*time.Second)
 
-			log2.Printf("Waiting until server has started, took %s \n", time.Since(start))
+			log2.Printf("Server has started, took %s \n", time.Since(start))
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
