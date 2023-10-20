@@ -241,6 +241,7 @@ query Foo {
 
 				_, _ = w.Write(bts)
 			}))
+			defer mockServer.Close()
 
 			shutdown := make(chan os.Signal, 1)
 
@@ -273,10 +274,7 @@ query Foo {
 			tt.want(t, res)
 
 			// cleanup
-			t.Cleanup(func() {
-				mockServer.Close()
-				shutdown <- syscall.SIGINT
-			})
+			shutdown <- syscall.SIGINT
 		})
 	}
 }
