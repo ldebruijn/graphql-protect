@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/graphql-go/graphql"
@@ -14,6 +15,7 @@ import (
 	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/readiness"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log2 "log"
@@ -29,6 +31,7 @@ import (
 
 var (
 	build       = "develop"
+	configPath  = ""
 	httpCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "go_graphql_armor",
 		Subsystem: "http",
@@ -52,10 +55,13 @@ func init() {
 }
 
 func main() {
+	flag.StringVar(&configPath, "f", "./armor.yml", "Defines the path at which the configuration file can be found")
+	flag.Parse()
+
 	log := slog.Default()
 
 	// cfg
-	cfg, err := config.NewConfig()
+	cfg, err := config.NewConfig(configPath)
 	if err != nil {
 		log.Error("Error loading application configuration", "err", err)
 		os.Exit(1)
@@ -103,6 +109,7 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 	mid := middleware(log, cfg, po)
 
 	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler())
 	mux.Handle(cfg.Web.Path, mid(Handler(pxy)))
 
 	api := http.Server{

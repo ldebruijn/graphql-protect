@@ -6,6 +6,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/stretchr/testify/assert"
 	"io"
+	log2 "log"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -244,29 +245,40 @@ query Foo {
 
 			shutdown := make(chan os.Signal, 1)
 
-			defaultConfig, _ := config.NewConfig()
+			defaultConfig, _ := config.NewConfig("")
 			cfg := tt.args.cfgOverrides(defaultConfig)
 
 			// set target to mockserver
 			cfg.Target.Host = mockServer.URL
 
 			go func() {
-				_ = run(slog.Default(), cfg, shutdown)
+				err := run(slog.Default(), cfg, shutdown)
+				assert.NoError(t, err, "error starting server for", tt.name)
 			}()
 
-			// tiny sleep to make sure HTTP server has started
-			time.Sleep(100 * time.Millisecond)
+			start := time.Now()
+
+			// block test case until server has started
+			log2.Println("Waiting until server has started")
+
+			blockUntilStarted(httptest.NewRequest("GET", "/", nil), 1*time.Second)
+
+			log2.Printf("Server has started, took %s \n", time.Since(start))
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
-			if err != nil {
-				assert.NoError(t, err, tt.name)
-			}
+
+			assert.NoError(t, err, tt.name)
+			assert.NotNil(t, res, "response was nil", tt.name)
 
 			tt.want(t, res)
 
 			// cleanup
 			shutdown <- syscall.SIGINT
+
+			// give time for server to shutdown
+			log2.Println("Waiting until server has shut down")
+			time.Sleep(100 * time.Millisecond)
 		})
 	}
 }
@@ -288,4 +300,21 @@ func errorsContainsMessage(msg string, bytes []byte) bool {
 		}
 	}
 	return false
+}
+
+func blockUntilStarted(req *http.Request, timeout time.Duration) {
+	client := &http.Client{
+		Timeout: 100 * time.Millisecond,
+	}
+	for start := time.Now(); time.Since(start) < timeout; {
+		resp, err := client.Do(req)
+		if err != nil {
+			// tiny sleep before next iteration
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+		if resp.StatusCode == http.StatusOK {
+			return
+		}
+	}
 }

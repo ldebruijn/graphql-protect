@@ -20,8 +20,9 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 )
 
 type Config struct {
-	Enabled bool `conf:"default:true" yaml:"enabled"`
-	Max     int  `conf:"default:15" yaml:"max"`
+	Enabled         bool `conf:"default:true" yaml:"enabled"`
+	Max             int  `conf:"default:15" yaml:"max"`
+	RejectOnFailure bool `conf:"default:true" yaml:"reject-on-failure"`
 }
 
 type MaxAliasesRule struct {
@@ -84,8 +85,12 @@ func (i *maxAliasesRuleInstance) onOperationDefinitionEnter(p visitor.VisitFuncP
 	if aliases > i.cfg.Max {
 		err := fmt.Sprintf("syntax error: Aliases limit of %d exceeded, found %d", i.cfg.Max, aliases)
 
-		i.validationContext.ReportError(gqlerrors.NewError(err, []ast.Node{od}, "", nil, []int{}, nil))
-		resultCounter.WithLabelValues("exceeded").Inc()
+		if i.cfg.RejectOnFailure {
+			i.validationContext.ReportError(gqlerrors.NewError(err, []ast.Node{od}, "", nil, []int{}, nil))
+			resultCounter.WithLabelValues("rejected").Inc()
+		} else {
+			resultCounter.WithLabelValues("failed").Inc()
+		}
 	} else {
 		resultCounter.WithLabelValues("allowed").Inc()
 	}

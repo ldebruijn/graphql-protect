@@ -30,11 +30,11 @@ type Config struct {
 	MaxAliases            aliases.Config                 `yaml:"max_aliases"`
 }
 
-func NewConfig() (*Config, error) {
+func NewConfig(configPath string) (*Config, error) {
 	cfg := Config{}
 
 	// ignore yaml read failure
-	fromYaml, _ := os.ReadFile("./armor.yml")
+	fromYaml, _ := os.ReadFile(configPath)
 
 	help, err := conf.Parse("go-graphql-armor", &cfg, yaml.WithData(fromYaml))
 	if err != nil {

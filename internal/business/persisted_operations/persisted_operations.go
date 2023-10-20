@@ -21,7 +21,7 @@ var (
 		Name:      "counter",
 		Help:      "The results of the persisted operations rule",
 	},
-		[]string{"state", "allowed"},
+		[]string{"state", "result"},
 	)
 	reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   "go_graphql_armor",
@@ -156,7 +156,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 
 		hash, err := hashFromPayload(payload)
 		if err != nil {
-			persistedOpsCounter.WithLabelValues("unknown", "blocked").Inc()
+			persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
 			p.log.Warn("no hash found ", "err", err)
 			res, _ := json.Marshal(buildErrorResponse("PersistedQueryNotFound"))
 			http.Error(w, string(res), 200)
@@ -169,7 +169,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 
 		if !ok {
 			// hash not found, fail
-			persistedOpsCounter.WithLabelValues("unknown", "blocked").Inc()
+			persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
 			p.log.Warn("Unknown hash, persisted operation not found ", "hash", hash)
 			res, _ := json.Marshal(buildErrorResponse("PersistedOperationNotFound"))
 			http.Error(w, string(res), 200)

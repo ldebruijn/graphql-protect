@@ -60,15 +60,28 @@ func Test_MaxAliasesRule(t *testing.T) {
 			want: nil,
 		},
 		{
-			name: "produces error when counted aliases are more than configured maximum",
+			name: "produces error when counted aliases are more than configured maximum and reject on failure is true",
 			args: args{
 				cfg: Config{
-					Max: 1,
+					Max:             1,
+					RejectOnFailure: true,
 				},
 				query:  query,
 				schema: queryType,
 			},
 			want: fmt.Errorf("syntax error: Aliases limit of %d exceeded, found %d", 1, 2),
+		},
+		{
+			name: "does not produce error when counted aliases are more than configured maximum and reject on failure is false",
+			args: args{
+				cfg: Config{
+					Max:             1,
+					RejectOnFailure: false,
+				},
+				query:  query,
+				schema: queryType,
+			},
+			want: nil,
 		},
 		{
 			name: "respects fragment aliases",
@@ -86,7 +99,8 @@ query A {
 `,
 				schema: queryType,
 				cfg: Config{
-					Max: 1,
+					Max:             1,
+					RejectOnFailure: true,
 				},
 			},
 			want: fmt.Errorf("syntax error: Aliases limit of %d exceeded, found %d", 1, 2),
