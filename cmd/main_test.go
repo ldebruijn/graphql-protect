@@ -13,6 +13,7 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+	"time"
 )
 
 func TestHttpServerIntegration(t *testing.T) {
@@ -252,6 +253,9 @@ query Foo {
 			go func() {
 				_ = run(slog.Default(), cfg, shutdown)
 			}()
+
+			// tiny sleep to make sure HTTP server has started
+			time.Sleep(100 * time.Millisecond)
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
