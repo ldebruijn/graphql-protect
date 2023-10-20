@@ -12,7 +12,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 )
@@ -274,7 +273,7 @@ query Foo {
 
 			// cleanup
 			defer func() {
-				shutdown <- syscall.SIGINT
+				//shutdown <- syscall.SIGINT
 			}()
 		})
 	}
