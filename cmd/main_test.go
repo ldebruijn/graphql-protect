@@ -6,6 +6,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/stretchr/testify/assert"
 	"io"
+	log2 "log"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -254,8 +255,14 @@ query Foo {
 				_ = run(slog.Default(), cfg, shutdown)
 			}()
 
+			start := time.Now()
+
 			// block test case until server has started
+			log2.Println("Waiting until server has started")
+
 			blockUntilStarted(httptest.NewRequest("GET", "/", nil), 1*time.Second)
+
+			log2.Printf("Waiting until server has started, took %s \n", time.Since(start))
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
