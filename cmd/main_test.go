@@ -251,7 +251,8 @@ query Foo {
 			cfg.Target.Host = mockServer.URL
 
 			go func() {
-				_ = run(slog.Default(), cfg, shutdown)
+				err := run(slog.Default(), cfg, shutdown)
+				assert.NoError(t, err, "error starting server for", tt.name)
 			}()
 
 			start := time.Now()
