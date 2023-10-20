@@ -254,8 +254,10 @@ query Foo {
 				_ = run(slog.Default(), cfg, shutdown)
 			}()
 
-			// tiny sleep to make sure HTTP server has started
-			time.Sleep(100 * time.Millisecond)
+			// block test case until server has started
+			blockUntilStarted(httptest.NewRequest("GET", "/", nil), 1*time.Second)
+			//tiny sleep to make sure HTTP server has started
+			//time.Sleep(100 * time.Millisecond)
 
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
@@ -288,4 +290,21 @@ func errorsContainsMessage(msg string, bytes []byte) bool {
 		}
 	}
 	return false
+}
+
+func blockUntilStarted(req *http.Request, timeout time.Duration) {
+	client := &http.Client{
+		Timeout: 100 * time.Millisecond,
+	}
+	for start := time.Now(); time.Since(start) < timeout; {
+		resp, err := client.Do(req)
+		if err != nil {
+			// tiny sleep before next iteration
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+		if resp.StatusCode == http.StatusOK {
+			return
+		}
+	}
 }
