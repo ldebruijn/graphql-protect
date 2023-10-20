@@ -275,6 +275,10 @@ query Foo {
 
 			// cleanup
 			shutdown <- syscall.SIGINT
+
+			// give time for server to shutdown
+			log2.Println("Waiting until server has shut down")
+			time.Sleep(100 * time.Millisecond)
 		})
 	}
 }
