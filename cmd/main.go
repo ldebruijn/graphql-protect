@@ -15,6 +15,7 @@ import (
 	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/readiness"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log2 "log"
@@ -108,6 +109,7 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 	mid := middleware(log, cfg, po)
 
 	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler())
 	mux.Handle(cfg.Web.Path, mid(Handler(pxy)))
 
 	api := http.Server{
