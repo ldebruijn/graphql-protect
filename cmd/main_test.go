@@ -6,6 +6,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/stretchr/testify/assert"
 	"io"
+	log2 "log"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -257,13 +258,18 @@ query Foo {
 			// block test case until server has started
 			blockUntilStarted(httptest.NewRequest("GET", "/", nil), 1*time.Second)
 
+			log2.Println("server has started")
 			url := "http://localhost:8080" + tt.args.request.URL.String()
 			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body)
+			log2.Println("fired request")
 			if err != nil {
 				assert.NoError(t, err, tt.name)
 			}
 
 			tt.want(t, res)
+			log2.Println("finished assertions")
+
+			log2.Println("initiating shutdown")
 
 			// cleanup
 			shutdown <- syscall.SIGINT
