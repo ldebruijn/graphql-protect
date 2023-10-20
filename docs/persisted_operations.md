@@ -78,3 +78,36 @@ For this reason we do not deem APQ a good practice, and have chosen not to suppo
 In order to utilize this feature you need to generate the persisted operations that each client can perform.
 
 [GraphQL Code Generator](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#persisted-documents)
+
+
+## Metrics
+
+This rule produces metrics to help you gain insights into the behavior of the rule.
+
+```
+go_graphql_armor_persisted_operations_results{state, result}
+```
+
+| `state`    | Description                                                                                                                                                   |
+|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `unknown`   | The rule was not able to do its job. This happens either when `fail_unknown_operations` is set to `false` or the rule was not able to deserialize the request. |
+| `errored` | The rule caught an error during request body mutation.                                                                                                        |
+| `known` | The rule received a hash for which it had a known operation                                                                                                   |
+
+
+| `result`  | Description                   |
+|---------|-------------------------------|
+| `allowed` | The rule allowed the request  |
+| `rejected` | The rule rejected the request |
+
+```
+go_graphql_armor_persisted_operations_reload{system}
+```
+
+
+| `system` | Description                                                                                           |
+|--------|-------------------------------------------------------------------------------------------------------|
+| `local`  | The rule reloaded its state from local storage                                                        |
+| `remote` | The rule reloaded the remote state onto local disk. This does not refresh the local state on its own. |
+
+No metrics are produced when the rule is disabled.
