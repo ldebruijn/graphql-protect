@@ -6,11 +6,31 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
+	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"log/slog"
 	"net/http"
 	"sync"
 	"time"
+)
+
+var (
+	persistedOpsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "go_graphql_armor",
+		Subsystem: "persisted_operations",
+		Name:      "counter",
+		Help:      "The results of the persisted operations rule",
+	},
+		[]string{"state", "allowed"},
+	)
+	reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   "go_graphql_armor",
+		Subsystem:   "persisted_operations",
+		Name:        "reload",
+		Help:        "Gauge tracking reloading behavior",
+		ConstLabels: nil,
+	},
+		[]string{"system"})
 )
 
 type ErrorPayload struct {
@@ -53,6 +73,10 @@ type PersistedOperationsHandler struct {
 	dirLoader LocalLoader
 	done      chan bool
 	lock      sync.RWMutex
+}
+
+func init() {
+	prometheus.MustRegister(persistedOpsCounter, reloadGauge)
 }
 
 func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
@@ -125,12 +149,14 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 		}
 
 		if !p.cfg.FailUnknownOperations && payload.Query != "" {
+			persistedOpsCounter.WithLabelValues("unknown", "allowed").Inc()
 			next.ServeHTTP(w, r)
 			return
 		}
 
 		hash, err := hashFromPayload(payload)
 		if err != nil {
+			persistedOpsCounter.WithLabelValues("unknown", "blocked").Inc()
 			p.log.Warn("no hash found ", "err", err)
 			res, _ := json.Marshal(buildErrorResponse("PersistedQueryNotFound"))
 			http.Error(w, string(res), 200)
@@ -143,6 +169,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 
 		if !ok {
 			// hash not found, fail
+			persistedOpsCounter.WithLabelValues("unknown", "blocked").Inc()
 			p.log.Warn("Unknown hash, persisted operation not found ", "hash", hash)
 			res, _ := json.Marshal(buildErrorResponse("PersistedOperationNotFound"))
 			http.Error(w, string(res), 200)
@@ -155,6 +182,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 		bts, err := json.Marshal(payload)
 		if err != nil {
 			// handle
+			persistedOpsCounter.WithLabelValues("errored", "allowed").Inc()
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -162,6 +190,8 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 		// overwrite request body with new payload
 		r.Body = io.NopCloser(bytes.NewBuffer(bts))
 		r.ContentLength = int64(len(bts))
+
+		persistedOpsCounter.WithLabelValues("known", "allowed").Inc()
 
 		next.ServeHTTP(w, r)
 	}
@@ -178,6 +208,7 @@ func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	p.lock.Unlock()
 
 	p.log.Info("Loaded persisted operations", "amount", len(cache))
+	reloadGauge.WithLabelValues("local").Inc()
 
 	return nil
 }
@@ -198,6 +229,7 @@ func (p *PersistedOperationsHandler) reload() {
 				if err != nil {
 					p.log.Warn("Error loading from local dir", "err", err)
 				}
+				reloadGauge.WithLabelValues("ticker").Inc()
 			}
 		}
 	}()
@@ -215,6 +247,8 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	if err != nil {
 		return
 	}
+
+	reloadGauge.WithLabelValues("remote").Inc()
 }
 
 func (p *PersistedOperationsHandler) Shutdown() {
