@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/graphql-go/graphql"
@@ -29,6 +30,7 @@ import (
 
 var (
 	build       = "develop"
+	configPath  = ""
 	httpCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "go_graphql_armor",
 		Subsystem: "http",
@@ -52,10 +54,13 @@ func init() {
 }
 
 func main() {
+	flag.StringVar(&configPath, "f", "./armor.yml", "Defines the path at which the configuration file can be found")
+	flag.Parse()
+
 	log := slog.Default()
 
 	// cfg
-	cfg, err := config.NewConfig()
+	cfg, err := config.NewConfig(configPath)
 	if err != nil {
 		log.Error("Error loading application configuration", "err", err)
 		os.Exit(1)
