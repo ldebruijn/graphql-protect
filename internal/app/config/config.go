@@ -9,6 +9,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
+	"log/slog"
 	"os"
 	"time"
 )
@@ -30,11 +31,14 @@ type Config struct {
 	MaxAliases            aliases.Config                 `yaml:"max_aliases"`
 }
 
-func NewConfig(configPath string) (*Config, error) {
+func NewConfig(log *slog.Logger, configPath string) (*Config, error) {
 	cfg := Config{}
 
 	// ignore yaml read failure
-	fromYaml, _ := os.ReadFile(configPath)
+	fromYaml, err := os.ReadFile(configPath)
+	if err != nil && configPath != "" {
+		log.Warn("Error loading configuration from filepath", configPath, err)
+	}
 
 	help, err := conf.Parse("go-graphql-armor", &cfg, yaml.WithData(fromYaml))
 	if err != nil {
