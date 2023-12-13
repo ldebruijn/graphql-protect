@@ -40,13 +40,19 @@ func NewConfig(log *slog.Logger, configPath string) (*Config, error) {
 		log.Warn("Error loading configuration from filepath", configPath, err)
 	}
 
-	help, err := conf.Parse("go-graphql-armor", &cfg, yaml.WithData(fromYaml))
+	help, err := conf.Parse("go-graphql-armor", &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
 			fmt.Println(help)
 			return nil, conf.ErrHelpWanted
 		}
 		return nil, fmt.Errorf("parsing config: %w", err)
+	}
+
+	// process yaml after parse, set defaults first and override with yaml after
+	err = yaml.WithData(fromYaml).Process("", &cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	return &cfg, nil
