@@ -19,9 +19,10 @@ import (
 
 func TestHttpServerIntegration(t *testing.T) {
 	type args struct {
-		request      *http.Request
-		mockResponse map[string]interface{}
-		cfgOverrides func(cfg *config.Config) *config.Config
+		request        *http.Request
+		mockResponse   map[string]interface{}
+		mockStatusCode int
+		cfgOverrides   func(cfg *config.Config) *config.Config
 	}
 	tests := []struct {
 		name string
@@ -53,6 +54,7 @@ func TestHttpServerIntegration(t *testing.T) {
 						},
 					},
 				},
+				mockStatusCode: http.StatusOK,
 			},
 			want: func(t *testing.T, response *http.Response) {
 				expected := map[string]interface{}{
@@ -99,6 +101,7 @@ func TestHttpServerIntegration(t *testing.T) {
 						},
 					},
 				},
+				mockStatusCode: http.StatusOK,
 			},
 			want: func(t *testing.T, response *http.Response) {
 				expected := map[string]interface{}{
@@ -151,6 +154,7 @@ func TestHttpServerIntegration(t *testing.T) {
 						},
 					},
 				},
+				mockStatusCode: http.StatusOK,
 			},
 			want: func(t *testing.T, response *http.Response) {
 				expected := map[string]interface{}{
@@ -217,6 +221,7 @@ query Foo {
 						"a10": "Yes",
 					},
 				},
+				mockStatusCode: http.StatusOK,
 			},
 			want: func(t *testing.T, response *http.Response) {
 				expected := map[string]interface{}{
@@ -233,11 +238,66 @@ query Foo {
 				assert.True(t, errorsContainsMessage("syntax error: Aliases limit of 3 exceeded, found 10", actual))
 			},
 		},
+		{
+			name: "correctly handles unexpected response when response mutators are enabled",
+			args: args{
+				request: func() *http.Request {
+					body := map[string]interface{}{
+						"query": "query Foo { product(id: 1) { id name } }",
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.FailUnknownOperations = false
+					return cfg
+				},
+				mockResponse: map[string]interface{}{
+					"data": map[string]interface{}{
+						"product": nil,
+					},
+					"errors": []map[string]interface{}{
+						{
+							"message": "Some unexpected error",
+							"path":    []string{"product"},
+							"extensions": map[string]interface{}{
+								"errorType": "BAD_REQUEST",
+							},
+						},
+					},
+				},
+				mockStatusCode: http.StatusBadRequest,
+			},
+			want: func(t *testing.T, response *http.Response) {
+				expected := map[string]interface{}{
+					"errors": []map[string]interface{}{
+						{
+							"message": "Some unexpected error",
+							"path":    []string{"product"},
+							"extensions": map[string]interface{}{
+								"errorType": "BAD_REQUEST",
+							},
+						},
+					},
+				}
+				_, _ = json.Marshal(expected)
+				assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				// perform string comparisons as map[string]interface seems incomparable
+				assert.True(t, errorsContainsMessage("Some unexpected error", actual))
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				bts, _ := json.Marshal(tt.args.mockResponse)
+				w.WriteHeader(tt.args.mockStatusCode)
 
 				_, _ = w.Write(bts)
 			}))
