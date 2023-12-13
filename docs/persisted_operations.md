@@ -17,13 +17,13 @@ You can configure `go-graphql-armor` to enable Persisted Operations.
 
 persisted_operations:
   # Enable or disable the feature, enabled by default
-  enabled: true
+  enabled: "true"
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
-  fail_unknown_operations: true
+  fail_unknown_operations: "true"
   # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
   store: "./store"
   reload:
-    enabled: true
+    enabled: "true"
     # The interval in which the local store dir is read and refreshes the internal state
     interval: 5m
     # The timeout for the remote operation
