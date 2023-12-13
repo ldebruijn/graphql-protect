@@ -43,11 +43,14 @@ persisted_operations:
     gcp_bucket: "gs://somebucket"
 
 max_aliases:
-  enabled: true
-  # Maximum number of aliases allowed within a single request
+  # Enable the feature
+  enable: true
+  # The maximum number of allowed aliases within a single request.
   max: 15
+  # Reject the request when the rule fails. Disable this to allow the request
+  reject_on_failure: true
 
-field_suggestions:
+block_field_suggestions:
   enabled: true
   mask: [redacted]
 ```
