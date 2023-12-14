@@ -9,7 +9,6 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
-	"log/slog"
 	"os"
 	"time"
 )
@@ -31,14 +30,8 @@ type Config struct {
 	MaxAliases            aliases.Config                 `yaml:"max_aliases"`
 }
 
-func NewConfig(log *slog.Logger, configPath string) (*Config, error) {
+func NewConfig(configPath string) (*Config, error) {
 	cfg := Config{}
-
-	// ignore yaml read failure
-	fromYaml, err := os.ReadFile(configPath)
-	if err != nil && configPath != "" {
-		log.Warn("Error loading configuration from filepath", configPath, err)
-	}
 
 	help, err := conf.Parse("go-graphql-armor", &cfg)
 	if err != nil {
@@ -49,10 +42,18 @@ func NewConfig(log *slog.Logger, configPath string) (*Config, error) {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
-	// process yaml after parse, set defaults first and override with yaml after
-	err = yaml.WithData(fromYaml).Process("", &cfg)
-	if err != nil {
-		return nil, err
+	if configPath != "" {
+		// ignore yaml read failure
+		fromYaml, err := os.ReadFile(configPath)
+		if err != nil {
+			return nil, fmt.Errorf("could not read config file [%s], %w", configPath, err)
+		}
+
+		// process yaml after parse, set defaults first and override with yaml after
+		err = yaml.WithData(fromYaml).Process("", &cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &cfg, nil
