@@ -331,8 +331,10 @@ query Foo {
 				}
 				_, _ = json.Marshal(expected)
 				assert.Equal(t, http.StatusOK, response.StatusCode)
-				_, err := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
 				assert.NoError(t, err)
+				_ = actual
+				assert.Contains(t, string(actual), "\"errors\": []")
 			},
 		},
 	}
