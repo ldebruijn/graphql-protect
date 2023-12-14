@@ -61,7 +61,7 @@ func main() {
 	log := slog.Default()
 
 	// cfg
-	cfg, err := config.NewConfig(log, configPath)
+	cfg, err := config.NewConfig(configPath)
 	if err != nil {
 		log.Error("Error loading application configuration", "err", err)
 		os.Exit(1)

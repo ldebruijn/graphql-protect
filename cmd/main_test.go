@@ -305,7 +305,7 @@ query Foo {
 
 			shutdown := make(chan os.Signal, 1)
 
-			defaultConfig, _ := config.NewConfig(nil, "")
+			defaultConfig, _ := config.NewConfig("")
 			cfg := tt.args.cfgOverrides(defaultConfig)
 
 			// set target to mockserver
