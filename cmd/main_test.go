@@ -292,6 +292,49 @@ query Foo {
 				assert.True(t, errorsContainsMessage("Some unexpected error", actual))
 			},
 		},
+		{
+			name: "Validates incoming request payload against schema",
+			args: args{
+				request: func() *http.Request {
+					body := map[string]interface{}{
+						"query": "query Foo($id: ID!) { product(id: $id) { id name } }",
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.PersistedOperations.Enabled = true
+					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.FailUnknownOperations = false
+					return cfg
+				},
+				mockResponse: map[string]interface{}{
+					"data": map[string]interface{}{
+						"product": map[string]interface{}{
+							"id":   "1",
+							"name": "name",
+						},
+					},
+				},
+				mockStatusCode: http.StatusOK,
+			},
+			want: func(t *testing.T, response *http.Response) {
+				expected := map[string]interface{}{
+					"data": map[string]interface{}{
+						"product": map[string]interface{}{
+							"id":   "1",
+							"name": "name",
+						},
+					},
+				}
+				_, _ = json.Marshal(expected)
+				assert.Equal(t, http.StatusOK, response.StatusCode)
+				_, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
