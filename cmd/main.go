@@ -16,6 +16,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/readiness"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log2 "log"
@@ -104,9 +105,15 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 		return nil
 	}
 
+	schemaProvider, err := schema.NewSchema(cfg.Schema, log)
+	if err != nil {
+		log.Error("Error initializing schema", "err", err)
+		return nil
+	}
+
 	mux := http.NewServeMux()
 
-	mid := middleware(log, cfg, po)
+	mid := middleware(log, cfg, po, schemaProvider)
 
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler())
@@ -150,12 +157,15 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 	return nil
 }
 
-func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
+func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider) func(next http.Handler) http.Handler {
 	rec := middleware2.Recover(log)
 	httpInstrumentation := HttpInstrumentation()
 
+	// clear validation rules as we leave operartion validation to the actual backend
+	graphql.SpecifiedRules = []graphql.ValidationRuleFn{}
+
 	_ = aliases.NewMaxAliasesRule(cfg.MaxAliases)
-	vr := ValidationRules()
+	vr := ValidationRules(schema)
 
 	fn := func(next http.Handler) http.Handler {
 		return rec(httpInstrumentation(po.Execute(vr(next))))
@@ -178,7 +188,7 @@ func HttpInstrumentation() func(next http.Handler) http.Handler {
 	}
 }
 
-func ValidationRules() func(next http.Handler) http.Handler {
+func ValidationRules(schema *schema.Provider) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			payload, err := gql.ParseRequestPayload(r)
@@ -186,9 +196,12 @@ func ValidationRules() func(next http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
+			sm := schema.Get()
+
 			params := graphql.Params{
 				RequestString: payload.Query,
 				Context:       r.Context(),
+				Schema:        schema.Get(),
 			}
 			result := graphql.Do(params)
 

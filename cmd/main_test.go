@@ -308,6 +308,28 @@ query Foo {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
 					cfg.PersistedOperations.FailUnknownOperations = false
+
+					file, err := os.CreateTemp("", "")
+					if err != nil {
+						// waaaah
+					}
+					defer file.Close()
+
+					_, err = file.Write([]byte(`
+type Query {
+	product(id: ID!) {
+		id: ID!
+		name: String
+	}
+}
+`))
+					if err != nil {
+						return nil
+					}
+
+					path := file.Name()
+
+					cfg.Schema.Path = path
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
