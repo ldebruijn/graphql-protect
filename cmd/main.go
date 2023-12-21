@@ -196,12 +196,12 @@ func ValidationRules(schema *schema.Provider) func(next http.Handler) http.Handl
 				next.ServeHTTP(w, r)
 				return
 			}
-			sm := schema.Get()
+			//sm := schema.Get()
 
 			params := graphql.Params{
 				RequestString: payload.Query,
 				Context:       r.Context(),
-				Schema:        schema.Get(),
+				//Schema:        schema.Get(),
 			}
 			result := graphql.Do(params)
 

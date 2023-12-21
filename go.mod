@@ -8,6 +8,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.2 // indirect
 	cloud.google.com/go/storage v1.33.0 // indirect
+	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/ardanlabs/conf/v3 v3.1.6 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -28,6 +29,7 @@ require (
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.10 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
