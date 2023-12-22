@@ -121,7 +121,6 @@ type Book {
 			} else {
 				assert.Equal(t, tt.want.Error(), errs[0].Message)
 			}
-			errs = nil
 		})
 	}
 }

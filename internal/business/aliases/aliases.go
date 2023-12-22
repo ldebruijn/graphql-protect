@@ -22,10 +22,6 @@ type Config struct {
 	RejectOnFailure bool `conf:"default:true" yaml:"reject-on-failure"`
 }
 
-type MaxAliasesRule struct {
-	cfg Config
-}
-
 func init() {
 	prometheus.MustRegister(resultCounter)
 }

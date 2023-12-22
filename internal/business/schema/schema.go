@@ -58,10 +58,11 @@ func NewSchema(cfg Config, log *slog.Logger) (*Provider, error) {
 		return nil, fmt.Errorf("unable to load schema from disk [%s]: %w", p.cfg.Path, err)
 	}
 
+	// initiate auto reloading
+	p.reload()
+
 	return &p, nil
 }
-
-type query struct{}
 
 func (p *Provider) load(contents string) error {
 	schema, err := gqlparser.LoadSchema(&ast.Source{
