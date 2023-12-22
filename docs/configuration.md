@@ -65,6 +65,14 @@ max_aliases:
 block_field_suggestions:
   enabled: "true"
   mask: [redacted]
+
+max_tokens:
+  # Enable the feature
+  enable: "true"
+  # The maximum number of allowed tokens within a single request.
+  max: 10000
+  # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
+  reject_on_failure: "true"
 ```
 
 For a more in-depth view of each option visit the accompanying documentation page.
