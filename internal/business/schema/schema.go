@@ -24,7 +24,7 @@ type Config struct {
 	AutoReload struct {
 		Enabled  bool          `conf:"default:true" yaml:"enabled"`
 		Interval time.Duration `conf:"default:30s" yaml:"interval"`
-	}
+	} `yaml:"auto_reload"`
 }
 
 type Provider struct {
