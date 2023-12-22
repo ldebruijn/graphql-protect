@@ -23,6 +23,7 @@ func TestHttpServerIntegration(t *testing.T) {
 		mockResponse   map[string]interface{}
 		mockStatusCode int
 		cfgOverrides   func(cfg *config.Config) *config.Config
+		schema         string
 	}
 	tests := []struct {
 		name string
@@ -41,6 +42,16 @@ func TestHttpServerIntegration(t *testing.T) {
 					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
 					return r
 				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
@@ -88,6 +99,16 @@ func TestHttpServerIntegration(t *testing.T) {
 					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
 					return r
 				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
@@ -134,6 +155,16 @@ func TestHttpServerIntegration(t *testing.T) {
 					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
 					return r
 				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
@@ -184,7 +215,7 @@ func TestHttpServerIntegration(t *testing.T) {
 				request: func() *http.Request {
 					body := map[string]interface{}{
 						"query": `
-query Foo { 
+query Foo($image: ImageInput!) { 
 	a1: uploadImage(image: $image)
 	a2: uploadImage(image: $image)
 	a3: uploadImage(image: $image)
@@ -196,12 +227,26 @@ query Foo {
 	a9: uploadImage(image: $image)
 	a10: uploadImage(image: $image)
 }`,
+						"variables": map[string]interface{}{
+							"image": map[string]interface{}{
+								"id": "1",
+							},
+						},
 					}
 
 					bts, _ := json.Marshal(body)
 					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
 					return r
 				}(),
+				schema: `
+extend type Query {
+	uploadImage(image: ImageInput!): String
+}
+
+input ImageInput {
+	id: ID!
+}
+`,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.MaxAliases.Enabled = true
 					cfg.MaxAliases.Max = 3
@@ -250,6 +295,16 @@ query Foo {
 					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
 					return r
 				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
@@ -293,7 +348,7 @@ query Foo {
 			},
 		},
 		{
-			name: "Validates incoming request payload against schema",
+			name: "validates incoming request payload against schema",
 			args: args{
 				request: func() *http.Request {
 					body := map[string]interface{}{
@@ -304,32 +359,20 @@ query Foo {
 					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
 					return r
 				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
 					cfg.PersistedOperations.FailUnknownOperations = false
-
-					file, err := os.CreateTemp("", "")
-					if err != nil {
-						// waaaah
-					}
-					defer file.Close()
-
-					_, err = file.Write([]byte(`
-type Query {
-	product(id: ID!) {
-		id: ID!
-		name: String
-	}
-}
-`))
-					if err != nil {
-						return nil
-					}
-
-					path := file.Name()
-
-					cfg.Schema.Path = path
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -356,7 +399,7 @@ type Query {
 				actual, err := io.ReadAll(response.Body)
 				assert.NoError(t, err)
 				_ = actual
-				assert.Contains(t, string(actual), "\"errors\": []")
+				assert.NotContains(t, string(actual), "\"errors\":")
 			},
 		},
 	}
@@ -372,11 +415,23 @@ type Query {
 
 			shutdown := make(chan os.Signal, 1)
 
+			// create temp file for storing schema
+			file, _ := os.CreateTemp("", "")
+			defer func() {
+				_ = os.Remove(file.Name())
+			}()
+
+			write, err := file.Write([]byte(tt.args.schema))
+			assert.NoError(t, err)
+			assert.NotEqual(t, 0, write)
+			_ = file.Close()
+
 			defaultConfig, _ := config.NewConfig("")
 			cfg := tt.args.cfgOverrides(defaultConfig)
 
 			// set target to mockserver
 			cfg.Target.Host = mockServer.URL
+			cfg.Schema.Path = file.Name()
 
 			go func() {
 				err := run(slog.Default(), cfg, shutdown)

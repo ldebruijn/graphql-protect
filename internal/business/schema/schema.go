@@ -2,9 +2,9 @@ package schema
 
 import (
 	"fmt"
-	"github.com/graph-gophers/graphql-go"
 	"github.com/prometheus/client_golang/prometheus"
-	"io"
+	"github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
 	"log/slog"
 	"os"
 	"time"
@@ -29,7 +29,7 @@ type Config struct {
 
 type Provider struct {
 	cfg           Config
-	schema        *graphql.Schema
+	schema        *ast.Schema
 	done          chan bool
 	refreshTicker *time.Ticker
 	log           *slog.Logger
@@ -63,28 +63,30 @@ func NewSchema(cfg Config, log *slog.Logger) (*Provider, error) {
 
 type query struct{}
 
-func (p *Provider) load(target io.Reader) error {
-	var to []byte
-	_, err := target.Read(to)
+func (p *Provider) load(contents string) error {
+	schema, err := gqlparser.LoadSchema(&ast.Source{
+		Name:    "graph/schema.graphqls",
+		Input:   contents,
+		BuiltIn: false,
+	})
 	if err != nil {
 		return err
 	}
-
-	schema := graphql.MustParseSchema(string(to), &query{})
 
 	p.schema = schema
 	return nil
 }
 
 func (p *Provider) loadFromFs() error {
-	open, err := os.Open(p.cfg.Path)
+	contents, err := os.ReadFile(p.cfg.Path)
 	if err != nil {
-		p.log.Warn("error opening file", "err", err)
+		return err
+
 	}
-	return p.load(open)
+	return p.load(string(contents))
 }
 
-func (p *Provider) Get() *graphql.Schema {
+func (p *Provider) Get() *ast.Schema {
 	return p.schema
 }
 

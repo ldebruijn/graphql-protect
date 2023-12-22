@@ -8,10 +8,10 @@ import (
 )
 
 type RequestPayload struct {
-	//OperationName string      `json:"operationName"`
-	Variables  interface{} `json:"variables"`
-	Query      string      `json:"query"`
-	Extensions Extensions  `json:"extensions"`
+	OperationName string                 `json:"operationName"`
+	Variables     map[string]interface{} `json:"variables"`
+	Query         string                 `json:"query"`
+	Extensions    Extensions             `json:"extensions"`
 }
 
 type Extensions struct {

@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
-	"github.com/graphql-go/graphql"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
@@ -19,6 +18,9 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/parser"
+	"github.com/vektah/gqlparser/v2/validator"
 	log2 "log"
 	"log/slog"
 	"net/http"
@@ -161,10 +163,7 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	rec := middleware2.Recover(log)
 	httpInstrumentation := HttpInstrumentation()
 
-	// clear validation rules as we leave operartion validation to the actual backend
-	graphql.SpecifiedRules = []graphql.ValidationRuleFn{}
-
-	_ = aliases.NewMaxAliasesRule(cfg.MaxAliases)
+	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	vr := ValidationRules(schema)
 
 	fn := func(next http.Handler) http.Handler {
@@ -196,17 +195,20 @@ func ValidationRules(schema *schema.Provider) func(next http.Handler) http.Handl
 				next.ServeHTTP(w, r)
 				return
 			}
-			//sm := schema.Get()
 
-			params := graphql.Params{
-				RequestString: payload.Query,
-				Context:       r.Context(),
-				//Schema:        schema.Get(),
-			}
-			result := graphql.Do(params)
+			var query, _ = parser.ParseQuery(&ast.Source{
+				Name:  payload.OperationName,
+				Input: payload.Query,
+			})
 
-			if result.HasErrors() {
-				_ = json.NewEncoder(w).Encode(result)
+			errs := validator.Validate(schema.Get(), query)
+
+			if errs != nil {
+				response := map[string]interface{}{
+					"data":   nil,
+					"errors": errs,
+				}
+				_ = json.NewEncoder(w).Encode(response)
 				return
 			}
 

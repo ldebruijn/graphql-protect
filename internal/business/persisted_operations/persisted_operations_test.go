@@ -127,10 +127,10 @@ func TestNewPersistedOperations(t *testing.T) {
 					assert.NoError(t, err)
 
 					assert.Equal(t, "query { foobar }", payload.Query)
-					assert.Equal(t, int64(82), r.ContentLength)
+					assert.Equal(t, int64(101), r.ContentLength)
 
 					length, _ := json.Marshal(payload)
-					assert.Equal(t, 82, len(length))
+					assert.Equal(t, 101, len(length))
 				}
 				return http.HandlerFunc(fn)
 			},
