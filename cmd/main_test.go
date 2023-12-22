@@ -402,6 +402,51 @@ type Product {
 				assert.NotContains(t, string(actual), "\"errors\":")
 			},
 		},
+		{
+			name: "throws error when exceeding max tokens",
+			args: args{
+				request: func() *http.Request {
+					body := map[string]interface{}{
+						"query": "query Foo($id: ID!) { product(id: $id) { id name } }",
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.Token.Enabled = true
+					cfg.Token.Max = 1
+					return cfg
+				},
+				mockResponse: map[string]interface{}{
+					"data": map[string]interface{}{
+						"product": map[string]interface{}{
+							"id":   "1",
+							"name": "name",
+						},
+					},
+				},
+				mockStatusCode: http.StatusOK,
+			},
+			want: func(t *testing.T, response *http.Response) {
+				assert.Equal(t, http.StatusOK, response.StatusCode)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				_ = actual
+				assert.Contains(t, string(actual), "operation has exceeded maximum tokens. found [22], max [1]")
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

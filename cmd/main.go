@@ -16,9 +16,11 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/readiness"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/tokens"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
 	log2 "log"
@@ -164,7 +166,8 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	httpInstrumentation := HttpInstrumentation()
 
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
-	vr := ValidationRules(schema)
+	tks := tokens.MaxTokens(cfg.Token)
+	vr := ValidationRules(schema, tks)
 
 	fn := func(next http.Handler) http.Handler {
 		return rec(httpInstrumentation(po.Execute(vr(next))))
@@ -187,7 +190,7 @@ func HttpInstrumentation() func(next http.Handler) http.Handler {
 	}
 }
 
-func ValidationRules(schema *schema.Provider) func(next http.Handler) http.Handler {
+func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			payload, err := gql.ParseRequestPayload(r)
@@ -196,10 +199,21 @@ func ValidationRules(schema *schema.Provider) func(next http.Handler) http.Handl
 				return
 			}
 
-			var query, _ = parser.ParseQuery(&ast.Source{
+			operationSource := &ast.Source{
 				Name:  payload.OperationName,
 				Input: payload.Query,
-			})
+			}
+			err = tks.Validate(operationSource)
+			if err != nil {
+				response := map[string]interface{}{
+					"data":   nil,
+					"errors": gqlerror.List{gqlerror.Wrap(err)},
+				}
+				_ = json.NewEncoder(w).Encode(response)
+				return
+			}
+
+			var query, _ = parser.ParseQuery(operationSource)
 
 			errs := validator.Validate(schema.Get(), query)
 
