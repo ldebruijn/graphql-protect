@@ -23,6 +23,9 @@ target:
   host: http://localhost:8081
   timeout: 10s
   keep_alive: 180s
+  
+schema:
+  path: ./schema.graphql
 
 persisted_operations:
   # Enable or disable the feature, enabled by default
