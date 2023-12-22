@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
-	"github.com/graphql-go/graphql"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
@@ -16,8 +15,12 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/readiness"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/parser"
+	"github.com/vektah/gqlparser/v2/validator"
 	log2 "log"
 	"log/slog"
 	"net/http"
@@ -104,9 +107,15 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 		return nil
 	}
 
+	schemaProvider, err := schema.NewSchema(cfg.Schema, log)
+	if err != nil {
+		log.Error("Error initializing schema", "err", err)
+		return nil
+	}
+
 	mux := http.NewServeMux()
 
-	mid := middleware(log, cfg, po)
+	mid := middleware(log, cfg, po, schemaProvider)
 
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler())
@@ -150,12 +159,12 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 	return nil
 }
 
-func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler) func(next http.Handler) http.Handler {
+func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider) func(next http.Handler) http.Handler {
 	rec := middleware2.Recover(log)
 	httpInstrumentation := HttpInstrumentation()
 
-	_ = aliases.NewMaxAliasesRule(cfg.MaxAliases)
-	vr := ValidationRules()
+	aliases.NewMaxAliasesRule(cfg.MaxAliases)
+	vr := ValidationRules(schema)
 
 	fn := func(next http.Handler) http.Handler {
 		return rec(httpInstrumentation(po.Execute(vr(next))))
@@ -178,7 +187,7 @@ func HttpInstrumentation() func(next http.Handler) http.Handler {
 	}
 }
 
-func ValidationRules() func(next http.Handler) http.Handler {
+func ValidationRules(schema *schema.Provider) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			payload, err := gql.ParseRequestPayload(r)
@@ -186,14 +195,20 @@ func ValidationRules() func(next http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
-			params := graphql.Params{
-				RequestString: payload.Query,
-				Context:       r.Context(),
-			}
-			result := graphql.Do(params)
 
-			if result.HasErrors() {
-				_ = json.NewEncoder(w).Encode(result)
+			var query, _ = parser.ParseQuery(&ast.Source{
+				Name:  payload.OperationName,
+				Input: payload.Query,
+			})
+
+			errs := validator.Validate(schema.Get(), query)
+
+			if errs != nil {
+				response := map[string]interface{}{
+					"data":   nil,
+					"errors": errs,
+				}
+				_ = json.NewEncoder(w).Encode(response)
 				return
 			}
 

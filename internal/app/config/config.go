@@ -9,6 +9,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
 	"os"
 	"time"
 )
@@ -24,6 +25,7 @@ type Config struct {
 		Path string `conf:"default:/graphql" yaml:"path"`
 		//DebugHost       string        `conf:"default:0.0.0.0:4000"`
 	}
+	Schema                schema.Config                  `yaml:"schema"`
 	Target                proxy.Config                   `yaml:"target"`
 	PersistedOperations   persisted_operations.Config    `yaml:"persisted_operations"`
 	BlockFieldSuggestions block_field_suggestions.Config `yaml:"block_field_suggestions"`

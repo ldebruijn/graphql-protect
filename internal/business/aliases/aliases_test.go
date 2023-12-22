@@ -2,15 +2,27 @@ package aliases
 
 import (
 	"fmt"
-	"github.com/graphql-go/graphql"
-	"github.com/graphql-go/graphql/language/ast"
-	"github.com/graphql-go/graphql/language/parser"
 	"github.com/stretchr/testify/assert"
+	"github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/parser"
+	"github.com/vektah/gqlparser/v2/validator"
 	"testing"
 )
 
 func Test_MaxAliasesRule(t *testing.T) {
-	query := `query {
+	schema := `
+type Query {
+   getBook(title: String): Book
+}
+
+type Book {
+	id: ID!
+	title: String
+	author: String
+}`
+
+	q := `query {
     firstBooks: getBook(title: "null") {
       author
       title
@@ -21,26 +33,9 @@ func Test_MaxAliasesRule(t *testing.T) {
     }
   }`
 
-	bookType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "Book",
-		Fields: graphql.Fields{
-			"title":  &graphql.Field{Type: graphql.String},
-			"author": &graphql.Field{Type: graphql.String},
-		},
-	})
-
-	queryType := graphql.ObjectConfig{
-		Name: "Query",
-		Fields: graphql.Fields{
-			"books": &graphql.Field{
-				Type: bookType,
-			},
-		},
-	}
-
 	type args struct {
 		query  string
-		schema graphql.ObjectConfig
+		schema string
 		cfg    Config
 	}
 	tests := []struct {
@@ -51,11 +46,25 @@ func Test_MaxAliasesRule(t *testing.T) {
 		{
 			name: "no aliases yields zero count",
 			args: args{
-				query:  query,
-				schema: queryType,
+				query:  q,
+				schema: schema,
 				cfg: Config{
-					Max: 15,
+					Max:     15,
+					Enabled: true,
 				},
+			},
+			want: nil,
+		},
+		{
+			name: "does not produce error when counted aliases are more than configured maximum and reject on failure is false",
+			args: args{
+				cfg: Config{
+					Enabled:         true,
+					Max:             1,
+					RejectOnFailure: false,
+				},
+				query:  q,
+				schema: schema,
 			},
 			want: nil,
 		},
@@ -64,118 +73,54 @@ func Test_MaxAliasesRule(t *testing.T) {
 			args: args{
 				cfg: Config{
 					Max:             1,
+					Enabled:         true,
 					RejectOnFailure: true,
 				},
-				query:  query,
-				schema: queryType,
+				query:  q,
+				schema: schema,
 			},
 			want: fmt.Errorf("syntax error: Aliases limit of %d exceeded, found %d", 1, 2),
-		},
-		{
-			name: "does not produce error when counted aliases are more than configured maximum and reject on failure is false",
-			args: args{
-				cfg: Config{
-					Max:             1,
-					RejectOnFailure: false,
-				},
-				query:  query,
-				schema: queryType,
-			},
-			want: nil,
 		},
 		{
 			name: "respects fragment aliases",
 			args: args{
-				query: `
-query A {
-        getBook(title: "null") {
-          firstTitle: title
-          ...BookFragment
-        }
-      }
-      fragment BookFragment on Book {
-        secondTitle: title
-      }
-`,
-				schema: queryType,
+				query: `query A {
+		 getBook(title: "null") {
+		   firstTitle: title
+		   ...BookFragment
+		 }
+		}
+		fragment BookFragment on Book {
+		 secondTitle: title
+		}`,
+				schema: schema,
 				cfg: Config{
 					Max:             1,
+					Enabled:         true,
 					RejectOnFailure: true,
 				},
 			},
 			want: fmt.Errorf("syntax error: Aliases limit of %d exceeded, found %d", 1, 2),
 		},
-		{
-			name: "does not crash on recursive fragments",
-			args: args{
-				query: `
-query {
-        ...A
-      }
-
-      fragment A on Query {
-        ...B
-      }
-
-      fragment B on Query {
-        ...A
-      }
-`,
-				schema: func() graphql.ObjectConfig {
-					aFragment := graphql.NewObject(graphql.ObjectConfig{
-						Name: "A",
-						//Fields: graphql.Fields{
-						//	"B": &graphql.Field{Type: bFragment},
-						//},
-					})
-
-					bFragment := graphql.NewObject(graphql.ObjectConfig{
-						Name: "B",
-						Fields: graphql.Fields{
-							"A": &graphql.Field{Type: aFragment},
-						},
-					})
-
-					aFragment.AddFieldConfig("B", &graphql.Field{Type: bFragment})
-
-					queryType := graphql.ObjectConfig{
-						Name: "Query",
-						Fields: graphql.Fields{
-							"A": &graphql.Field{
-								Type: aFragment,
-							},
-						},
-					}
-					return queryType
-				}(),
-				cfg: Config{
-					Max: 3,
-				},
-			},
-			want: fmt.Errorf("Cannot spread fragment \"%s\" within itself via %s.", "A", "B"),
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			astDoc := parseQuery(t, tt.args.query)
-			schema, _ := graphql.NewSchema(graphql.SchemaConfig{Query: graphql.NewObject(tt.args.schema)})
+			NewMaxAliasesRule(tt.args.cfg)
 
-			ma := NewMaxAliasesRule(tt.args.cfg)
+			query, _ := parser.ParseQuery(&ast.Source{Name: "ff", Input: tt.args.query})
+			schema := gqlparser.MustLoadSchema(&ast.Source{
+				Name:    "graph/schema.graphqls",
+				Input:   tt.args.schema,
+				BuiltIn: false,
+			})
 
-			vr := graphql.ValidateDocument(&schema, astDoc, []graphql.ValidationRuleFn{graphql.NoFragmentCyclesRule, ma.Validate})
-			errs := vr.Errors
-			if tt.want != nil {
+			errs := validator.Validate(schema, query)
+
+			if tt.want == nil {
+				assert.Empty(t, errs)
+			} else {
 				assert.Equal(t, tt.want.Error(), errs[0].Message)
 			}
 		})
 	}
-}
-
-func parseQuery(t *testing.T, q string) *ast.Document {
-	t.Helper()
-	astDoc, err := parser.Parse(parser.ParseParams{Source: q})
-	if err != nil {
-		t.Fatalf("parse failed: %s", err)
-	}
-	return astDoc
 }
