@@ -52,7 +52,7 @@ persisted_operations:
   remote:
     # Load persisted operations from a GCP Cloud Storage bucket.
     # Will look at all the objects in the bucket and try to load any object with a `.json` extension
-    gcp_bucket: "gs://somebucket"
+    gcp_bucket: "somebucket"
 
 max_aliases:
   # Enable the feature
