@@ -42,8 +42,7 @@ type ErrorPayload struct {
 type Config struct {
 	Enabled bool `conf:"default:false" yaml:"enabled"`
 	// The location on which persisted operations are stored
-	Store  string `conf:"./store" yaml:"store"`
-	Format string `conf:"apollo-persisted-query-manifest" yaml:"format"`
+	Store string `conf:"./store" yaml:"store"`
 	// Configuration for auto-reloading persisted operations
 	Reload struct {
 		Enabled  bool          `conf:"default:false" yaml:"enabled"`
