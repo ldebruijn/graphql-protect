@@ -200,7 +200,6 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule) func(ne
 			}
 
 			operationSource := &ast.Source{
-				Name:  payload.OperationName,
 				Input: payload.Query,
 			}
 			err = tks.Validate(operationSource)
