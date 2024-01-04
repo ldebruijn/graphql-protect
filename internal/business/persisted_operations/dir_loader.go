@@ -2,7 +2,7 @@ package persisted_operations
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -13,12 +13,16 @@ import (
 // a source for persisted operations/
 // If it fails to load a file it moves on to the next file in the directory
 type DirLoader struct {
-	path string
+	path                               string
+	format                             string
+	apolloPersistedQueryManifestParser ApolloPersistedQueryManifestParser
 }
 
 func NewLocalDirLoader(cfg Config) *DirLoader {
 	return &DirLoader{
-		path: cfg.Store,
+		path:                               cfg.Store,
+		format:                             cfg.Format,
+		apolloPersistedQueryManifestParser: ApolloPersistedQueryManifestParser{},
 	}
 }
 
@@ -32,20 +36,26 @@ func (d *DirLoader) Load(ctx context.Context) (map[string]string, error) {
 		}
 	}
 
-	var result map[string]string
+	var result = make(map[string]string)
 
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 		if filepath.Ext(file.Name()) == ".json" {
-			contents, err := os.ReadFile(file.Name())
+			filePath := fmt.Sprintf("%s/%s", d.path, file.Name())
+			contents, err := os.ReadFile(filePath)
 			if err != nil {
 				continue
 			}
-			// append to map
-			err = json.Unmarshal(contents, &result)
-			if err != nil {
+
+			if d.format == "apollo-persisted-query-manifest" {
+				err = d.apolloPersistedQueryManifestParser.ParseContents(contents, result)
+				if err != nil {
+					continue
+				}
+			} else {
+				fmt.Println("Not implemented format: ", d.format)
 				continue
 			}
 		}

@@ -42,7 +42,8 @@ type ErrorPayload struct {
 type Config struct {
 	Enabled bool `conf:"default:false" yaml:"enabled"`
 	// The location on which persisted operations are stored
-	Store string `conf:"./store" yaml:"store"`
+	Store  string `conf:"./store" yaml:"store"`
+	Format string `conf:"apollo-persisted-query-manifest" yaml:"format"`
 	// Configuration for auto-reloading persisted operations
 	Reload struct {
 		Enabled  bool          `conf:"default:false" yaml:"enabled"`
@@ -88,7 +89,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		ctx := context.Background()
 		ctx, cancel := context.WithTimeout(ctx, cfg.Reload.Timeout)
 		defer cancel()
-		err := remoteLoader.Load(ctx)
+		err := remoteLoader.Load(ctx, log)
 		if err != nil {
 			return nil, err
 		}
@@ -243,7 +244,7 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
 	defer cancel()
 
-	err := p.remoteLoader.Load(ctx)
+	err := p.remoteLoader.Load(ctx, p.log)
 	if err != nil {
 		return
 	}

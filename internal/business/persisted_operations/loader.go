@@ -3,6 +3,7 @@ package persisted_operations
 import (
 	"context"
 	"errors"
+	"log/slog"
 )
 
 type LocalLoader interface {
@@ -10,7 +11,7 @@ type LocalLoader interface {
 }
 
 type RemoteLoader interface {
-	Load(ctx context.Context) error
+	Load(ctx context.Context, log *slog.Logger) error
 }
 
 var ErrNoRemoteLoaderSpecified = errors.New("no remote loader specified")

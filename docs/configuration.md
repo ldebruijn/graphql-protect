@@ -43,6 +43,8 @@ persisted_operations:
   fail_unknown_operations: true
   # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
   store: "./store"
+  # The format of the .json file, available formats are: ["apollo-persisted-query-manifest"]
+  format: "apollo-persisted-query-manifest"
   reload:
     enabled: true
     # The interval in which the local store dir is read and refreshes the internal state
