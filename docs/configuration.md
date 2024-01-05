@@ -23,7 +23,7 @@ target:
   host: http://localhost:8081
   timeout: 10s
   keep_alive: 180s
-  
+
 schema:
   # Path to a local file in which the schema can be found
   path: "./schema.graphql"
@@ -32,19 +32,19 @@ schema:
   # after each `schema.auto_reload.interval` has passed.
   auto_reload:
     # Enable automatic file reloading
-    enabled: "true"
+    enabled: true
     # The interval in which the schema file should be reloaded
     interval: 5m
     
 persisted_operations:
   # Enable or disable the feature, enabled by default
-  enabled: "true"
+  enabled: true
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
-  fail_unknown_operations: "true"
+  fail_unknown_operations: true
   # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
   store: "./store"
   reload:
-    enabled: "true"
+    enabled: true
     # The interval in which the local store dir is read and refreshes the internal state
     interval: 5m
     # The timeout for the remote operation
@@ -52,27 +52,27 @@ persisted_operations:
   remote:
     # Load persisted operations from a GCP Cloud Storage bucket.
     # Will look at all the objects in the bucket and try to load any object with a `.json` extension
-    gcp_bucket: "gs://somebucket"
+    gcp_bucket: "somebucket"
 
 max_aliases:
   # Enable the feature
-  enable: "true"
+  enable: true
   # The maximum number of allowed aliases within a single request.
   max: 15
   # Reject the request when the rule fails. Disable this to allow the request
-  reject_on_failure: "true"
+  reject_on_failure: true
 
 block_field_suggestions:
-  enabled: "true"
+  enabled: true
   mask: [redacted]
 
 max_tokens:
   # Enable the feature
-  enable: "true"
+  enable: true
   # The maximum number of allowed tokens within a single request.
   max: 10000
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
-  reject_on_failure: "true"
+  reject_on_failure: true
 ```
 
 For a more in-depth view of each option visit the accompanying documentation page.

@@ -45,38 +45,39 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 			break
 		}
 		if err != nil {
+			errs = append(errs, err)
 			break
 		}
 
 		ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 
-		f, err := os.Create(filepath.Join(g.store, attrs.Name))
+		file, err := os.Create(filepath.Join(g.store, attrs.Name))
 		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("os.Create: %w", err))
 			continue
 		}
 
-		rc, err := g.client.Bucket(g.bucket).Object(attrs.Name).NewReader(ctx)
+		reader, err := g.client.Bucket(g.bucket).Object(attrs.Name).NewReader(ctx)
 		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("Object(%q).NewReader: %w", attrs.Name, err))
 			continue
 		}
 
-		if _, err := io.Copy(f, rc); err != nil {
+		if _, err := io.Copy(file, reader); err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("io.Copy: %w", err))
 			continue
 		}
 
-		if err = f.Close(); err != nil {
+		if err = file.Close(); err != nil {
 			cancel()
-			errs = append(errs, fmt.Errorf("f.Close: %w", err))
+			errs = append(errs, fmt.Errorf("file.Close: %w", err))
 		}
 
 		cancel()
-		_ = rc.Close()
+		_ = reader.Close()
 	}
 
 	return errors.Join(errs...)

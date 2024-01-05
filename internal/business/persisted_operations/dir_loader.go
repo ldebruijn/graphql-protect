@@ -3,6 +3,7 @@ package persisted_operations
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -39,13 +40,16 @@ func (d *DirLoader) Load(ctx context.Context) (map[string]string, error) {
 			continue
 		}
 		if filepath.Ext(file.Name()) == ".json" {
-			contents, err := os.ReadFile(file.Name())
+			filePath := filepath.Join(d.path, file.Name())
+			contents, err := os.ReadFile(filePath)
 			if err != nil {
 				continue
 			}
-			// append to map
+
 			err = json.Unmarshal(contents, &result)
+
 			if err != nil {
+				fmt.Println(err)
 				continue
 			}
 		}
