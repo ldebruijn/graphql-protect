@@ -33,14 +33,14 @@ func (d *DirLoader) Load(ctx context.Context) (map[string]string, error) {
 		}
 	}
 
-	var result = make(map[string]string)
+	var result map[string]string
 
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
 		if filepath.Ext(file.Name()) == ".json" {
-			filePath := fmt.Sprintf("%s/%s", d.path, file.Name())
+			filePath := filepath.Join(d.path, file.Name())
 			contents, err := os.ReadFile(filePath)
 			if err != nil {
 				continue

@@ -88,7 +88,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		ctx := context.Background()
 		ctx, cancel := context.WithTimeout(ctx, cfg.Reload.Timeout)
 		defer cancel()
-		err := remoteLoader.Load(ctx, log)
+		err := remoteLoader.Load(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -243,7 +243,7 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
 	defer cancel()
 
-	err := p.remoteLoader.Load(ctx, p.log)
+	err := p.remoteLoader.Load(ctx)
 	if err != nil {
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"google.golang.org/api/iterator"
 	"io"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -34,7 +33,7 @@ func NewGcpStorageLoader(ctx context.Context, bucket string, store string) (*Gcp
 		store:  store,
 	}, nil
 }
-func (gcp *GcpStorageLoader) Load(ctx context.Context, log *slog.Logger) error {
+func (gcp *GcpStorageLoader) Load(ctx context.Context) error {
 	it := gcp.client.Bucket(gcp.bucket).Objects(ctx, &storage.Query{
 		MatchGlob: "*.json",
 	})
@@ -46,7 +45,7 @@ func (gcp *GcpStorageLoader) Load(ctx context.Context, log *slog.Logger) error {
 			break
 		}
 		if err != nil {
-			log.Warn("Error:", err)
+			errs = append(errs, err)
 			break
 		}
 
