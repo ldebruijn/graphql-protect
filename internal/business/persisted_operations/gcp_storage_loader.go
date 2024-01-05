@@ -33,8 +33,8 @@ func NewGcpStorageLoader(ctx context.Context, bucket string, store string) (*Gcp
 		store:  store,
 	}, nil
 }
-func (gcp *GcpStorageLoader) Load(ctx context.Context) error {
-	it := gcp.client.Bucket(gcp.bucket).Objects(ctx, &storage.Query{
+func (g *GcpStorageLoader) Load(ctx context.Context) error {
+	it := g.client.Bucket(g.bucket).Objects(ctx, &storage.Query{
 		MatchGlob: "*.json",
 	})
 
@@ -51,14 +51,14 @@ func (gcp *GcpStorageLoader) Load(ctx context.Context) error {
 
 		ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 
-		file, err := os.Create(filepath.Join(gcp.store, attrs.Name))
+		file, err := os.Create(filepath.Join(g.store, attrs.Name))
 		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("os.Create: %w", err))
 			continue
 		}
 
-		reader, err := gcp.client.Bucket(gcp.bucket).Object(attrs.Name).NewReader(ctx)
+		reader, err := g.client.Bucket(g.bucket).Object(attrs.Name).NewReader(ctx)
 		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("Object(%q).NewReader: %w", attrs.Name, err))
