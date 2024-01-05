@@ -51,7 +51,7 @@ type Config struct {
 	}
 	// Remote strategies for fetching persisted operations
 	Remote struct {
-		GcpBucket string `conf:"gs://something/foo" yaml:"gcp_bucket"`
+		GcpBucket string `conf:"your_bucket_name" yaml:"gcp_bucket"`
 	}
 	FailUnknownOperations bool `conf:"default:false" yaml:"fail_unknown_operations"`
 }
