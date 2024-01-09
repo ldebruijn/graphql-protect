@@ -23,14 +23,14 @@ var (
 	},
 		[]string{"state", "result"},
 	)
-	reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	reloadCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace:   "go_graphql_armor",
 		Subsystem:   "persisted_operations",
 		Name:        "reload",
-		Help:        "Gauge tracking reloading behavior",
+		Help:        "Counter tracking reloading behavior and results",
 		ConstLabels: nil,
 	},
-		[]string{"system"})
+		[]string{"system", "result"})
 )
 
 type ErrorPayload struct {
@@ -76,7 +76,7 @@ type PersistedOperationsHandler struct {
 }
 
 func init() {
-	prometheus.MustRegister(persistedOpsCounter, reloadGauge)
+	prometheus.MustRegister(persistedOpsCounter, reloadCounter)
 }
 
 func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
@@ -201,6 +201,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
 func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	cache, err := p.dirLoader.Load(context.Background())
 	if err != nil {
+		reloadCounter.WithLabelValues("local", "failure").Inc()
 		return err
 	}
 	p.lock.Lock()
@@ -208,7 +209,7 @@ func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	p.lock.Unlock()
 
 	p.log.Info("Loaded persisted operations", "amount", len(cache))
-	reloadGauge.WithLabelValues("local").Set(1)
+	reloadCounter.WithLabelValues("local", "success").Inc()
 
 	return nil
 }
@@ -228,8 +229,10 @@ func (p *PersistedOperationsHandler) reload() {
 				err := p.reloadFromLocalDir()
 				if err != nil {
 					p.log.Warn("Error loading from local dir", "err", err)
+					reloadCounter.WithLabelValues("ticker", "failure").Inc()
+					continue
 				}
-				reloadGauge.WithLabelValues("ticker").Set(1)
+				reloadCounter.WithLabelValues("ticker", "success").Inc()
 			}
 		}
 	}()
@@ -245,10 +248,11 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 
 	err := p.remoteLoader.Load(ctx)
 	if err != nil {
+		reloadCounter.WithLabelValues("remote", "failure").Inc()
 		return
 	}
 
-	reloadGauge.WithLabelValues("remote").Set(1)
+	reloadCounter.WithLabelValues("remote", "success").Inc()
 }
 
 func (p *PersistedOperationsHandler) Shutdown() {
