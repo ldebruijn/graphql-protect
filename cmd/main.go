@@ -53,10 +53,19 @@ var (
 	},
 		[]string{"route"},
 	)
+
+	appInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "go_graphql_armor",
+		Subsystem: "app",
+		Name:      "info",
+		Help:      "Application information",
+	},
+		[]string{"version", "go_version"},
+	)
 )
 
 func init() {
-	prometheus.MustRegister(httpCounter, httpDuration)
+	prometheus.MustRegister(httpCounter, httpDuration, appInfo)
 }
 
 func main() {
@@ -75,6 +84,11 @@ func main() {
 	log2.Println(cfgAsString)
 
 	log.Info("Starting service", "version", build)
+
+	appInfo.With(prometheus.Labels{
+		"version":    build,
+		"go_version": runtime.Version(),
+	})
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)

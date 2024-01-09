@@ -208,7 +208,7 @@ func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	p.lock.Unlock()
 
 	p.log.Info("Loaded persisted operations", "amount", len(cache))
-	reloadGauge.WithLabelValues("local").Inc()
+	reloadGauge.WithLabelValues("local").Set(1)
 
 	return nil
 }
@@ -229,7 +229,7 @@ func (p *PersistedOperationsHandler) reload() {
 				if err != nil {
 					p.log.Warn("Error loading from local dir", "err", err)
 				}
-				reloadGauge.WithLabelValues("ticker").Inc()
+				reloadGauge.WithLabelValues("ticker").Set(1)
 			}
 		}
 	}()
@@ -248,7 +248,7 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 		return
 	}
 
-	reloadGauge.WithLabelValues("remote").Inc()
+	reloadGauge.WithLabelValues("remote").Set(1)
 }
 
 func (p *PersistedOperationsHandler) Shutdown() {
