@@ -35,6 +35,7 @@ import (
 )
 
 var (
+	shortHash   = "develop"
 	build       = "develop"
 	configPath  = ""
 	httpCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -60,7 +61,7 @@ var (
 		Name:      "info",
 		Help:      "Application information",
 	},
-		[]string{"version", "go_version"},
+		[]string{"version", "go_version", "short_hash"},
 	)
 )
 
@@ -88,6 +89,7 @@ func main() {
 	appInfo.With(prometheus.Labels{
 		"version":    build,
 		"go_version": runtime.Version(),
+		"short_hash": shortHash,
 	})
 
 	shutdown := make(chan os.Signal, 1)
