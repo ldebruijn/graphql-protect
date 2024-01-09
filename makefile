@@ -4,7 +4,8 @@ BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 VERSION = develop
 
 META_PKG = main
-LDFLAGS += -X '$(META_PKG).build=$(SHORT_HASH)'
+LDFLAGS += -X '$(META_PKG).shortHash=$(SHORT_HASH)'
+LDFLAGS += -X '$(META_PKG).build=$(VERSION)'
 LDFLAGS += -s -w
 
 .PHONY: dev.setup
