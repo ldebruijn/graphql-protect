@@ -63,7 +63,7 @@ var (
 	},
 		[]string{"version", "go_version", "short_hash"},
 	)
-	redactedError = errors.New("error(s) redacted")
+	errRedacted = errors.New("error(s) redacted")
 )
 
 func init() {
@@ -222,7 +222,7 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, obfusca
 			err = tks.Validate(operationSource)
 			if err != nil {
 				if obfuscateErrors {
-					err = redactedError
+					err = errRedacted
 				}
 
 				response := map[string]interface{}{
@@ -239,7 +239,7 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, obfusca
 
 			if errs != nil {
 				if obfuscateErrors {
-					errs = gqlerror.List{gqlerror.Wrap(redactedError)}
+					errs = gqlerror.List{gqlerror.Wrap(errRedacted)}
 				}
 				response := map[string]interface{}{
 					"data":   nil,
