@@ -36,6 +36,10 @@ schema:
     # The interval in which the schema file should be reloaded
     interval: 5m
     
+# Configures whether we obfuscate graphql-armor validation errors such as max_aliases/max_tokens
+# Recommended to set it to 'true' for public environments
+obfuscate_validation_errors: false    
+    
 persisted_operations:
   # Enable or disable the feature, enabled by default
   enabled: true

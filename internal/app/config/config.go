@@ -26,12 +26,13 @@ type Config struct {
 		Path string `conf:"default:/graphql" yaml:"path"`
 		//DebugHost       string        `conf:"default:0.0.0.0:4000"`
 	}
-	Schema                schema.Config                  `yaml:"schema"`
-	Target                proxy.Config                   `yaml:"target"`
-	PersistedOperations   persisted_operations.Config    `yaml:"persisted_operations"`
-	BlockFieldSuggestions block_field_suggestions.Config `yaml:"block_field_suggestions"`
-	MaxTokens             tokens.Config                  `yaml:"max_tokens"`
-	MaxAliases            aliases.Config                 `yaml:"max_aliases"`
+	ObfuscateValidationErrors bool                           `conf:"default:false" yaml:"obfuscate_validation_errors"`
+	Schema                    schema.Config                  `yaml:"schema"`
+	Target                    proxy.Config                   `yaml:"target"`
+	PersistedOperations       persisted_operations.Config    `yaml:"persisted_operations"`
+	BlockFieldSuggestions     block_field_suggestions.Config `yaml:"block_field_suggestions"`
+	MaxTokens                 tokens.Config                  `yaml:"max_tokens"`
+	MaxAliases                aliases.Config                 `yaml:"max_aliases"`
 }
 
 func NewConfig(configPath string) (*Config, error) {
