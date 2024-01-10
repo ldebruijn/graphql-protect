@@ -27,10 +27,10 @@ type Config struct {
 		//DebugHost       string        `conf:"default:0.0.0.0:4000"`
 	}
 	Schema                schema.Config                  `yaml:"schema"`
-	Token                 tokens.Config                  `yaml:"token"`
 	Target                proxy.Config                   `yaml:"target"`
 	PersistedOperations   persisted_operations.Config    `yaml:"persisted_operations"`
 	BlockFieldSuggestions block_field_suggestions.Config `yaml:"block_field_suggestions"`
+	MaxTokens             tokens.Config                  `yaml:"max_tokens"`
 	MaxAliases            aliases.Config                 `yaml:"max_aliases"`
 }
 
