@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -281,6 +282,66 @@ input ImageInput {
 				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				assert.True(t, errorsContainsMessage("syntax error: Aliases limit of 3 exceeded, found 10", actual))
+			},
+		},
+		{
+			name: "redacts error message of request with too many aliases",
+			args: args{
+				request: func() *http.Request {
+					body := map[string]interface{}{
+						"query": `
+query Foo($image: ImageInput!) { 
+	a1: uploadImage(image: $image)
+	a2: uploadImage(image: $image)
+}`,
+						"variables": map[string]interface{}{
+							"image": map[string]interface{}{
+								"id": "1",
+							},
+						},
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				schema: `
+extend type Query {
+	uploadImage(image: ImageInput!): String
+}
+
+input ImageInput {
+	id: ID!
+}
+`,
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.MaxAliases.Enabled = true
+					cfg.MaxAliases.Max = 1
+					cfg.ObfuscateValidationErrors = true
+					return cfg
+				},
+				mockResponse: map[string]interface{}{
+					"data": map[string]interface{}{
+						"a1": "Yes",
+						"a2": "Yes",
+					},
+				},
+				mockStatusCode: http.StatusOK,
+			},
+			want: func(t *testing.T, response *http.Response) {
+				expected := map[string]interface{}{
+					"errors": []map[string]interface{}{
+						{
+							"message": errRedacted.Error(),
+						},
+					},
+				}
+				_, _ = json.Marshal(expected)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				// perform string comparisons as map[string]interface seems incomparable
+				fmt.Println(string(actual))
+				assert.True(t, errorsContainsMessage(errRedacted.Error(), actual))
 			},
 		},
 		{
