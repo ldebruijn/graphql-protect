@@ -182,7 +182,7 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	httpInstrumentation := HttpInstrumentation()
 
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
-	tks := tokens.MaxTokens(cfg.Token)
+	tks := tokens.MaxTokens(cfg.MaxTokens)
 	vr := ValidationRules(schema, tks)
 
 	fn := func(next http.Handler) http.Handler {

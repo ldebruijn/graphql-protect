@@ -19,7 +19,7 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 type Config struct {
 	Enabled         bool `conf:"default:true" yaml:"enabled"`
 	Max             int  `conf:"default:1000" yaml:"max"`
-	RejectOnFailure bool `conf:"default:true" yaml:"reject-on-failure"`
+	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
 }
 
 type MaxTokensRule struct {
