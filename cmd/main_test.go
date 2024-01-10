@@ -425,8 +425,8 @@ type Product {
 }
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
-					cfg.Token.Enabled = true
-					cfg.Token.Max = 1
+					cfg.MaxTokens.Enabled = true
+					cfg.MaxTokens.Max = 1
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
