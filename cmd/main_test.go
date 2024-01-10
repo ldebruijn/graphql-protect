@@ -332,7 +332,7 @@ input ImageInput {
 				expected := map[string]interface{}{
 					"errors": []map[string]interface{}{
 						{
-							"message": "Error(s) redacted",
+							"message": errRedacted.Error(),
 						},
 					},
 				}
@@ -341,7 +341,7 @@ input ImageInput {
 				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				fmt.Println(string(actual))
-				assert.True(t, errorsContainsMessage("Error(s) redacted", actual))
+				assert.True(t, errorsContainsMessage(errRedacted.Error(), actual))
 			},
 		},
 		{
