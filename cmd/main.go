@@ -63,6 +63,7 @@ var (
 	},
 		[]string{"version", "go_version", "short_hash"},
 	)
+	errRedacted = errors.New("error(s) redacted")
 )
 
 func init() {
@@ -183,7 +184,7 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	tks := tokens.MaxTokens(cfg.MaxTokens)
-	vr := ValidationRules(schema, tks)
+	vr := ValidationRules(schema, tks, cfg.ObfuscateValidationErrors)
 
 	fn := func(next http.Handler) http.Handler {
 		return rec(httpInstrumentation(po.Execute(vr(next))))
@@ -206,7 +207,7 @@ func HttpInstrumentation() func(next http.Handler) http.Handler {
 	}
 }
 
-func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule) func(next http.Handler) http.Handler {
+func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, obfuscateErrors bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			payload, err := gql.ParseRequestPayload(r)
@@ -220,6 +221,10 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule) func(ne
 			}
 			err = tks.Validate(operationSource)
 			if err != nil {
+				if obfuscateErrors {
+					err = errRedacted
+				}
+
 				response := map[string]interface{}{
 					"data":   nil,
 					"errors": gqlerror.List{gqlerror.Wrap(err)},
@@ -233,6 +238,9 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule) func(ne
 			errs := validator.Validate(schema.Get(), query)
 
 			if errs != nil {
+				if obfuscateErrors {
+					errs = gqlerror.List{gqlerror.Wrap(errRedacted)}
+				}
 				response := map[string]interface{}{
 					"data":   nil,
 					"errors": errs,
