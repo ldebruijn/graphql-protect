@@ -32,18 +32,27 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 			KeepAlive: cfg.KeepAlive,
 		}).DialContext,
 	}
-	proxy.ModifyResponse = func(res *http.Response) error {
+	proxy.ModifyResponse = modifyResponse(blockFieldSuggestions)
+
+	return proxy, nil
+}
+
+func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler) func(res *http.Response) error {
+	return func(res *http.Response) error {
 		if !blockFieldSuggestions.Enabled() {
 			return nil
 		}
 
-		decoder := json.NewDecoder(res.Body)
+		// read raw response bytes
+		bodyBytes, _ := io.ReadAll(res.Body)
 		defer res.Body.Close()
 
 		var response map[string]interface{}
-		err := decoder.Decode(&response)
+		err := json.Unmarshal(bodyBytes, &response)
 		if err != nil {
 			// if we cannot decode just return
+			// make sure to set body back to original bytes
+			res.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			return nil
 		}
 
@@ -51,6 +60,8 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 		bts, err := json.Marshal(modified)
 		if err != nil {
 			// if we cannot marshall just return
+			// make sure to set body back to original bytes
+			res.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			return nil
 		}
 
@@ -61,6 +72,4 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 
 		return nil
 	}
-
-	return proxy, nil
 }
