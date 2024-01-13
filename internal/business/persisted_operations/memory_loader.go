@@ -1,4 +1,4 @@
-package persisted_operations
+package persisted_operations // nolint:revive
 
 import (
 	"context"
@@ -16,6 +16,6 @@ func newMemoryLoader(store map[string]string) *MemoryLoader {
 	}
 }
 
-func (d *MemoryLoader) Load(ctx context.Context) (map[string]string, error) {
+func (d *MemoryLoader) Load(_ context.Context) (map[string]string, error) {
 	return d.store, nil
 }

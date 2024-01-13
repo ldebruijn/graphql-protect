@@ -102,7 +102,7 @@ func main() {
 	}
 }
 
-func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
+func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { // nolint:funlen
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	log.Info("Starting proxy", "target", cfg.Target.Host)
@@ -180,7 +180,7 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
 
 func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider) func(next http.Handler) http.Handler {
 	rec := middleware2.Recover(log)
-	httpInstrumentation := HttpInstrumentation()
+	httpInstrumentation := HTTPInstrumentation()
 
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	tks := tokens.MaxTokens(cfg.MaxTokens)
@@ -193,7 +193,7 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	return fn
 }
 
-func HttpInstrumentation() func(next http.Handler) http.Handler {
+func HTTPInstrumentation() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()

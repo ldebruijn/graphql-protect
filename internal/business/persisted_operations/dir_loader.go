@@ -1,4 +1,4 @@
-package persisted_operations
+package persisted_operations // nolint:revive
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func NewLocalDirLoader(cfg Config) *DirLoader {
 	}
 }
 
-func (d *DirLoader) Load(ctx context.Context) (map[string]string, error) {
+func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 	files, err := os.ReadDir(d.path)
 	if err != nil {
 		// if we can't read the dir, try creating it

@@ -1,4 +1,4 @@
-package block_field_suggestions
+package block_field_suggestions // nolint:revive
 
 import (
 	"reflect"

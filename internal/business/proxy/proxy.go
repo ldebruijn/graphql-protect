@@ -32,7 +32,7 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 			KeepAlive: cfg.KeepAlive,
 		}).DialContext,
 	}
-	proxy.ModifyResponse = modifyResponse(blockFieldSuggestions)
+	proxy.ModifyResponse = modifyResponse(blockFieldSuggestions) // nolint:bodyclose
 
 	return proxy, nil
 }
