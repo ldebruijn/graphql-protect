@@ -1,8 +1,6 @@
-package persisted_operations
+package persisted_operations // nolint:revive
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
@@ -12,6 +10,11 @@ import (
 	"net/http"
 	"sync"
 	"time"
+)
+
+import (
+	"bytes"
+	"context"
 )
 
 var (
@@ -134,7 +137,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 
 // Execute runs of the persisted operations handler
 // it uses the configuration supplied to decide its behavior
-func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler {
+func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { // nolint:funlen
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !p.cfg.Enabled || r.Method != "POST" {
 			next.ServeHTTP(w, r)

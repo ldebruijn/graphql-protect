@@ -26,7 +26,7 @@ func Recover(log *slog.Logger) func(next http.Handler) http.Handler {
 			defer func() {
 				err := recover()
 				// we don't recover http.ErrAbortHandler so the response to the client is aborted, this should not be logged
-				if err == http.ErrAbortHandler {
+				if err == http.ErrAbortHandler { // nolint:errorlint
 					panic(err)
 				}
 				if err != nil {

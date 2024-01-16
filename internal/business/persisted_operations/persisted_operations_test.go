@@ -1,4 +1,4 @@
-package persisted_operations
+package persisted_operations // nolint:revive
 
 import (
 	"bytes"
@@ -146,7 +146,7 @@ func TestNewPersistedOperations(t *testing.T) {
 			po, _ := NewPersistedOperations(log, tt.args.cfg, newMemoryLoader(tt.args.cache), nil)
 			po.cache = tt.args.cache
 
-			bts, err := json.Marshal(&tt.args.payload)
+			bts, err := json.Marshal(&tt.args.payload) // nolint:gosec
 			if err != nil {
 				assert.NoError(t, err)
 				return
@@ -156,7 +156,10 @@ func TestNewPersistedOperations(t *testing.T) {
 			resp := httptest.NewRecorder()
 
 			po.Execute(tt.want(t)).ServeHTTP(resp, req)
-			tt.resWant(t, resp.Result())
+			res := resp.Result()
+			defer res.Body.Close()
+
+			tt.resWant(t, res)
 		})
 	}
 }
