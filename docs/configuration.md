@@ -77,6 +77,10 @@ max_tokens:
   max: 10000
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
   reject_on_failure: true
+
+disable_get_method:
+  # Enable the feature
+  enable: "true"
 ```
 
 For a more in-depth view of each option visit the accompanying documentation page.
