@@ -31,7 +31,10 @@ func TestNewReadinessHandler(t *testing.T) {
 
 			handler.ServeHTTP(resp, req)
 
-			tt.want(t, resp.Result())
+			res := resp.Result()
+			defer res.Body.Close()
+
+			tt.want(t, res)
 		})
 	}
 }
