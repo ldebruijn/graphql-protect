@@ -7,6 +7,7 @@ import (
 	"github.com/ardanlabs/conf/v3/yaml"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/disable_method"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
@@ -33,6 +34,7 @@ type Config struct {
 	BlockFieldSuggestions     block_field_suggestions.Config `yaml:"block_field_suggestions"`
 	MaxTokens                 tokens.Config                  `yaml:"max_tokens"`
 	MaxAliases                aliases.Config                 `yaml:"max_aliases"`
+	DisableGetMethod          disable_method.Config          `yaml:"disable_get_method"`
 }
 
 func NewConfig(configPath string) (*Config, error) {

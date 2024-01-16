@@ -10,6 +10,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/disable_method"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
@@ -185,9 +186,10 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	tks := tokens.MaxTokens(cfg.MaxTokens)
 	vr := ValidationRules(schema, tks, cfg.ObfuscateValidationErrors)
+	disableMethod := disable_method.DisableMethodRule(cfg.DisableGetMethod)
 
 	fn := func(next http.Handler) http.Handler {
-		return rec(httpInstrumentation(po.Execute(vr(next))))
+		return rec(httpInstrumentation(disableMethod(po.Execute(vr(next)))))
 	}
 
 	return fn
@@ -197,7 +199,6 @@ func HttpInstrumentation() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			httpCounter.WithLabelValues(r.URL.Path).Inc()
 
 			next.ServeHTTP(w, r)
 
