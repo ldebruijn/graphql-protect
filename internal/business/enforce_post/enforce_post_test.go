@@ -1,4 +1,4 @@
-package disable_get // nolint:revive
+package enforce_post // nolint:revive
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -73,12 +73,40 @@ func TestDisableMethodRule(t *testing.T) {
 				assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
 			},
 		},
+		{
+			name: "does block PUT that contain extensions for blocking persisted operations",
+			args: args{
+				cfg: Config{
+					Enabled: true,
+				},
+				request: func() *http.Request {
+					return httptest.NewRequest("PUT", "/graphql?extensions=something", nil)
+				}(),
+			},
+			want: func(res *http.Response) {
+				assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
+			},
+		},
+		{
+			name: "does block PUT that contain extensions for blocking persisted operations",
+			args: args{
+				cfg: Config{
+					Enabled: true,
+				},
+				request: func() *http.Request {
+					return httptest.NewRequest("DELETE", "/graphql?extensions=something", nil)
+				}(),
+			},
+			want: func(res *http.Response) {
+				assert.Equal(t, http.StatusMethodNotAllowed, res.StatusCode)
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
 
-			mw := DisableMethodRule(tt.args.cfg)
+			mw := EnforcePostMethod(tt.args.cfg)
 			mw(requestRecorder{}).ServeHTTP(rec, tt.args.request)
 			result := rec.Result()
 			defer result.Body.Close()

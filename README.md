@@ -14,9 +14,9 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 * [Max Aliases](docs/max_aliases.md)
 * [Max Tokens](docs/max_tokens.md)
 * [Max Depth](docs/max_depth.md)
+* [Enforce POST](docs/enforce_post.md)
 * _Max Directives (coming soon)_
 * _Cost Limit (coming soon)_
-* [Disable GET Method](docs/disable_get)
 
 Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
 

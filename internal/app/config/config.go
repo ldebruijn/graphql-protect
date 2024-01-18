@@ -7,7 +7,7 @@ import (
 	"github.com/ardanlabs/conf/v3/yaml"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/disable_get"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/enforce_post"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/max_depth"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
@@ -35,7 +35,7 @@ type Config struct {
 	BlockFieldSuggestions     block_field_suggestions.Config `yaml:"block_field_suggestions"`
 	MaxTokens                 tokens.Config                  `yaml:"max_tokens"`
 	MaxAliases                aliases.Config                 `yaml:"max_aliases"`
-	DisableGet                disable_get.Config             `yaml:"disable_get"`
+	EnforcePost               enforce_post.Config            `yaml:"enforce_post"`
 	MaxDepth                  max_depth.Config               `yaml:"max_depth"`
 }
 

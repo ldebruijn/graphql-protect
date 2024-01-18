@@ -525,7 +525,7 @@ type Product {
 }
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
-					cfg.DisableGet.Enabled = true
+					cfg.EnforcePost.Enabled = true
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
