@@ -22,6 +22,10 @@ type Config struct {
 	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
 }
 
+func init() {
+	prometheus.MustRegister(resultCounter)
+}
+
 type MaxTokensRule struct {
 	cfg Config
 }

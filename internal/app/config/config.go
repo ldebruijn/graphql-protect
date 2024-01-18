@@ -8,6 +8,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/disable_get"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/max_depth"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
@@ -25,7 +26,7 @@ type Config struct {
 		Host            string        `conf:"default:0.0.0.0:8080" yaml:"host"`
 		// or maybe we just want to listen on everything and forward
 		Path string `conf:"default:/graphql" yaml:"path"`
-		//DebugHost       string        `conf:"default:0.0.0.0:4000"`
+		// DebugHost       string        `conf:"default:0.0.0.0:4000"`
 	}
 	ObfuscateValidationErrors bool                           `conf:"default:false" yaml:"obfuscate_validation_errors"`
 	Schema                    schema.Config                  `yaml:"schema"`
@@ -35,6 +36,7 @@ type Config struct {
 	MaxTokens                 tokens.Config                  `yaml:"max_tokens"`
 	MaxAliases                aliases.Config                 `yaml:"max_aliases"`
 	DisableGet                disable_get.Config             `yaml:"disable_get"`
+	MaxDepth                  max_depth.Config               `yaml:"max_depth"`
 }
 
 func NewConfig(configPath string) (*Config, error) {

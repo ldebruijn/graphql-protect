@@ -1,4 +1,4 @@
-package persisted_operations
+package persisted_operations // nolint:revive
 
 import (
 	"context"

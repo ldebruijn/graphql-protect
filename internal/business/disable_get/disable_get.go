@@ -1,4 +1,4 @@
-package disable_get
+package disable_get // nolint:revive
 
 import (
 	"github.com/prometheus/client_golang/prometheus"

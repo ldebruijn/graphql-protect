@@ -601,6 +601,7 @@ type Product {
 			assert.NoError(t, err, tt.name)
 			assert.NotNil(t, res, "response was nil", tt.name)
 
+			defer res.Body.Close()
 			tt.want(t, res)
 
 			// cleanup
@@ -643,6 +644,7 @@ func blockUntilStarted(req *http.Request, timeout time.Duration) {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
+		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			return
 		}
