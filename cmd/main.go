@@ -10,6 +10,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/enforce_post"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/max_depth"
 	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
@@ -187,7 +188,7 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	max_depth.NewMaxDepthRule(cfg.MaxDepth)
 	tks := tokens.MaxTokens(cfg.MaxTokens)
 	vr := ValidationRules(schema, tks, cfg.ObfuscateValidationErrors)
-	disableMethod := enforce_post_method.EnforcePostMethod(cfg.EnforcePost)
+	disableMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)
 
 	fn := func(next http.Handler) http.Handler {
 		return rec(httpInstrumentation(disableMethod(po.Execute(vr(next)))))
