@@ -11,6 +11,7 @@ import (
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/max_depth"
 	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
@@ -183,6 +184,7 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	httpInstrumentation := HttpInstrumentation()
 
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
+	max_depth.NewMaxDepthRule(cfg.MaxDepth)
 	tks := tokens.MaxTokens(cfg.MaxTokens)
 	vr := ValidationRules(schema, tks, cfg.ObfuscateValidationErrors)
 

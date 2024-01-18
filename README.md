@@ -13,7 +13,7 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 * [Block Field Suggestions](docs/block_field_suggestions.md)
 * [Max Aliases](docs/max_aliases.md)
 * [Max Tokens](docs/max_tokens.md)
-* _Max Depth (coming soon)_
+* [Max Depth](docs/max_depth.md)
 * _Max Directives (coming soon)_
 * _Cost Limit (coming soon)_
 

@@ -78,6 +78,7 @@ func countSelectionSet(set ast.SelectionSet) int {
 	for _, selection := range set {
 		switch v := selection.(type) {
 		case *ast.Field:
+			// When a query has no alias defined it defaults to the name of the query
 			if v.Alias != "" && v.Alias != v.Name {
 				count++
 			}
