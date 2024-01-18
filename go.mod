@@ -7,7 +7,7 @@ require (
 	github.com/ardanlabs/conf/v3 v3.1.6
 	github.com/prometheus/client_golang v1.18.0
 	github.com/stretchr/testify v1.8.4
-	github.com/vektah/gqlparser/v2 v2.5.10
+	github.com/vektah/gqlparser/v2 v2.5.11
 	google.golang.org/api v0.142.0
 )
 
