@@ -2,8 +2,9 @@
 
 ![Go GraphQL Armor Banner](docs/assets/banner.jpeg?raw=true)
 
+Go GraphQL Armor is dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway.
+
 This is repository inspired by the great work of the [original JS GraphQL Armor](https://github.com/Escape-Technologies/graphql-armor) middleware.
-It is dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway.
 
 [![Go](https://github.com/ldebruijn/go-graphql-armor/actions/workflows/go.yml/badge.svg)](https://github.com/ldebruijn/go-graphql-armor/actions/workflows/go.yml)
 
