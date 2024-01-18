@@ -1,5 +1,7 @@
 # Go GraphQL Armor 🛡️
 
+![Go GraphQL Armor Banner](docs/assets/banner.jpeg?raw=true)
+
 This is repository inspired by the great work of the [original JS GraphQL Armor](https://github.com/Escape-Technologies/graphql-armor) middleware.
 It is dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway.
 
