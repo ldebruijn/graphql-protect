@@ -1,4 +1,4 @@
-package disable_method
+package disable_get
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,7 +30,9 @@ func DisableMethodRule(cfg Config) func(next http.Handler) http.Handler {
 				return
 			}
 
-			if r.Method == "GET" {
+			query := r.URL.Query()
+
+			if r.Method == "GET" && (query.Has("query") || query.Has("extensions")) {
 				methodCounter.WithLabelValues().Inc()
 				http.Error(w, "405 - method not allowed", http.StatusMethodNotAllowed)
 				return

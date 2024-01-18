@@ -16,7 +16,7 @@ It is dead-simple yet highly customizable security sidecar compatible with any H
 * _Max Depth (coming soon)_
 * _Max Directives (coming soon)_
 * _Cost Limit (coming soon)_
-* [Disable GET Method](docs/disable_get_method.md)
+* [Disable GET Method](docs/disable_get)
 
 Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
 

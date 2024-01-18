@@ -7,4 +7,4 @@ Please see each section for in-depth documentation
 * [Block Field Suggestions](block_field_suggestions.md)
 * [Max Aliases](max_aliases.md)
 * [Max Tokens](max_tokens.md)
-* [Disable Get Method](disable_get_method)
+* [Disable Get Method](disable_get)
