@@ -25,7 +25,7 @@ type Config struct {
 		Host            string        `conf:"default:0.0.0.0:8080" yaml:"host"`
 		// or maybe we just want to listen on everything and forward
 		Path string `conf:"default:/graphql" yaml:"path"`
-		//DebugHost       string        `conf:"default:0.0.0.0:4000"`
+		// DebugHost       string        `conf:"default:0.0.0.0:4000"`
 	}
 	ObfuscateValidationErrors bool                           `conf:"default:false" yaml:"obfuscate_validation_errors"`
 	Schema                    schema.Config                  `yaml:"schema"`

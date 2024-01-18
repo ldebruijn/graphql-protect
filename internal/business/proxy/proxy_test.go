@@ -38,7 +38,7 @@ func Test_modifyResponse(t *testing.T) {
 						ContentLength: 0,
 						Header:        map[string][]string{},
 					}
-				}(),
+				}(), // nolint:bodyclose
 			},
 			want: func(res *http.Response) {
 				body, _ := io.ReadAll(res.Body)
@@ -66,7 +66,7 @@ func Test_modifyResponse(t *testing.T) {
 						ContentLength: 0,
 						Header:        map[string][]string{},
 					}
-				}(),
+				}(), // nolint:bodyclose
 			},
 			want: func(res *http.Response) {
 				body, _ := io.ReadAll(res.Body)
@@ -83,7 +83,7 @@ func Test_modifyResponse(t *testing.T) {
 						Enabled: true,
 					})
 				}(),
-				response: func() *http.Response {
+				response: func() *http.Response { // nolint:bodyclose
 					return &http.Response{
 						Status:        "200",
 						StatusCode:    200,
@@ -94,7 +94,7 @@ func Test_modifyResponse(t *testing.T) {
 						ContentLength: 0,
 						Header:        map[string][]string{},
 					}
-				}(),
+				}(), // nolint:bodyclose
 			},
 			want: func(res *http.Response) {
 				body, _ := io.ReadAll(res.Body)
@@ -123,7 +123,7 @@ func Test_modifyResponse(t *testing.T) {
 						ContentLength: 0,
 						Header:        map[string][]string{},
 					}
-				}(),
+				}(), // nolint:bodyclose
 			},
 			want: func(res *http.Response) {
 				body, _ := io.ReadAll(res.Body)
@@ -135,7 +135,7 @@ func Test_modifyResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := modifyResponse(tt.args.blockFieldSuggestions)
+			result := modifyResponse(tt.args.blockFieldSuggestions) // nolint:bodyclose
 
 			_ = result(tt.args.response)
 			tt.want(tt.args.response)
