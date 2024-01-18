@@ -72,7 +72,7 @@ block_field_suggestions:
   
 max_depth:
   enable: true
-  # The maximum number of allowed aliases within a single request.
+  # The maximum allowed depth within a single request.
   max: 15
   # Reject the request when the rule fails. Disable this to allow the request
   reject_on_failure: false
