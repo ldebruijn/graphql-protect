@@ -4,7 +4,7 @@ go 1.21.1
 
 require (
 	cloud.google.com/go/storage v1.33.0
-	github.com/ardanlabs/conf/v3 v3.1.6
+	github.com/ardanlabs/conf/v3 v3.1.7
 	github.com/prometheus/client_golang v1.18.0
 	github.com/stretchr/testify v1.8.4
 	github.com/vektah/gqlparser/v2 v2.5.11

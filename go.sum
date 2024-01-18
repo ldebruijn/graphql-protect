@@ -16,8 +16,8 @@ github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 h1:bvNMNQO63//z+xNg
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0 h1:jfIu9sQUG6Ig+0+Ap1h4unLjW6YQJpKZVmUzxsD4E/Q=
 github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0/go.mod h1:t2tdKJDJF9BV14lnkjHmOQgcvEKgtqs5a1N3LNdJhGE=
-github.com/ardanlabs/conf/v3 v3.1.6 h1:t6AkG131ncy21ko18KQvBIc6+fWGZHTho12fd8JaUo8=
-github.com/ardanlabs/conf/v3 v3.1.6/go.mod h1:zclexWKe0NVj6LHQ8NgDDZ7bQ1spE0KeKPFficdtAjU=
+github.com/ardanlabs/conf/v3 v3.1.7 h1:p232cF68TafoA5U9ZlbxUIhGJtGNdKHBXF80Fdqb5t0=
+github.com/ardanlabs/conf/v3 v3.1.7/go.mod h1:zclexWKe0NVj6LHQ8NgDDZ7bQ1spE0KeKPFficdtAjU=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
