@@ -504,8 +504,45 @@ type Product {
 				assert.Equal(t, http.StatusOK, response.StatusCode)
 				actual, err := io.ReadAll(response.Body)
 				assert.NoError(t, err)
-				_ = actual
 				assert.Contains(t, string(actual), "operation has exceeded maximum tokens. found [22], max [1]")
+			},
+		},
+		{
+			name: "blocks operations through GET requests",
+			args: args{
+				request: func() *http.Request {
+					r := httptest.NewRequest("GET", "/graphql?query=query%20Foo%28%24id%3A%20ID%21%29%20%7B%20product%28id%3A%20%24id%29%20%7B%20id%20name%20%7D%20%7D", nil)
+					return r
+				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.EnforcePost.Enabled = true
+					return cfg
+				},
+				mockResponse: map[string]interface{}{
+					"data": map[string]interface{}{
+						"product": map[string]interface{}{
+							"id":   "1",
+							"name": "name",
+						},
+					},
+				},
+				mockStatusCode: http.StatusOK,
+			},
+			want: func(t *testing.T, response *http.Response) {
+				assert.Equal(t, http.StatusMethodNotAllowed, response.StatusCode)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				assert.Contains(t, string(actual), "405 - method not allowed")
 			},
 		},
 	}
@@ -553,8 +590,14 @@ type Product {
 
 			log2.Printf("Server has started, took %s \n", time.Since(start))
 
-			url := "http://localhost:8080" + tt.args.request.URL.String()
-			res, err := http.Post(url, tt.args.request.Header.Get("Content-Type"), tt.args.request.Body) // nolint:gosec,noctx
+			// necessary mutations for executing request
+			tt.args.request.Host = "localhost:8080"
+			tt.args.request.URL.Host = "localhost:8080"
+			tt.args.request.URL.Scheme = "http"
+			tt.args.request.RequestURI = ""
+
+			res, err := http.DefaultClient.Do(tt.args.request)
+
 			assert.NoError(t, err, tt.name)
 			assert.NotNil(t, res, "response was nil", tt.name)
 
