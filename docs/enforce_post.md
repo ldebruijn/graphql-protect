@@ -2,6 +2,8 @@
 
 A rule that enforces the use of HTTP POST method when sending operations to the upstream GraphQL API.
 
+The rule will block requests with non-POST HTTP methods **only** if the requests contain GraphQL operations. If no operation is found it will still forward the request to the upstream. This is useful for accessing GraphiQL for example through Go GraphQL Armor.
+
 
 <!-- TOC -->
 

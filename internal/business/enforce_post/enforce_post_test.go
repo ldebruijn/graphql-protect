@@ -32,7 +32,7 @@ func TestDisableMethodRule(t *testing.T) {
 			},
 		},
 		{
-			name: "does not block GETs that contain no operation",
+			name: "does not block GETs that contain no operation (for i.e. graphiql access)",
 			args: args{
 				cfg: Config{
 					Enabled: true,
