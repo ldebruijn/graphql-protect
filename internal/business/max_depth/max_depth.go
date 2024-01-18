@@ -1,4 +1,4 @@
-package max_depth
+package max_depth // nolint:revive
 
 import (
 	"fmt"
