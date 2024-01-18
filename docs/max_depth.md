@@ -1,6 +1,6 @@
 # Max depth
 
-Restricting the maximum depth of operations that are allowed within a single operation to protect your API from ddosing.
+Restricting the maximum depth of operations that are allowed within a single operation to protect your API from abuse.
 
 <!-- TOC -->
 

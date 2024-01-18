@@ -29,7 +29,6 @@ func init() {
 func NewMaxDepthRule(cfg Config) {
 	if cfg.Enabled {
 		validator.AddRule("MaxDepth", func(observers *validator.Events, addError validator.AddErrFunc) {
-
 			observers.OnOperation(func(walker *validator.Walker, operation *ast.OperationDefinition) {
 				var maxDepth = countDepth(operation.SelectionSet)
 
@@ -76,23 +75,3 @@ func countDepth(selectionSet ast.SelectionSet) int {
 	return depth
 
 }
-
-//
-//func countDepth(set ast.SelectionSet) int {
-//	count := 0
-//	if len(set) == 0 {
-//		return count
-//	}
-//
-//	for _, selection := range set {
-//		switch v := selection.(type) {
-//		case *ast.Field:
-//			if v.Alias != "" && v.Alias != v.Name {
-//				count++
-//			}
-//			count += countDepth(v.SelectionSet)
-//		}
-//	}
-//
-//	return count
-//}
