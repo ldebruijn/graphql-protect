@@ -6,6 +6,7 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/conf/v3/yaml"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/batch"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/enforce_post"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/max_depth"
@@ -37,6 +38,7 @@ type Config struct {
 	MaxAliases                aliases.Config                 `yaml:"max_aliases"`
 	EnforcePost               enforce_post.Config            `yaml:"enforce_post"`
 	MaxDepth                  max_depth.Config               `yaml:"max_depth"`
+	MaxBatch                  batch.Config                   `yaml:"max_batch"`
 }
 
 func NewConfig(configPath string) (*Config, error) {
