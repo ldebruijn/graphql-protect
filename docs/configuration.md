@@ -85,6 +85,14 @@ max_tokens:
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
   reject_on_failure: true
 
+max_batch:
+  # Enable the feature
+  enable: "true"
+  # The maximum number of operations within a single batched request.
+  max: 5
+  # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
+  reject_on_failure: "true"
+
 enforce_post:
   # Enable the feature
   enabled: true

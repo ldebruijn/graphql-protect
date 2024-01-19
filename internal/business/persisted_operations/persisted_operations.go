@@ -1,10 +1,12 @@
 package persisted_operations // nolint:revive
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"io"
 	"log/slog"
 	"net/http"
@@ -13,7 +15,6 @@ import (
 )
 
 import (
-	"bytes"
 	"context"
 )
 
@@ -37,9 +38,11 @@ var (
 )
 
 type ErrorPayload struct {
-	Errors []struct {
-		Message string `json:"message"`
-	} `json:"errors"`
+	Errors gqlerror.List `json:"errors"`
+}
+
+type ErrorMessage struct {
+	Message string `json:"message"`
 }
 
 type Config struct {
@@ -61,6 +64,8 @@ type Config struct {
 
 var ErrNoLoaderSupplied = errors.New("no remoteLoader supplied")
 var ErrNoHashFound = errors.New("no hash found")
+var ErrPersistedQueryNotFound = errors.New("PersistedQueryNotFound")
+var ErrPersistedOperationNotFound = errors.New("PersistedOperationNotFound")
 var ErrReloadIntervalTooShort = errors.New("reload interval cannot be less than 10 seconds")
 
 type PersistedOperationsHandler struct {
@@ -137,12 +142,14 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 
 // Execute runs of the persisted operations handler
 // it uses the configuration supplied to decide its behavior
-func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { // nolint:funlen
+func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { // nolint:funlen,cyclop
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !p.cfg.Enabled || r.Method != "POST" {
 			next.ServeHTTP(w, r)
 			return
 		}
+
+		var errs gqlerror.List
 
 		payload, err := gql.ParseRequestPayload(r)
 		if err != nil {
@@ -151,50 +158,68 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 			return
 		}
 
-		if !p.cfg.FailUnknownOperations && payload.Query != "" {
-			persistedOpsCounter.WithLabelValues("unknown", "allowed").Inc()
-			next.ServeHTTP(w, r)
-			return
+		for i, data := range payload {
+			if !p.cfg.FailUnknownOperations && data.Query != "" {
+				persistedOpsCounter.WithLabelValues("unknown", "allowed").Inc()
+				continue
+			}
+
+			hash, err := hashFromPayload(data)
+			if err != nil {
+				persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
+				errs = append(errs, gqlerror.Wrap(ErrPersistedQueryNotFound))
+				continue
+			}
+
+			p.lock.RLock()
+			query, ok := p.cache[hash]
+			p.lock.RUnlock()
+
+			if !ok {
+				// hash not found, fail
+				persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
+				errs = append(errs, gqlerror.Wrap(ErrPersistedOperationNotFound))
+				continue
+			}
+
+			// update the original data
+			payload[i].Query = query
+			payload[i].Extensions.PersistedQuery = nil
+
+			persistedOpsCounter.WithLabelValues("known", "allowed").Inc()
 		}
 
-		hash, err := hashFromPayload(payload)
-		if err != nil {
-			persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
-			p.log.Warn("no hash found ", "err", err)
-			res, _ := json.Marshal(buildErrorResponse("PersistedQueryNotFound"))
+		if len(errs) > 0 {
+			// if any error occured we fail
+			res, _ := json.Marshal(ErrorPayload{
+				Errors: errs,
+			})
 			http.Error(w, string(res), 200)
 			return
 		}
 
-		p.lock.RLock()
-		query, ok := p.cache[hash]
-		p.lock.RUnlock()
-
-		if !ok {
-			// hash not found, fail
-			persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
-			p.log.Warn("Unknown hash, persisted operation not found ", "hash", hash)
-			res, _ := json.Marshal(buildErrorResponse("PersistedOperationNotFound"))
-			http.Error(w, string(res), 200)
-			return
-		}
-
-		payload.Query = query
-		payload.Extensions.PersistedQuery = nil
-
-		bts, err := json.Marshal(payload)
-		if err != nil {
-			// handle
-			persistedOpsCounter.WithLabelValues("errored", "allowed").Inc()
-			next.ServeHTTP(w, r)
-			return
+		var bts []byte
+		// forward batched request
+		if len(payload) > 1 {
+			bts, err = json.Marshal(payload)
+			if err != nil {
+				// handle
+				next.ServeHTTP(w, r)
+				return
+			}
+		} else if len(payload) == 1 {
+			// forward regular request
+			bts, err = json.Marshal(payload[0])
+			if err != nil {
+				// handle
+				next.ServeHTTP(w, r)
+				return
+			}
 		}
 
 		// overwrite request body with new payload
 		r.Body = io.NopCloser(bytes.NewBuffer(bts))
 		r.ContentLength = int64(len(bts))
-
-		persistedOpsCounter.WithLabelValues("known", "allowed").Inc()
 
 		next.ServeHTTP(w, r)
 	}
@@ -262,7 +287,7 @@ func (p *PersistedOperationsHandler) Shutdown() {
 	p.done <- true
 }
 
-func hashFromPayload(payload gql.RequestPayload) (string, error) {
+func hashFromPayload(payload gql.RequestData) (string, error) {
 	if payload.Extensions.PersistedQuery == nil {
 		return "", ErrNoHashFound
 	}
@@ -273,18 +298,4 @@ func hashFromPayload(payload gql.RequestPayload) (string, error) {
 	}
 
 	return hash, nil
-}
-
-func buildErrorResponse(message string) ErrorPayload {
-	return ErrorPayload{
-		Errors: []struct {
-			Message string `json:"message"`
-		}([]struct {
-			Message string
-		}{
-			{
-				Message: message,
-			},
-		}),
-	}
 }
