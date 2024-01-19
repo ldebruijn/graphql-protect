@@ -17,6 +17,7 @@ _This is repository inspired by the great work of the similarly named Javascript
 * [Max Aliases](docs/max_aliases.md)
 * [Max Tokens](docs/max_tokens.md)
 * [Max Depth](docs/max_depth.md)
+* [Max Batch](docs/max_batch.md)
 * [Enforce POST](docs/enforce_post.md)
 * _Max Directives (coming soon)_
 * _Cost Limit (coming soon)_
