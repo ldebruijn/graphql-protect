@@ -21,7 +21,7 @@ import (
 func TestHttpServerIntegration(t *testing.T) {
 	type args struct {
 		request        *http.Request
-		mockResponse   map[string]interface{}
+		mockResponse   interface{}
 		mockStatusCode int
 		cfgOverrides   func(cfg *config.Config) *config.Config
 		schema         string
@@ -508,6 +508,133 @@ type Product {
 			},
 		},
 		{
+			name: "batching works",
+			args: args{
+				request: func() *http.Request {
+					body := []map[string]interface{}{
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					return cfg
+				},
+				mockResponse: []map[string]interface{}{
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+				},
+				mockStatusCode: http.StatusOK,
+			},
+			want: func(t *testing.T, response *http.Response) {
+				assert.Equal(t, http.StatusOK, response.StatusCode)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				assert.Equal(t, string(actual), "[{\"data\":{\"product\":{\"id\":\"1\",\"name\":\"name\"}}},{\"data\":{\"product\":{\"id\":\"1\",\"name\":\"name\"}}},{\"data\":{\"product\":{\"id\":\"1\",\"name\":\"name\"}}}]")
+			},
+		},
+		{
+			name: "maximum batch protection works",
+			args: args{
+				request: func() *http.Request {
+					body := []map[string]interface{}{
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.MaxBatch.Max = 1
+					cfg.MaxBatch.Enabled = true
+					cfg.MaxBatch.RejectOnFailure = true
+					return cfg
+				},
+				mockResponse: []map[string]interface{}{
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+				},
+				mockStatusCode: http.StatusOK,
+			},
+			want: func(t *testing.T, response *http.Response) {
+				assert.Equal(t, http.StatusOK, response.StatusCode)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				assert.Contains(t, string(actual), "operation has exceeded maximum batch size. found [3], max [1]")
+			},
+		},
+		{
 			name: "blocks operations through GET requests",
 			args: args{
 				request: func() *http.Request {
@@ -578,7 +705,10 @@ type Product {
 
 			go func() {
 				err := run(slog.Default(), cfg, shutdown)
-				assert.NoError(t, err, "error starting server for", tt.name)
+				if err != nil {
+					assert.NoError(t, err, "error starting server for", tt.name)
+					return
+				}
 			}()
 
 			start := time.Now()
