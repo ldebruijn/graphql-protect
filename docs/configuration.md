@@ -85,7 +85,7 @@ max_tokens:
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
   reject_on_failure: true
 
-enforcePost:
+enforce_post:
   # Enable the feature
   enabled: true
 ```
