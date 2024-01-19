@@ -22,6 +22,10 @@ type PersistedQuery struct {
 }
 
 func ParseRequestPayload(r *http.Request) ([]RequestData, error) {
+	if r.ContentLength < 1 {
+		return []RequestData{}, nil
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return []RequestData{}, err

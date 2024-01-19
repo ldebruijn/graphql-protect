@@ -97,6 +97,16 @@ func TestParseRequestPayload(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "Handles request without body gracefully",
+			args: args{
+				r: func() *http.Request {
+					return httptest.NewRequest("POST", "/graphql", nil)
+				}(),
+			},
+			want:    []RequestData{},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
