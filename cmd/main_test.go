@@ -564,9 +564,74 @@ type Product {
 			},
 			want: func(t *testing.T, response *http.Response) {
 				assert.Equal(t, http.StatusOK, response.StatusCode)
-				_, err := io.ReadAll(response.Body)
+				actual, err := io.ReadAll(response.Body)
 				assert.NoError(t, err)
-				//assert.Contains(t, string(actual), "operation has exceeded maximum tokens. found [22], max [1]")
+				assert.Equal(t, string(actual), "[{\"data\":{\"product\":{\"id\":\"1\",\"name\":\"name\"}}},{\"data\":{\"product\":{\"id\":\"1\",\"name\":\"name\"}}},{\"data\":{\"product\":{\"id\":\"1\",\"name\":\"name\"}}}]")
+			},
+		},
+		{
+			name: "maximum batch protection works",
+			args: args{
+				request: func() *http.Request {
+					body := []map[string]interface{}{
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+						{"query": "query Foo($id: ID!) { product(id: $id) { id name } }"},
+					}
+
+					bts, _ := json.Marshal(body)
+					r := httptest.NewRequest("POST", "/graphql", bytes.NewBuffer(bts))
+					return r
+				}(),
+				schema: `
+extend type Query {
+	product(id: ID!): Product
+}
+
+type Product {
+	id: ID!
+	name: String
+}
+`,
+				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.MaxBatch.Max = 1
+					cfg.MaxBatch.Enabled = true
+					cfg.MaxBatch.RejectOnFailure = true
+					return cfg
+				},
+				mockResponse: []map[string]interface{}{
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+					{
+						"data": map[string]interface{}{
+							"product": map[string]interface{}{
+								"id":   "1",
+								"name": "name",
+							},
+						},
+					},
+				},
+				mockStatusCode: http.StatusOK,
+			},
+			want: func(t *testing.T, response *http.Response) {
+				assert.Equal(t, http.StatusOK, response.StatusCode)
+				actual, err := io.ReadAll(response.Body)
+				assert.NoError(t, err)
+				assert.Contains(t, string(actual), "operation has exceeded maximum batch size. found [3], max [1]")
 			},
 		},
 		{
@@ -642,7 +707,6 @@ type Product {
 				err := run(slog.Default(), cfg, shutdown)
 				if err != nil {
 					assert.NoError(t, err, "error starting server for", tt.name)
-					t.Fatalf("could not start application server %v", err)
 					return
 				}
 			}()

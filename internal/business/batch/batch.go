@@ -1,24 +1,27 @@
 package batch
 
 import (
+	"errors"
 	"fmt"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/vektah/gqlparser/v2/ast"
-	"github.com/vektah/gqlparser/v2/lexer"
 )
 
-var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Namespace: "go_graphql_armor",
-	Subsystem: "max_batch",
-	Name:      "results",
-	Help:      "The results of the max batch rule",
-},
-	[]string{"result"},
+var (
+	resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "go_graphql_armor",
+		Subsystem: "max_batch",
+		Name:      "results",
+		Help:      "The results of the max batch rule",
+	},
+		[]string{"result"},
+	)
+	ErrMaxBatchSizeTooSmall = errors.New("maximum allowed batch size cannot be smaller than 1. Protection auto-disabled")
 )
 
 type Config struct {
 	Enabled         bool `conf:"default:true" yaml:"enabled"`
-	Max             int  `conf:"default:3" yaml:"max"`
+	Max             int  `conf:"default:5" yaml:"max"`
 	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
 }
 
@@ -30,38 +33,29 @@ type MaxBatchRule struct {
 	cfg Config
 }
 
-func MaxBatch(cfg Config) *MaxBatchRule {
+func NewMaxBatch(cfg Config) (*MaxBatchRule, error) {
+	if cfg.Max < 1 {
+		return &MaxBatchRule{
+			cfg: Config{
+				Enabled: false,
+			},
+		}, ErrMaxBatchSizeTooSmall
+	}
+
 	return &MaxBatchRule{
 		cfg: cfg,
-	}
+	}, nil
 }
 
-func (t *MaxBatchRule) Validate(source *ast.Source) error {
+func (t *MaxBatchRule) Validate(payload []gql.RequestData) error {
 	if !t.cfg.Enabled {
 		return nil
 	}
 
-	lex := lexer.New(source)
-	count := 0
-
-	for {
-		tok, err := lex.ReadToken()
-
-		if err != nil {
-			return err
-		}
-
-		if tok.Kind == lexer.EOF {
-			break
-		}
-
-		count++
-	}
-
-	if count > t.cfg.Max {
+	if len(payload) > t.cfg.Max {
 		if t.cfg.RejectOnFailure {
 			resultCounter.WithLabelValues("rejected").Inc()
-			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, t.cfg.Max)
+			return fmt.Errorf("operation has exceeded maximum batch size. found [%d], max [%d]", len(payload), t.cfg.Max)
 		}
 		resultCounter.WithLabelValues("failed").Inc()
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
+	"github.com/ldebruijn/go-graphql-armor/internal/business/batch"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/enforce_post"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
@@ -187,7 +188,12 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	max_depth.NewMaxDepthRule(cfg.MaxDepth)
 	tks := tokens.MaxTokens(cfg.MaxTokens)
-	vr := ValidationRules(schema, tks, cfg.ObfuscateValidationErrors)
+	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
+	if err != nil {
+		log.Warn("Error initializing maximum batch protection", err)
+	}
+
+	vr := ValidationRules(schema, tks, maxBatch, cfg.ObfuscateValidationErrors)
 	disableMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)
 
 	fn := func(next http.Handler) http.Handler {
@@ -210,7 +216,7 @@ func HTTPInstrumentation() func(next http.Handler) http.Handler {
 	}
 }
 
-func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, obfuscateErrors bool) func(next http.Handler) http.Handler {
+func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, batch *batch.MaxBatchRule, obfuscateErrors bool) func(next http.Handler) http.Handler { // nolint:funlen,cyclop
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			payload, err := gql.ParseRequestPayload(r)
@@ -221,27 +227,35 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, obfusca
 
 			var errs gqlerror.List
 
-			for _, data := range payload {
-				operationSource := &ast.Source{
-					Input: data.Query,
-				}
+			err = batch.Validate(payload)
+			if err != nil {
+				errs = append(errs, gqlerror.Wrap(err))
+			}
 
-				err = tks.Validate(operationSource)
-				if err != nil {
-					errs = append(errs, gqlerror.Wrap(err))
-					continue
-				}
+			// only process the rest if no error yet
+			if err == nil {
+				for _, data := range payload {
+					operationSource := &ast.Source{
+						Input: data.Query,
+					}
 
-				var query, err = parser.ParseQuery(operationSource)
-				if err != nil {
-					errs = append(errs, gqlerror.Wrap(err))
-					continue
-				}
+					err = tks.Validate(operationSource)
+					if err != nil {
+						errs = append(errs, gqlerror.Wrap(err))
+						continue
+					}
 
-				errList := validator.Validate(schema.Get(), query)
-				if len(errList) > 0 {
-					errs = append(errs, errList...)
-					continue
+					var query, err = parser.ParseQuery(operationSource)
+					if err != nil {
+						errs = append(errs, gqlerror.Wrap(err))
+						continue
+					}
+
+					errList := validator.Validate(schema.Get(), query)
+					if len(errList) > 0 {
+						errs = append(errs, errList...)
+						continue
+					}
 				}
 			}
 

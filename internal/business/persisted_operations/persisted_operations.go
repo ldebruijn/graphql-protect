@@ -142,7 +142,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 
 // Execute runs of the persisted operations handler
 // it uses the configuration supplied to decide its behavior
-func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { // nolint:funlen
+func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { // nolint:funlen,cyclop
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !p.cfg.Enabled || r.Method != "POST" {
 			next.ServeHTTP(w, r)
