@@ -219,36 +219,46 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, obfusca
 				return
 			}
 
-			operationSource := &ast.Source{
-				Input: payload.Query,
-			}
-			err = tks.Validate(operationSource)
-			if err != nil {
-				if obfuscateErrors {
-					err = errRedacted
+			var errs gqlerror.List
+
+			for _, data := range payload {
+				operationSource := &ast.Source{
+					Input: data.Query,
 				}
 
-				response := map[string]interface{}{
-					"data":   nil,
-					"errors": gqlerror.List{gqlerror.Wrap(err)},
+				err = tks.Validate(operationSource)
+				if err != nil {
+					errs = append(errs, gqlerror.Wrap(err))
+					continue
 				}
-				_ = json.NewEncoder(w).Encode(response)
-				return
+
+				var query, err = parser.ParseQuery(operationSource)
+				if err != nil {
+					errs = append(errs, gqlerror.Wrap(err))
+					continue
+				}
+
+				err = validator.Validate(schema.Get(), query)
+				if err != nil {
+					errs = append(errs, gqlerror.Wrap(err))
+					continue
+				}
 			}
 
-			var query, _ = parser.ParseQuery(operationSource)
-
-			errs := validator.Validate(schema.Get(), query)
-
-			if errs != nil {
+			if len(errs) > 0 {
 				if obfuscateErrors {
 					errs = gqlerror.List{gqlerror.Wrap(errRedacted)}
 				}
+
 				response := map[string]interface{}{
 					"data":   nil,
 					"errors": errs,
 				}
-				_ = json.NewEncoder(w).Encode(response)
+
+				err = json.NewEncoder(w).Encode(response)
+				if err != nil {
+					log2.Println(err)
+				}
 				return
 			}
 

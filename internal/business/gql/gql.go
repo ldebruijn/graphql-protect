@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type RequestPayload struct {
+type RequestData struct {
 	Variables  map[string]interface{} `json:"variables"`
 	Query      string                 `json:"query"`
 	Extensions Extensions             `json:"extensions"`
@@ -21,18 +21,28 @@ type PersistedQuery struct {
 	Sha256Hash string `json:"sha256Hash"`
 }
 
-func ParseRequestPayload(r *http.Request) (RequestPayload, error) {
+func ParseRequestPayload(r *http.Request) ([]RequestData, error) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return RequestPayload{}, err
+		return []RequestData{}, err
 	}
 	// Replace the body with a new reader after reading from the original
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
-	var payload RequestPayload
-	err = json.Unmarshal(body, &payload)
-	if err != nil {
-		return RequestPayload{}, err
+	body = bytes.TrimSpace(body)
+	// assume its a batch request
+	if body[0] == '[' {
+		var data []RequestData
+		err = json.Unmarshal(body, &data)
+		if err != nil {
+			return []RequestData{}, err
+		}
+		return data, nil
 	}
-	return payload, nil
+	var data RequestData
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return []RequestData{}, err
+	}
+	return []RequestData{data}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +15,7 @@ import (
 func TestNewPersistedOperations(t *testing.T) {
 	type args struct {
 		cfg     Config
-		payload gql.RequestPayload
+		payload []byte
 		cache   map[string]string
 	}
 	tests := []struct {
@@ -46,15 +47,19 @@ func TestNewPersistedOperations(t *testing.T) {
 					Enabled:               true,
 					FailUnknownOperations: true,
 				},
-				payload: gql.RequestPayload{
-					Query: "query { foo }",
-				},
+				payload: func() []byte {
+					data := gql.RequestData{
+						Query: "query { foo }",
+					}
+					bts, _ := json.Marshal(data)
+					return bts
+				}(),
 			},
 			want: func(t *testing.T) http.Handler {
 				fn := func(w http.ResponseWriter, r *http.Request) {
 					decoder := json.NewDecoder(r.Body)
 
-					var payload gql.RequestPayload
+					var payload gql.RequestData
 					err := decoder.Decode(&payload)
 					assert.NoError(t, err)
 
@@ -73,13 +78,18 @@ func TestNewPersistedOperations(t *testing.T) {
 					Enabled:               true,
 					FailUnknownOperations: false,
 				},
-				payload: gql.RequestPayload{
-					Extensions: gql.Extensions{
-						PersistedQuery: &gql.PersistedQuery{
-							Sha256Hash: "foobar",
+				payload: func() []byte {
+					data := gql.RequestData{
+						Extensions: gql.Extensions{
+							PersistedQuery: &gql.PersistedQuery{
+								Sha256Hash: "foobar",
+							},
 						},
-					},
-				},
+					}
+					bts, _ := json.Marshal(data)
+					return bts
+				}(),
+
 				cache: map[string]string{},
 			},
 			want: func(t *testing.T) http.Handler {
@@ -107,13 +117,17 @@ func TestNewPersistedOperations(t *testing.T) {
 					Enabled:               true,
 					FailUnknownOperations: false,
 				},
-				payload: gql.RequestPayload{
-					Extensions: gql.Extensions{
-						PersistedQuery: &gql.PersistedQuery{
-							Sha256Hash: "foobar",
+				payload: func() []byte {
+					data := gql.RequestData{
+						Extensions: gql.Extensions{
+							PersistedQuery: &gql.PersistedQuery{
+								Sha256Hash: "foobar",
+							},
 						},
-					},
-				},
+					}
+					bts, _ := json.Marshal(data)
+					return bts
+				}(),
 				cache: map[string]string{
 					"foobar": "query { foobar }",
 				},
@@ -122,7 +136,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				fn := func(w http.ResponseWriter, r *http.Request) {
 					decoder := json.NewDecoder(r.Body)
 
-					var payload gql.RequestPayload
+					var payload gql.RequestData
 					err := decoder.Decode(&payload)
 					assert.NoError(t, err)
 
@@ -139,6 +153,96 @@ func TestNewPersistedOperations(t *testing.T) {
 				assert.Equal(t, 200, res.StatusCode)
 			},
 		},
+		{
+			name: "Swaps in batched query payload if hash operation is known, updates content length accordingly",
+			args: args{
+				cfg: Config{
+					Enabled:               true,
+					FailUnknownOperations: false,
+				},
+				payload: func() []byte {
+					data := []gql.RequestData{
+						{
+							Extensions: gql.Extensions{
+								PersistedQuery: &gql.PersistedQuery{
+									Sha256Hash: "foobar",
+								},
+							},
+						},
+						{
+							Extensions: gql.Extensions{
+								PersistedQuery: &gql.PersistedQuery{
+									Sha256Hash: "baz",
+								},
+							},
+						},
+					}
+					bts, _ := json.Marshal(data)
+					return bts
+				}(),
+				cache: map[string]string{
+					"foobar": "query { foobar }",
+					"baz":    "query { baz }",
+				},
+			},
+			want: func(t *testing.T) http.Handler {
+				fn := func(w http.ResponseWriter, r *http.Request) {
+					payload, err := io.ReadAll(r.Body)
+					assert.NoError(t, err)
+
+					assert.Equal(t, `[{"variables":null,"query":"query { foobar }","extensions":{"persistedQuery":null}},{"variables":null,"query":"query { baz }","extensions":{"persistedQuery":null}}]`, string(payload))
+					assert.Equal(t, int64(len(payload)), r.ContentLength)
+				}
+				return http.HandlerFunc(fn)
+			},
+			resWant: func(t *testing.T, res *http.Response) {
+				assert.Equal(t, 200, res.StatusCode)
+			},
+		},
+		{
+			name: "fails entire batch if one operation is unknown",
+			args: args{
+				cfg: Config{
+					Enabled:               true,
+					FailUnknownOperations: false,
+				},
+				payload: func() []byte {
+					data := []gql.RequestData{
+						{
+							Extensions: gql.Extensions{
+								PersistedQuery: &gql.PersistedQuery{
+									Sha256Hash: "foobar",
+								},
+							},
+						},
+						{
+							Extensions: gql.Extensions{
+								PersistedQuery: &gql.PersistedQuery{
+									Sha256Hash: "baz",
+								},
+							},
+						},
+					}
+					bts, _ := json.Marshal(data)
+					return bts
+				}(),
+				cache: map[string]string{
+					"foobar": "query { foobar }",
+				},
+			},
+			want: func(t *testing.T) http.Handler {
+				fn := func(w http.ResponseWriter, r *http.Request) {
+					assert.Fail(t, "should not reach here")
+				}
+				return http.HandlerFunc(fn)
+			},
+			resWant: func(t *testing.T, res *http.Response) {
+				assert.Equal(t, 200, res.StatusCode)
+				payload, err := io.ReadAll(res.Body)
+				assert.NoError(t, err)
+				assert.Equal(t, "{\"errors\":[{\"message\":\"PersistedOperationNotFound\"}]}\n", string(payload))
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -146,13 +250,7 @@ func TestNewPersistedOperations(t *testing.T) {
 			po, _ := NewPersistedOperations(log, tt.args.cfg, newMemoryLoader(tt.args.cache), nil)
 			po.cache = tt.args.cache
 
-			bts, err := json.Marshal(&tt.args.payload) // nolint:gosec
-			if err != nil {
-				assert.NoError(t, err)
-				return
-			}
-
-			req := httptest.NewRequest("POST", "/", bytes.NewBuffer(bts))
+			req := httptest.NewRequest("POST", "/", bytes.NewBuffer(tt.args.payload))
 			resp := httptest.NewRecorder()
 
 			po.Execute(tt.want(t)).ServeHTTP(resp, req)
