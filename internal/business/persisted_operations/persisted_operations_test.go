@@ -141,11 +141,11 @@ func TestNewPersistedOperations(t *testing.T) {
 					assert.NoError(t, err)
 
 					assert.Equal(t, "query { foobar }", payload.Query)
-					assert.Equal(t, int64(82), r.ContentLength)
+					assert.Equal(t, int64(44), r.ContentLength)
 
 					length, _ := json.Marshal(payload)
 
-					assert.Equal(t, 82, len(length))
+					assert.Equal(t, 44, len(length))
 				}
 				return http.HandlerFunc(fn)
 			},
@@ -190,7 +190,7 @@ func TestNewPersistedOperations(t *testing.T) {
 					payload, err := io.ReadAll(r.Body)
 					assert.NoError(t, err)
 
-					assert.Equal(t, `[{"variables":null,"query":"query { foobar }","extensions":{"persistedQuery":null}},{"variables":null,"query":"query { baz }","extensions":{"persistedQuery":null}}]`, string(payload))
+					assert.Equal(t, `[{"query":"query { foobar }","extensions":{}},{"query":"query { baz }","extensions":{}}]`, string(payload))
 					assert.Equal(t, int64(len(payload)), r.ContentLength)
 				}
 				return http.HandlerFunc(fn)

@@ -8,13 +8,13 @@ import (
 )
 
 type RequestData struct {
-	Variables  map[string]interface{} `json:"variables"`
-	Query      string                 `json:"query"`
-	Extensions Extensions             `json:"extensions"`
+	Variables  map[string]interface{} `json:"variables,omitempty"`
+	Query      string                 `json:"query,omitempty"`
+	Extensions Extensions             `json:"extensions,omitempty"`
 }
 
 type Extensions struct {
-	PersistedQuery *PersistedQuery `json:"persistedQuery"`
+	PersistedQuery *PersistedQuery `json:"persistedQuery,omitempty"`
 }
 
 type PersistedQuery struct {

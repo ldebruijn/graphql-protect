@@ -238,9 +238,9 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, obfusca
 					continue
 				}
 
-				err = validator.Validate(schema.Get(), query)
-				if err != nil {
-					errs = append(errs, gqlerror.Wrap(err))
+				errList := validator.Validate(schema.Get(), query)
+				if len(errList) > 0 {
+					errs = append(errs, errList...)
 					continue
 				}
 			}
