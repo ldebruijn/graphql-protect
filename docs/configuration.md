@@ -60,7 +60,7 @@ persisted_operations:
 
 max_aliases:
   # Enable the feature
-  enable: true
+  enabled: true
   # The maximum number of allowed aliases within a single request.
   max: 15
   # Reject the request when the rule fails. Disable this to allow the request
@@ -71,7 +71,7 @@ block_field_suggestions:
   mask: [redacted]
   
 max_depth:
-  enable: true
+  enabled: true
   # The maximum allowed depth within a single request.
   max: 15
   # Reject the request when the rule fails. Disable this to allow the request
@@ -79,15 +79,15 @@ max_depth:
 
 max_tokens:
   # Enable the feature
-  enable: true
+  enabled: true
   # The maximum number of allowed tokens within a single request.
   max: 10000
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
   reject_on_failure: true
 
-disable_get_method:
+enforcePost:
   # Enable the feature
-  enable: "true"
+  enabled: true
 ```
 
 For a more in-depth view of each option visit the accompanying documentation page.
