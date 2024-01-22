@@ -9,7 +9,7 @@ Or even worse, uploading a 1 MB image with 1000 aliases in 1 request using the s
 
 ## Configuration
 
-You can configure `go-graphql-armor` to limit the maximum number of aliases allowed on an operation.
+You can configure `graphql-protect` to limit the maximum number of aliases allowed on an operation.
 
 ```yaml
 max_aliases:
@@ -26,7 +26,7 @@ max_aliases:
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-go_graphql_armor_max_aliases_results{result}
+graphql_protect_max_aliases_results{result}
 ```
 
 

@@ -10,7 +10,7 @@ We recommend that all GraphQL APIs that only intend a specific/known set of clie
 
 ## Configuration
 
-You can configure `go-graphql-armor` to enable Persisted Operations.
+You can configure `graphql-protect` to enable Persisted Operations.
 
 ```yaml
 # ...
@@ -20,7 +20,7 @@ persisted_operations:
   enabled: "true"
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
   reject_on_failure: "true"
-  # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
+  # Store is the location on local disk where graphql-protect can find the persisted operations, it loads any `*.json` files on disk
   store: "./store"
   reload:
     enabled: "true"
@@ -38,7 +38,7 @@ persisted_operations:
 
 ## How it works
 
-`go-graphql-armor` looks at the `store` location on local disk to find any `*.json` files it can parse for persisted operations. 
+`graphql-protect` looks at the `store` location on local disk to find any `*.json` files it can parse for persisted operations. 
 
 It can be configured to look at this directory and reload based on the files on local disk.
 
@@ -46,7 +46,7 @@ Additionally, it can be configured to fetch operations from a remote location on
 
 ## Parsing Structure
 
-To be able to parse Persisted Operations go-graphql-armor expects a `key-value` structure for `hash-operation` in the files.
+To be able to parse Persisted Operations graphql-protect expects a `key-value` structure for `hash-operation` in the files.
 
 `any-file.json`
 ```json
@@ -85,7 +85,7 @@ In order to utilize this feature you need to generate the persisted operations t
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-go_graphql_armor_persisted_operations_results{state, result}
+graphql_protect_persisted_operations_results{state, result}
 ```
 
 | `state`  | Description                                                                                                                                                   |
@@ -101,7 +101,7 @@ go_graphql_armor_persisted_operations_results{state, result}
 | `rejected` | The rule rejected the request |
 
 ```
-go_graphql_armor_persisted_operations_reload{system}
+graphql_protect_persisted_operations_reload{system}
 ```
 
 

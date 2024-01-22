@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/conf/v3/yaml"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/batch"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/enforce_post"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/max_depth"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/tokens"
+	"github.com/ldebruijn/graphql-protect/internal/business/aliases"
+	"github.com/ldebruijn/graphql-protect/internal/business/batch"
+	"github.com/ldebruijn/graphql-protect/internal/business/block_field_suggestions"
+	"github.com/ldebruijn/graphql-protect/internal/business/enforce_post"
+	"github.com/ldebruijn/graphql-protect/internal/business/max_depth"
+	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
+	"github.com/ldebruijn/graphql-protect/internal/business/proxy"
+	"github.com/ldebruijn/graphql-protect/internal/business/schema"
+	"github.com/ldebruijn/graphql-protect/internal/business/tokens"
 	"os"
 	"time"
 )
@@ -44,7 +44,7 @@ type Config struct {
 func NewConfig(configPath string) (*Config, error) {
 	cfg := Config{}
 
-	help, err := conf.Parse("go-graphql-armor", &cfg)
+	help, err := conf.Parse("graphql-protect", &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
 			fmt.Println(help)

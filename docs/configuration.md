@@ -1,12 +1,12 @@
 # Configuration
 
-go-graphql-armor can be configured in various ways, though we recommend configuring it via a `armor.yml`. file
+graphql-protect can be configured in various ways, though we recommend configuring it via a `protect.yml`. file
 
 <!-- TOC -->
 
-# armor.yml
+# protect.yml
 
-The best way to configure `go-graphql-armor` is by specifying a `armor.yml` in the same directory as you're running the binary.
+The best way to configure `graphql-protect` is by specifying a `protect.yml` in the same directory as you're running the binary.
 
 The following outlines the structure of the yaml
 
@@ -36,7 +36,7 @@ schema:
     # The interval in which the schema file should be reloaded
     interval: 5m
     
-# Configures whether we obfuscate graphql-armor validation errors such as max_aliases/max_tokens
+# Configures whether we obfuscate graphql-protect validation errors such as max_aliases/max_tokens
 # Recommended to set it to 'true' for public environments
 obfuscate_validation_errors: false    
     
@@ -45,7 +45,7 @@ persisted_operations:
   enabled: true
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
   reject_on_failure: true
-  # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
+  # Store is the location on local disk where graphql-protect can find the persisted operations, it loads any `*.json` files on disk
   store: "./store"
   reload:
     enabled: true
@@ -102,7 +102,7 @@ For a more in-depth view of each option visit the accompanying documentation pag
 
 ## Environment Variables
 
-If so desired `go-graphql-armor` _can_ be configured using environment variables. write out the full configuration path for each value.
+If so desired `graphql-protect` _can_ be configured using environment variables. write out the full configuration path for each value.
 
 For example:
 
@@ -114,12 +114,12 @@ PERSISTED_OPERATIONS_STORE_GCP_BUCKET: gs://my-bucket
 
 ## Command line arguments
 
-Usage: go-graphql-armor [options] [arguments]
+Usage: graphql-protect [options] [arguments]
 
 Examples:
 
 ```bash
-go-graphql-armor \
+graphql-protect \
     --persisted-operations-enabled=true \
     --web-path=/graphql \
     --persisted-operations-store-gcp-bucket=gs://my-bucket
@@ -127,4 +127,4 @@ go-graphql-armor \
 
 ## Which configuration is applied?
 
-During startup `go-graphql-armor` will output its applied configuration. It will do this in command line argument format, though it will apply and output configuration from any of these sources.
+During startup `graphql-protect` will output its applied configuration. It will do this in command line argument format, though it will apply and output configuration from any of these sources.

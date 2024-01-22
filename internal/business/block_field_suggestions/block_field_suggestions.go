@@ -6,7 +6,7 @@ import (
 )
 
 var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Namespace: "go_graphql_armor",
+	Namespace: "graphql_protect",
 	Subsystem: "block_field_suggestions",
 	Name:      "results",
 	Help:      "The results of the block field suggestions rule",

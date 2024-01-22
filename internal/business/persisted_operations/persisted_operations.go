@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"io"
@@ -20,7 +20,7 @@ import (
 
 var (
 	persistedOpsHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "go_graphql_armor",
+		Namespace: "graphql_protect",
 		Subsystem: "persisted_operations",
 		Name:      "counter",
 		Help:      "The results of the persisted operations rule",
@@ -28,7 +28,7 @@ var (
 		[]string{"state", "result"},
 	)
 	reloadCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace:   "go_graphql_armor",
+		Namespace:   "graphql_protect",
 		Subsystem:   "persisted_operations",
 		Name:        "reload",
 		Help:        "Counter tracking reloading behavior and results",

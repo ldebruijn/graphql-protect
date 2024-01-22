@@ -3,7 +3,7 @@ package persisted_operations // nolint:revive
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log/slog"

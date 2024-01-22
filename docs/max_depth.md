@@ -6,7 +6,7 @@ Restricting the maximum depth of operations that are allowed within a single ope
 
 ## Configuration
 
-You can configure `go-graphql-armor` to limit the maximum depth on an operation.
+You can configure `graphql-protect` to limit the maximum depth on an operation.
 
 ```yaml
 max_depth:
@@ -23,7 +23,7 @@ max_depth:
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-go_graphql_armor_max_depth_results{result}
+graphql_protect_max_depth_results{result}
 ```
 
 
