@@ -6,7 +6,7 @@ import (
 )
 
 var methodCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Namespace: "go_graphql_armor",
+	Namespace: "graphql_protect",
 	Subsystem: "enforce_post",
 	Name:      "count",
 	Help:      "Amount of times the enforce POST rule was triggered and blocked a request",

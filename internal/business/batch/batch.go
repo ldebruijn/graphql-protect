@@ -3,13 +3,13 @@ package batch
 import (
 	"errors"
 	"fmt"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
 	resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "go_graphql_armor",
+		Namespace: "graphql_protect",
 		Subsystem: "max_batch",
 		Name:      "results",
 		Help:      "The results of the max batch rule",

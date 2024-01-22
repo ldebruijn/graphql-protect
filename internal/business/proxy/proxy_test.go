@@ -1,7 +1,7 @@
 package proxy
 
 import (
-	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
+	"github.com/ldebruijn/graphql-protect/internal/business/block_field_suggestions"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"

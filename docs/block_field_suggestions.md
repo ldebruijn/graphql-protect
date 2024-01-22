@@ -8,7 +8,7 @@ Disabling field suggestions prevent the discovery of your GraphQL schema even wh
 
 ## Configuration
 
-You can configure `go-graphql-armor` to remove field suggestions from your API.
+You can configure `graphql-protect` to remove field suggestions from your API.
 
 ```yaml
 block_field_suggestions:
@@ -30,7 +30,7 @@ We scan each `errors[].message` field in the responses and replace the message w
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-go_graphql_armor_block_field_suggestions_results{result}
+graphql_protect_block_field_suggestions_results{result}
 ```
 
 | `result`   | Description                                                         |

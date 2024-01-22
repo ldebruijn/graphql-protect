@@ -1,12 +1,12 @@
-# Go GraphQL Armor 🛡️
+# GraphQL Protect 🛡️
 
-Go GraphQL Armor is dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway.
+GraphQL Protect is dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway.
 
-![Go GraphQL Armor Banner](docs/assets/banner.jpeg?raw=true)
+![GraphQL Protect Banner](docs/assets/banner.jpeg?raw=true)
 
-[![Go](https://github.com/ldebruijn/go-graphql-armor/actions/workflows/go.yml/badge.svg)](https://github.com/ldebruijn/go-graphql-armor/actions/workflows/go.yml)
+[![Go](https://github.com/ldebruijn/graphql-protect/actions/workflows/go.yml/badge.svg)](https://github.com/ldebruijn/graphql-protect/actions/workflows/go.yml)
 
-_This is repository inspired by the great work of the similarly named Javascript [GraphQL Armor](https://github.com/Escape-Technologies/graphql-armor) middleware._
+_This is repository inspired by the great work of the similarly named Javascript [GraphQL Protect](https://github.com/Escape-Technologies/graphql-armor) middleware._
 
 <!-- TOC -->
 
@@ -28,15 +28,15 @@ Curious why you need these features? Check out this [Excellent talk on GraphQL s
 
 ## As Container
 ```shell
-docker pull ghcr.io/ldebruijn/go-graphql-armor:latest
-docker run -p 8080:8080 -v $(pwd)/armor.yml:/app/armor.yml ghcr.io/ldebruijn/go-graphql-armor:latest
+docker pull ghcr.io/ldebruijn/graphql-protect:latest
+docker run -p 8080:8080 -v $(pwd)/protect.yml:/app/protect.yml ghcr.io/ldebruijn/graphql-protect:latest
 ```
 Make sure to portforward the right ports for your supplied configuration
 
 ## Source code
 
 ```shell
-git clone git@github.com:ldebruijn/go-graphql-armor.git
+git clone git@github.com:ldebruijn/graphql-protect.git
 ```
 
 Build & Test
@@ -56,20 +56,20 @@ Run Container
 
 ## Configuration
 
-We recommend configuring the binary using a yaml file, place a file called `armor.yml` in the same directory as you're running the binary.
+We recommend configuring the binary using a yaml file, place a file called `protect.yml` in the same directory as you're running the binary.
 
 For all the configuration options check out the [Configuration Documentation](docs/configuration.md)
 
-Alternatively go-graphql-armor can be configured using environment variables or command line arguments.
+Alternatively graphql-protect can be configured using environment variables or command line arguments.
 
 ## Contributing
 
-Ensure you have read the [Contributing Guide](https://github.com/ldebruijn/go-graphql-armor/blob/main/CONTRIBUTING.md) before contributing.
+Ensure you have read the [Contributing Guide](https://github.com/ldebruijn/graphql-protect/blob/main/CONTRIBUTING.md) before contributing.
 
 To set up your project, make sure you run the `make dev.setup` script.
 
 ```bash
-git clone git@github.com:ldebruijn/go-graphql-armor.git
-cd go-graphql-armor
+git clone git@github.com:ldebruijn/graphql-protect.git
+cd graphql-protect
 make dev.setup
 ```

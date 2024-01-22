@@ -27,8 +27,8 @@ lint:
 
 .PHONY: build_container
 build_container: build
-	docker build . -t go-graphql-armor --build-arg BUILD_DATE=$(BUILD_DATE) --build-arg VERSION=$(VERSION) --build-arg REVISION=$(SHORT_HASH)
+	docker build . -t graphql-protect --build-arg BUILD_DATE=$(BUILD_DATE) --build-arg VERSION=$(VERSION) --build-arg REVISION=$(SHORT_HASH)
 
 .PHONY: run_container
 run_container: build_container
-	go run -d -p 8080:8080 go-graphql-armor
+	go run -d -p 8080:8080 graphql-protect

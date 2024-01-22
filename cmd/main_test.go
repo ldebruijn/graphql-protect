@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
+	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/stretchr/testify/assert"
 	"io"
 	log2 "log"

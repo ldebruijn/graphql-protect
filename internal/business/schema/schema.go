@@ -11,7 +11,7 @@ import (
 )
 
 var reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-	Namespace:   "go_graphql_armor",
+	Namespace:   "graphql_protect",
 	Subsystem:   "schema",
 	Name:        "reload",
 	Help:        "Gauge tracking reloading behavior",
