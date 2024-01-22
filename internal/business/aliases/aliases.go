@@ -5,15 +5,18 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
+	"time"
 )
 
-var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Namespace: "go_graphql_armor",
-	Subsystem: "max_aliases",
-	Name:      "results",
-	Help:      "The results of the max aliases rule",
-},
-	[]string{"result"},
+var (
+	resultHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "go_graphql_armor",
+		Subsystem: "max_aliases",
+		Name:      "results",
+		Help:      "The results of the max aliases rule",
+	},
+		[]string{"result"},
+	)
 )
 
 type Config struct {
@@ -23,7 +26,7 @@ type Config struct {
 }
 
 func init() {
-	prometheus.MustRegister(resultCounter)
+	prometheus.MustRegister(resultHistogram)
 }
 
 func NewMaxAliasesRule(cfg Config) {
@@ -44,6 +47,8 @@ func NewMaxAliasesRule(cfg Config) {
 			})
 
 			observers.OnOperation(func(walker *validator.Walker, operation *ast.OperationDefinition) {
+				start := time.Now()
+
 				aliases += countAliases(operation)
 
 				if aliases > cfg.Max {
@@ -53,12 +58,12 @@ func NewMaxAliasesRule(cfg Config) {
 							validator.Message(err),
 							validator.At(operation.Position),
 						)
-						resultCounter.WithLabelValues("rejected").Inc()
+						resultHistogram.WithLabelValues("rejected").Observe(time.Since(start).Seconds())
 					} else {
-						resultCounter.WithLabelValues("failed").Inc()
+						resultHistogram.WithLabelValues("failed").Observe(time.Since(start).Seconds())
 					}
 				} else {
-					resultCounter.WithLabelValues("allowed").Inc()
+					resultHistogram.WithLabelValues("allowed").Observe(time.Since(start).Seconds())
 				}
 			})
 		})

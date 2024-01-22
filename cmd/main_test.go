@@ -169,7 +169,7 @@ type Product {
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
-					cfg.PersistedOperations.FailUnknownOperations = false
+					cfg.PersistedOperations.RejectOnFailure = false
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -369,7 +369,7 @@ type Product {
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
-					cfg.PersistedOperations.FailUnknownOperations = false
+					cfg.PersistedOperations.RejectOnFailure = false
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -433,7 +433,7 @@ type Product {
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
-					cfg.PersistedOperations.FailUnknownOperations = false
+					cfg.PersistedOperations.RejectOnFailure = false
 					return cfg
 				},
 				mockResponse: map[string]interface{}{

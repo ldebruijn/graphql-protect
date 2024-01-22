@@ -19,7 +19,7 @@ persisted_operations:
   # Enable or disable the feature, enabled by default
   enabled: "true"
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
-  fail_unknown_operations: "true"
+  reject_on_failure: "true"
   # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
   store: "./store"
   reload:
@@ -88,10 +88,10 @@ This rule produces metrics to help you gain insights into the behavior of the ru
 go_graphql_armor_persisted_operations_results{state, result}
 ```
 
-| `state`    | Description                                                                                                                                                   |
-|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `unknown`   | The rule was not able to do its job. This happens either when `fail_unknown_operations` is set to `false` or the rule was not able to deserialize the request. |
-| `errored` | The rule caught an error during request body mutation.                                                                                                        |
+| `state`  | Description                                                                                                                                                   |
+|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `unknown` | The rule was not able to do its job. This happens either when `reject_on_failure` is set to `false` or the rule was not able to deserialize the request. |
+| `error` | The rule caught an error during request body mutation.                                                                                                        |
 | `known` | The rule received a hash for which it had a known operation                                                                                                   |
 
 
