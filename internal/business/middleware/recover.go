@@ -8,7 +8,7 @@ import (
 )
 
 var recoverCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Namespace: "go_graphql_armor",
+	Namespace: "graphql_protect",
 	Subsystem: "recover",
 	Name:      "count",
 	Help:      "Amount of times the middleware recovered a panic",

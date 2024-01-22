@@ -1,4 +1,4 @@
-module github.com/ldebruijn/go-graphql-armor
+module github.com/ldebruijn/graphql-protect
 
 go 1.21.1
 

@@ -7,7 +7,7 @@ This can be useful to prevent DDoS attacks, Heap Overflows or Server overload.
 
 ## Configuration
 
-You can configure `go-graphql-armor` to limit the maximum number of tokens allowed on an operation.
+You can configure `graphql-protect` to limit the maximum number of tokens allowed on an operation.
 
 ```yaml
 max_tokens:
@@ -24,7 +24,7 @@ max_tokens:
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-go_graphql_armor_max_tokens_results{result}
+graphql_protect_max_tokens_results{result}
 ```
 
 

@@ -7,19 +7,19 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
-	"github.com/ldebruijn/go-graphql-armor/internal/app/config"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/aliases"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/batch"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/block_field_suggestions"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/enforce_post"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/max_depth"
-	middleware2 "github.com/ldebruijn/go-graphql-armor/internal/business/middleware"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/persisted_operations"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/proxy"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/readiness"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/schema"
-	"github.com/ldebruijn/go-graphql-armor/internal/business/tokens"
+	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	"github.com/ldebruijn/graphql-protect/internal/business/aliases"
+	"github.com/ldebruijn/graphql-protect/internal/business/batch"
+	"github.com/ldebruijn/graphql-protect/internal/business/block_field_suggestions"
+	"github.com/ldebruijn/graphql-protect/internal/business/enforce_post"
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
+	"github.com/ldebruijn/graphql-protect/internal/business/max_depth"
+	middleware2 "github.com/ldebruijn/graphql-protect/internal/business/middleware"
+	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
+	"github.com/ldebruijn/graphql-protect/internal/business/proxy"
+	"github.com/ldebruijn/graphql-protect/internal/business/readiness"
+	"github.com/ldebruijn/graphql-protect/internal/business/schema"
+	"github.com/ldebruijn/graphql-protect/internal/business/tokens"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -43,7 +43,7 @@ var (
 	configPath = ""
 
 	httpDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "go_graphql_armor",
+		Namespace: "graphql_protect",
 		Subsystem: "http",
 		Name:      "duration",
 		Help:      "HTTP duration",
@@ -52,7 +52,7 @@ var (
 	)
 
 	appInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "go_graphql_armor",
+		Namespace: "graphql_protect",
 		Subsystem: "app",
 		Name:      "info",
 		Help:      "Application information",
@@ -67,7 +67,7 @@ func init() {
 }
 
 func main() {
-	flag.StringVar(&configPath, "f", "./armor.yml", "Defines the path at which the configuration file can be found")
+	flag.StringVar(&configPath, "f", "./protect.yml", "Defines the path at which the configuration file can be found")
 	flag.Parse()
 
 	log := slog.Default()
@@ -147,7 +147,7 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { 
 	serverErrors := make(chan error, 1)
 
 	go func() {
-		log.Info("startup", "status", "go-graphql-armor started", "host", api.Addr)
+		log.Info("startup", "status", "graphql-protect started", "host", api.Addr)
 
 		serverErrors <- api.ListenAndServe()
 	}()

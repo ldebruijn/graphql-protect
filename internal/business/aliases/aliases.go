@@ -10,7 +10,7 @@ import (
 
 var (
 	resultHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "go_graphql_armor",
+		Namespace: "graphql_protect",
 		Subsystem: "max_aliases",
 		Name:      "results",
 		Help:      "The results of the max aliases rule",

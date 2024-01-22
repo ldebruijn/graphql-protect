@@ -1,6 +1,6 @@
 # Schema
 
-`go-graphql-armor` needs to know your schema in order to perform its validations. 
+`graphql-protect` needs to know your schema in order to perform its validations. 
 
 <!-- TOC -->
 
@@ -25,7 +25,7 @@ schema:
 ## Metrics
 
 ```
-go_graphql_armor_schema_reload{state}
+graphql_protect_schema_reload{state}
 ```
 
 | `state`   | Description                                                 |

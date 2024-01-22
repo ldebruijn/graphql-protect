@@ -1,7 +1,7 @@
 package batch
 
 import (
-	"github.com/ldebruijn/go-graphql-armor/internal/business/gql"
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
