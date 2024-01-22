@@ -90,7 +90,7 @@ go_graphql_armor_persisted_operations_results{state, result}
 
 | `state`  | Description                                                                                                                                                   |
 |---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `unknown` | The rule was not able to do its job. This happens either when `fail_unknown_operations` is set to `false` or the rule was not able to deserialize the request. |
+| `unknown` | The rule was not able to do its job. This happens either when `reject_on_failure` is set to `false` or the rule was not able to deserialize the request. |
 | `error` | The rule caught an error during request body mutation.                                                                                                        |
 | `known` | The rule received a hash for which it had a known operation                                                                                                   |
 
