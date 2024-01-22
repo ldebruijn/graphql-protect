@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	persistedOpsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	persistedOpsHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "go_graphql_armor",
 		Subsystem: "persisted_operations",
 		Name:      "counter",
@@ -59,7 +59,7 @@ type Config struct {
 	Remote struct {
 		GcpBucket string `conf:"your_bucket_name" yaml:"gcp_bucket"`
 	}
-	FailUnknownOperations bool `conf:"default:false" yaml:"fail_unknown_operations"`
+	RejectOnFailure bool `conf:"default:false" yaml:"reject_on_failure"`
 }
 
 var ErrNoLoaderSupplied = errors.New("no remoteLoader supplied")
@@ -84,7 +84,7 @@ type PersistedOperationsHandler struct {
 }
 
 func init() {
-	prometheus.MustRegister(persistedOpsCounter, reloadCounter)
+	prometheus.MustRegister(persistedOpsHistogram, reloadCounter)
 }
 
 func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
@@ -149,6 +149,8 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 			return
 		}
 
+		start := time.Now()
+
 		var errs gqlerror.List
 
 		payload, err := gql.ParseRequestPayload(r)
@@ -159,14 +161,14 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 		}
 
 		for i, data := range payload {
-			if !p.cfg.FailUnknownOperations && data.Query != "" {
-				persistedOpsCounter.WithLabelValues("unknown", "allowed").Inc()
+			if !p.cfg.RejectOnFailure && data.Query != "" {
+				persistedOpsHistogram.WithLabelValues("unknown", "allowed").Observe(time.Since(start).Seconds())
 				continue
 			}
 
 			hash, err := hashFromPayload(data)
 			if err != nil {
-				persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
+				persistedOpsHistogram.WithLabelValues("error", "rejected").Observe(time.Since(start).Seconds())
 				errs = append(errs, gqlerror.Wrap(ErrPersistedQueryNotFound))
 				continue
 			}
@@ -177,7 +179,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 
 			if !ok {
 				// hash not found, fail
-				persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
+				persistedOpsHistogram.WithLabelValues("unknown", "rejected").Observe(time.Since(start).Seconds())
 				errs = append(errs, gqlerror.Wrap(ErrPersistedOperationNotFound))
 				continue
 			}
@@ -186,7 +188,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 			payload[i].Query = query
 			payload[i].Extensions.PersistedQuery = nil
 
-			persistedOpsCounter.WithLabelValues("known", "allowed").Inc()
+			persistedOpsHistogram.WithLabelValues("known", "allowed").Observe(time.Since(start).Seconds())
 		}
 
 		if len(errs) > 0 {

@@ -44,8 +44,8 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Allows unpersisted requests if configured",
 			args: args{
 				cfg: Config{
-					Enabled:               true,
-					FailUnknownOperations: true,
+					Enabled:         true,
+					RejectOnFailure: true,
 				},
 				payload: func() []byte {
 					data := gql.RequestData{
@@ -75,8 +75,8 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Returns error if no hash match is found and unpersisted operations are not allowed",
 			args: args{
 				cfg: Config{
-					Enabled:               true,
-					FailUnknownOperations: false,
+					Enabled:         true,
+					RejectOnFailure: false,
 				},
 				payload: func() []byte {
 					data := gql.RequestData{
@@ -114,8 +114,8 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Swaps in query payload if hash operation is known, updates content length accordingly",
 			args: args{
 				cfg: Config{
-					Enabled:               true,
-					FailUnknownOperations: false,
+					Enabled:         true,
+					RejectOnFailure: false,
 				},
 				payload: func() []byte {
 					data := gql.RequestData{
@@ -157,8 +157,8 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "Swaps in batched query payload if hash operation is known, updates content length accordingly",
 			args: args{
 				cfg: Config{
-					Enabled:               true,
-					FailUnknownOperations: false,
+					Enabled:         true,
+					RejectOnFailure: false,
 				},
 				payload: func() []byte {
 					data := []gql.RequestData{
@@ -203,8 +203,8 @@ func TestNewPersistedOperations(t *testing.T) {
 			name: "fails entire batch if one operation is unknown",
 			args: args{
 				cfg: Config{
-					Enabled:               true,
-					FailUnknownOperations: false,
+					Enabled:         true,
+					RejectOnFailure: false,
 				},
 				payload: func() []byte {
 					data := []gql.RequestData{
