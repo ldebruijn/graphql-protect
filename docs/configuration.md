@@ -44,7 +44,7 @@ persisted_operations:
   # Enable or disable the feature, enabled by default
   enabled: true
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
-  fail_unknown_operations: true
+  reject_on_failure: true
   # Store is the location on local disk where go-graphql-armor can find the persisted operations, it loads any `*.json` files on disk
   store: "./store"
   reload:

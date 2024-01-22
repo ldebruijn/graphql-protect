@@ -38,17 +38,10 @@ import (
 )
 
 var (
-	shortHash   = "develop"
-	build       = "develop"
-	configPath  = ""
-	httpCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "go_graphql_armor",
-		Subsystem: "http",
-		Name:      "count",
-		Help:      "HTTP request counts",
-	},
-		[]string{"route"},
-	)
+	shortHash  = "develop"
+	build      = "develop"
+	configPath = ""
+
 	httpDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "go_graphql_armor",
 		Subsystem: "http",
@@ -70,7 +63,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(httpCounter, httpDuration, appInfo)
+	prometheus.MustRegister(httpDuration, appInfo)
 }
 
 func main() {
@@ -242,7 +235,7 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, batch *
 					err = tks.Validate(operationSource)
 					if err != nil {
 						errs = append(errs, gqlerror.Wrap(err))
-						continue
+						continue // we could consider break-ing here. That would short-circuit on error, with the downside of not returning all potential errors
 					}
 
 					var query, err = parser.ParseQuery(operationSource)
