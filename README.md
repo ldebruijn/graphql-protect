@@ -6,7 +6,7 @@ GraphQL Protect is dead-simple yet highly customizable security sidecar compatib
 
 [![Go](https://github.com/ldebruijn/graphql-protect/actions/workflows/go.yml/badge.svg)](https://github.com/ldebruijn/graphql-protect/actions/workflows/go.yml)
 
-_This is repository inspired by the great work of the similarly named Javascript [GraphQL Protect](https://github.com/Escape-Technologies/graphql-armor) middleware._
+_This is repository inspired by the great work of the Javascript [GraphQL Armor](https://github.com/Escape-Technologies/graphql-armor) middleware._
 
 <!-- TOC -->
 
