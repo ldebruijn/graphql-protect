@@ -12,13 +12,13 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 
 ## Features
 
-* [Persisted Operations](docs/persisted_operations.md)
-* [Block Field Suggestions](docs/block_field_suggestions.md)
-* [Max Aliases](docs/max_aliases.md)
-* [Max Tokens](docs/max_tokens.md)
-* [Max Depth](docs/max_depth.md)
-* [Max Batch](docs/max_batch.md)
-* [Enforce POST](docs/enforce_post.md)
+* [Persisted Operations](docs/protections/persisted_operations.md)
+* [Block Field Suggestions](docs/protections/block_field_suggestions.md)
+* [Max Aliases](docs/protections/max_aliases.md)
+* [Max Tokens](docs/protections/max_tokens.md)
+* [Max Depth](docs/protections/max_depth.md)
+* [Max Batch](docs/protections/max_batch.md)
+* [Enforce POST](docs/protections/enforce_post.md)
 * _Max Directives (coming soon)_
 * _Cost Limit (coming soon)_
 
