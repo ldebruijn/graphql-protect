@@ -66,7 +66,7 @@ spec:
 
 ## Config Map Resource
 
-You can create a configmap with the runtime configuration by running the following command and pointing it to your configuration file.
+You can create configmaps with the necessary configuration by running the following command and pointing it to your configuration file.
 
 ### Protect.yml
 

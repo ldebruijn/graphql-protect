@@ -114,7 +114,7 @@ PERSISTED_OPERATIONS_STORE_GCP_BUCKET: gs://my-bucket
 
 ## Command line arguments
 
-Usage: graphql-protect [options] [arguments]
+Usage: `graphql-protect [options] [arguments]`
 
 Examples:
 
