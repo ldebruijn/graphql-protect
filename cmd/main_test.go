@@ -54,8 +54,7 @@ type Product {
 }
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
-					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.Enabled = false
 					return cfg
 				},
 				mockResponse: map[string]interface{}{

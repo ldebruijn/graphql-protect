@@ -68,7 +68,7 @@ func TestNewConfig(t *testing.T) {
 					Host:      "http://localhost:8081",
 				},
 				PersistedOperations: persisted_operations.Config{
-					Enabled: true,
+					Enabled: false,
 					Store:   "./store",
 					Reload: struct {
 						Enabled  bool          `conf:"default:true" yaml:"enabled"`
@@ -84,8 +84,8 @@ func TestNewConfig(t *testing.T) {
 						Timeout:  10 * time.Second,
 					}),
 					Remote: struct {
-						GcpBucket string `conf:"default:your_bucket_name" yaml:"gcp_bucket"`
-					}(struct{ GcpBucket string }{GcpBucket: "your_bucket_name"}),
+						GcpBucket string `yaml:"gcp_bucket"`
+					}(struct{ GcpBucket string }{GcpBucket: ""}),
 					RejectOnFailure: true,
 				},
 				BlockFieldSuggestions: block_field_suggestions.Config{
@@ -144,7 +144,7 @@ schema:
 obfuscate_validation_errors: true    
     
 persisted_operations:
-  enabled: false
+  enabled: true
   reject_on_failure: false
   store: "store"
   reload:
@@ -222,7 +222,7 @@ enforce_post:
 					Host:      "host",
 				},
 				PersistedOperations: persisted_operations.Config{
-					Enabled: false,
+					Enabled: true,
 					Store:   "store",
 					Reload: struct {
 						Enabled  bool          `conf:"default:true" yaml:"enabled"`
@@ -238,7 +238,7 @@ enforce_post:
 						Timeout:  1 * time.Second,
 					}),
 					Remote: struct {
-						GcpBucket string `conf:"default:your_bucket_name" yaml:"gcp_bucket"`
+						GcpBucket string `yaml:"gcp_bucket"`
 					}(struct{ GcpBucket string }{GcpBucket: "gcp_bucket"}),
 					RejectOnFailure: false,
 				},

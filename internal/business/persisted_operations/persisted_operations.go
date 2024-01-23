@@ -46,7 +46,7 @@ type ErrorMessage struct {
 }
 
 type Config struct {
-	Enabled bool `conf:"default:true" yaml:"enabled"`
+	Enabled bool `conf:"default:false" yaml:"enabled"`
 	// The location on which persisted operations are stored
 	Store string `conf:"default:./store" yaml:"store"`
 	// Configuration for auto-reloading persisted operations
@@ -57,7 +57,7 @@ type Config struct {
 	}
 	// Remote strategies for fetching persisted operations
 	Remote struct {
-		GcpBucket string `conf:"default:your_bucket_name" yaml:"gcp_bucket"`
+		GcpBucket string `yaml:"gcp_bucket"`
 	}
 	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
 }
