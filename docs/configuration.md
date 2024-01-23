@@ -98,7 +98,7 @@ enforce_post:
   enabled: true
 ```
 
-For a more in-depth view of each option visit the accompanying documentation page.
+For a more in-depth view of each option visit the accompanying documentation page of each individual protection.
 
 ## Environment Variables
 

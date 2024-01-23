@@ -7,7 +7,7 @@ GraphQL Protect is intended to run as sidecar to your main application. This all
 This specification describes a minimal example, focussing only on the elements relevant for GraphQL Protect. 
 
 > [!NOTE]
-> This is not a complete example, you're expected this mix this in with your existing deployment specification
+> This is not a complete example, you're expected to mix this in with your existing deployment specification.
 
 ```yaml
 apiVersion: apps/v1
