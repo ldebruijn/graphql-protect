@@ -75,7 +75,7 @@ max_depth:
   # The maximum allowed depth within a single request.
   max: 15
   # Reject the request when the rule fails. Disable this to allow the request
-  reject_on_failure: false
+  reject_on_failure: true
 
 max_tokens:
   # Enable the feature
@@ -87,11 +87,11 @@ max_tokens:
 
 max_batch:
   # Enable the feature
-  enable: "true"
+  enabled: true
   # The maximum number of operations within a single batched request.
   max: 5
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
-  reject_on_failure: "true"
+  reject_on_failure: true
 
 enforce_post:
   # Enable the feature

@@ -16,7 +16,7 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 
 type Config struct {
 	Enabled bool   `conf:"default:true" yaml:"enabled"`
-	Mask    string `conf:"default:[redacted]" yaml:"redacted"`
+	Mask    string `conf:"default:[redacted]" yaml:"mask"`
 }
 
 type BlockFieldSuggestionsHandler struct {

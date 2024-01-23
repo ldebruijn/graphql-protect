@@ -46,20 +46,20 @@ type ErrorMessage struct {
 }
 
 type Config struct {
-	Enabled bool `conf:"default:false" yaml:"enabled"`
+	Enabled bool `conf:"default:true" yaml:"enabled"`
 	// The location on which persisted operations are stored
-	Store string `conf:"./store" yaml:"store"`
+	Store string `conf:"default:./store" yaml:"store"`
 	// Configuration for auto-reloading persisted operations
 	Reload struct {
-		Enabled  bool          `conf:"default:false" yaml:"enabled"`
+		Enabled  bool          `conf:"default:true" yaml:"enabled"`
 		Interval time.Duration `conf:"default:5m" yaml:"interval"`
 		Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
 	}
 	// Remote strategies for fetching persisted operations
 	Remote struct {
-		GcpBucket string `conf:"your_bucket_name" yaml:"gcp_bucket"`
+		GcpBucket string `conf:"default:your_bucket_name" yaml:"gcp_bucket"`
 	}
-	RejectOnFailure bool `conf:"default:false" yaml:"reject_on_failure"`
+	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
 }
 
 var ErrNoLoaderSupplied = errors.New("no remoteLoader supplied")
