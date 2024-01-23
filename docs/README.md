@@ -4,7 +4,7 @@ Please see each section for in-depth documentation
 
 ## Configuration
 
-[This section](configuration) describes the configuration options for GraphQL Protect.
+[This section](configuration.md) describes the configuration options for GraphQL Protect.
 
 ## Protections
 
