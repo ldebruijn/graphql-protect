@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/go-graphql-armor.iml" filepath="$PROJECT_DIR$/go-graphql-armor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/graphql-protect.iml" filepath="$PROJECT_DIR$/graphql-protect.iml" />
     </modules>
   </component>
 </project>
