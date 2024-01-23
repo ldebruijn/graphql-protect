@@ -12,11 +12,11 @@ You can configure `graphql-protect` to limit the maximum number of operations al
 ```yaml
 max_batch:
   # Enable the feature
-  enable: "true"
+  enable: true
   # The maximum number of operations within a single batched request.
   max: 5
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
-  reject_on_failure: "true"
+  reject_on_failure: true
 ```
 
 ## Metrics

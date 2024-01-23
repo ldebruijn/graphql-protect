@@ -14,11 +14,11 @@ You can configure `graphql-protect` to limit the maximum number of aliases allow
 ```yaml
 max_aliases:
   # Enable the feature
-  enable: "true"
+  enable: true
   # The maximum number of allowed aliases within a single request.
   max: 15
   # Reject the request when the rule fails. Disable this to allow the request
-  reject_on_failure: "true"
+  reject_on_failure: true
 ```
 
 ## Metrics

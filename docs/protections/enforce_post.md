@@ -12,7 +12,7 @@ The rule will block requests with non-POST HTTP methods **only** if the requests
 ```yaml
 enforce_post:
   # Enable the feature
-  enable: "true"
+  enable: true
 ```
 
 ## Metrics
