@@ -29,9 +29,11 @@ Curious why you need these features? Check out this [Excellent talk on GraphQL s
 ## As Container
 ```shell
 docker pull ghcr.io/ldebruijn/graphql-protect:latest
-docker run -p 8080:8080 -v $(pwd)/protect.yml:/app/protect.yml ghcr.io/ldebruijn/graphql-protect:latest
+docker run -p 8080:8080 -v $(pwd)/protect.yml:/app/protect.yml -v $(pwd)/schema.graphql:/app/schema.graphql ghcr.io/ldebruijn/graphql-protect:latest
 ```
 Make sure to portforward the right ports for your supplied configuration
+
+Check out our [run documentation](docs/README.md#run) for more concrete examples.
 
 ## Source code
 
@@ -51,6 +53,8 @@ Run Container
 ```
 
 ## Documentation
+
+Check out our extensive documentation, including configuration examples, detailed descriptions of each protection feature as well as deployment configuration examples.
 
 [Documentation](docs/README.md)
 

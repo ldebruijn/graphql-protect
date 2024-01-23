@@ -8,7 +8,7 @@ graphql-protect can be configured in various ways, though we recommend configuri
 
 The best way to configure `graphql-protect` is by specifying a `protect.yml` in the same directory as you're running the binary.
 
-The following outlines the structure of the yaml
+The following outlines the structure of the yaml, as well as outlines the **defaults** for each configuration option.
 
 ```yaml
 web:
@@ -42,7 +42,7 @@ obfuscate_validation_errors: false
     
 persisted_operations:
   # Enable or disable the feature, enabled by default
-  enabled: true
+  enabled: false
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
   reject_on_failure: true
   # Store is the location on local disk where graphql-protect can find the persisted operations, it loads any `*.json` files on disk
@@ -56,7 +56,7 @@ persisted_operations:
   remote:
     # Load persisted operations from a GCP Cloud Storage bucket.
     # Will look at all the objects in the bucket and try to load any object with a `.json` extension
-    gcp_bucket: "somebucket"
+    gcp_bucket: ""
 
 max_aliases:
   # Enable the feature
@@ -98,7 +98,7 @@ enforce_post:
   enabled: true
 ```
 
-For a more in-depth view of each option visit the accompanying documentation page.
+For a more in-depth view of each option visit the accompanying documentation page of each individual protection.
 
 ## Environment Variables
 
@@ -114,7 +114,7 @@ PERSISTED_OPERATIONS_STORE_GCP_BUCKET: gs://my-bucket
 
 ## Command line arguments
 
-Usage: graphql-protect [options] [arguments]
+Usage: `graphql-protect [options] [arguments]`
 
 Examples:
 

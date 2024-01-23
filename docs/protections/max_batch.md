@@ -1,21 +1,22 @@
-# Max depth
+# Max Batch
 
-Restricting the maximum depth of operations that are allowed within a single operation to protect your API from abuse.
+Restricts the maximum number of operations inside a batched request. This helps prevent an excessive number operations reaching your landscape through minimal requests.
+This can be useful to prevent DDoS attacks, Heap Overflows or Server overload.
 
 <!-- TOC -->
 
 ## Configuration
 
-You can configure `graphql-protect` to limit the maximum depth on an operation.
+You can configure `graphql-protect` to limit the maximum number of operations allowed inside a batch request.
 
 ```yaml
-max_depth:
+max_batch:
   # Enable the feature
-  enable: "true"
-  # The maximum depth allowed within a single request.
-  max: 15
-  # Reject the request when the rule fails. Disable this to allow the request
-  reject_on_failure: "true"
+  enable: true
+  # The maximum number of operations within a single batched request.
+  max: 5
+  # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
+  reject_on_failure: true
 ```
 
 ## Metrics
@@ -23,7 +24,7 @@ max_depth:
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-graphql_protect_max_depth_results{result}
+graphql_protect_max_batch_results{result}
 ```
 
 

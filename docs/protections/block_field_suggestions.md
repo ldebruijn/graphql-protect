@@ -13,7 +13,7 @@ You can configure `graphql-protect` to remove field suggestions from your API.
 ```yaml
 block_field_suggestions:
   # Enable the feature, this will remove any field suggestions on your API
-  enable: "true"
+  enable: true
   # The mask to apply whenever a field suggestion is found. The entire message will be replaced with this string
   mask: [redacted]
 ```

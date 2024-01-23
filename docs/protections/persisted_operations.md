@@ -17,13 +17,13 @@ You can configure `graphql-protect` to enable Persisted Operations.
 
 persisted_operations:
   # Enable or disable the feature, enabled by default
-  enabled: "true"
+  enabled: false
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
-  reject_on_failure: "true"
+  reject_on_failure: true
   # Store is the location on local disk where graphql-protect can find the persisted operations, it loads any `*.json` files on disk
   store: "./store"
   reload:
-    enabled: "true"
+    enabled: true
     # The interval in which the local store dir is read and refreshes the internal state
     interval: 5m
     # The timeout for the remote operation
@@ -31,7 +31,7 @@ persisted_operations:
   remote:
     # Load persisted operations from a GCP Cloud Storage bucket.
     # Will look at all the objects in the bucket and try to load any object with a `.json` extension
-    gcp_bucket: "gs://somebucket"
+    gcp_bucket: ""
 
 # ...
 ```

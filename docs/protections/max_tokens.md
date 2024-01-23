@@ -12,11 +12,11 @@ You can configure `graphql-protect` to limit the maximum number of tokens allowe
 ```yaml
 max_tokens:
   # Enable the feature
-  enable: "true"
+  enable: true
   # The maximum number of allowed tokens within a single request.
   max: 1000
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
-  reject_on_failure: "true"
+  reject_on_failure: true
 ```
 
 ## Metrics
