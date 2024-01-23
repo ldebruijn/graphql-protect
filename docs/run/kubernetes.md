@@ -6,8 +6,8 @@ GraphQL Protect is intended to run as sidecar to your main application. This all
 
 This specification describes a minimal example, focussing only on the elements relevant for GraphQL Protect. 
 
-[!NOTE] 
-This is not a complete example, you're expected this mix this in with your existing deployment specification
+> [!NOTE]
+> This is not a complete example, you're expected this mix this in with your existing deployment specification
 
 ```yaml
 apiVersion: apps/v1
@@ -80,4 +80,5 @@ kubectl create configmap graphql-protect-config --from-file=protect.yml
 kubectl create configmap graphql-schema-config --from-file=schema.graphql
 ```
 
-[NOTE!] As always, make sure you're operating on the right context and namespace when executing these commands.
+> [!NOTE] 
+> As always, make sure you're operating on the right context and namespace when executing these commands.
