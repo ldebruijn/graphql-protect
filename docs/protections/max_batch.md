@@ -1,6 +1,6 @@
 # Max Batch
 
-Restricts the maximum number of operations inside a batched request. This helps prevent an excessive number operations reaching your landscape through minimal requests.
+Restricts the maximum number of operations inside a batched request. This helps prevent an excessive number of operations reaching your landscape through minimal requests.
 This can be useful to prevent DDoS attacks, Heap Overflows or Server overload.
 
 <!-- TOC -->
