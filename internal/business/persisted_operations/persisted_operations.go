@@ -192,7 +192,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 		}
 
 		if len(errs) > 0 {
-			// if any error occured we fail
+			// if any error occurred we fail
 			res, _ := json.Marshal(ErrorPayload{
 				Errors: errs,
 			})
