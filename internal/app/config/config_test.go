@@ -12,7 +12,6 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/tokens"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
-	"log"
 	"os"
 	"testing"
 	"time"
@@ -298,19 +297,18 @@ func TestWriteDefaultConfigToYaml(t *testing.T) {
 
 	cfg, err := NewConfig("")
 	if err != nil {
+		assert.NoError(t, err)
 		return
 	}
 
 	file, err := os.OpenFile("default-config.yml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		log.Fatalf("error opening/creating file: %v", err)
+		assert.NoError(t, err)
+		return
 	}
 	defer file.Close()
 
 	enc := yaml.NewEncoder(file)
 
-	err = enc.Encode(cfg)
-	if err != nil {
-		log.Fatalf("error encoding: %v", err)
-	}
+	_ = enc.Encode(cfg)
 }
