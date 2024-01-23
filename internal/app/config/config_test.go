@@ -11,6 +11,8 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/business/tokens"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -286,5 +288,29 @@ enforce_post:
 
 			assert.Equal(t, tt.want, got)
 		})
+	}
+}
+
+// WriteDefaultConfigToYaml is used to write a configuration file with pure defaults to a yaml file.
+// This makes it really easy to copy-paste it onto documentation examples.
+func TestWriteDefaultConfigToYaml(t *testing.T) {
+	t.Skip("not actually a test, abusing the test for easy generation of default configuration file")
+
+	cfg, err := NewConfig("")
+	if err != nil {
+		return
+	}
+
+	file, err := os.OpenFile("default-config.yml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		log.Fatalf("error opening/creating file: %v", err)
+	}
+	defer file.Close()
+
+	enc := yaml.NewEncoder(file)
+
+	err = enc.Encode(cfg)
+	if err != nil {
+		log.Fatalf("error encoding: %v", err)
 	}
 }
