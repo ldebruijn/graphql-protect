@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/graphql-protect.iml" filepath="$PROJECT_DIR$/graphql-protect.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/graphql-protect.iml" filepath="$PROJECT_DIR$/.idea/graphql-protect.iml" />
     </modules>
   </component>
 </project>
