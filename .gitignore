@@ -3,6 +3,12 @@ default-config.yml
 operations.json
 TODO.md
 
+# Jetbrains IDEs
+.idea/
+
+# MacOS
+.DS_Store
+
 # ignore binary
 main
 
