@@ -14,12 +14,12 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/enforce_post"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/ldebruijn/graphql-protect/internal/business/max_depth"
-	middleware2 "github.com/ldebruijn/graphql-protect/internal/business/middleware"
 	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
-	"github.com/ldebruijn/graphql-protect/internal/business/proxy"
-	"github.com/ldebruijn/graphql-protect/internal/business/readiness"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/business/tokens"
+	"github.com/ldebruijn/graphql-protect/internal/http/middleware"
+	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
+	"github.com/ldebruijn/graphql-protect/internal/http/readiness"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -29,27 +29,16 @@ import (
 	log2 "log"
 	"log/slog"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
-	"time"
 )
 
 var (
 	shortHash  = "develop"
 	build      = "develop"
 	configPath = ""
-
-	httpDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "graphql_protect",
-		Subsystem: "http",
-		Name:      "duration",
-		Help:      "HTTP duration",
-	},
-		[]string{"route"},
-	)
 
 	appInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "graphql_protect",
@@ -63,7 +52,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(httpDuration, appInfo)
+	prometheus.MustRegister(appInfo)
 }
 
 func main() {
@@ -130,11 +119,11 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { 
 
 	mux := http.NewServeMux()
 
-	mid := middleware(log, cfg, po, schemaProvider)
+	mid := middlewareChain(log, cfg, po, schemaProvider)
 
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler())
-	mux.Handle(cfg.Web.Path, mid(Handler(pxy)))
+	mux.Handle(cfg.Web.Path, mid(pxy))
 
 	api := http.Server{
 		Addr:         cfg.Web.Host,
@@ -174,9 +163,9 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { 
 	return nil
 }
 
-func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider) func(next http.Handler) http.Handler {
-	rec := middleware2.Recover(log)
-	httpInstrumentation := HTTPInstrumentation()
+func middlewareChain(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider) func(next http.Handler) http.Handler {
+	rec := middleware.Recover(log)
+	httpInstrumentation := middleware.RequestMetricMiddleware()
 
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	max_depth.NewMaxDepthRule(cfg.MaxDepth)
@@ -194,19 +183,6 @@ func middleware(log *slog.Logger, cfg *config.Config, po *persisted_operations.P
 	}
 
 	return fn
-}
-
-func HTTPInstrumentation() func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
-
-			next.ServeHTTP(w, r)
-
-			httpDuration.WithLabelValues(r.URL.Path).Observe(time.Since(start).Seconds())
-		}
-		return http.HandlerFunc(fn)
-	}
 }
 
 func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, batch *batch.MaxBatchRule, obfuscateErrors bool) func(next http.Handler) http.Handler { // nolint:funlen,cyclop
@@ -273,11 +249,4 @@ func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, batch *
 		}
 		return http.HandlerFunc(fn)
 	}
-}
-
-func Handler(p *httputil.ReverseProxy) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		p.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
 }

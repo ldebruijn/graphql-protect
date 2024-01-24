@@ -11,9 +11,9 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/enforce_post"
 	"github.com/ldebruijn/graphql-protect/internal/business/max_depth"
 	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
-	"github.com/ldebruijn/graphql-protect/internal/business/proxy"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/business/tokens"
+	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
 	"os"
 	"time"
 )
