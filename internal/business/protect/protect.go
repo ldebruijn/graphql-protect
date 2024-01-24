@@ -56,7 +56,7 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_opera
 }
 
 func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//TODO Include validation rules here?
+	// TODO Include validation rules here?
 	p.next.ServeHTTP(w, r)
 }
 
