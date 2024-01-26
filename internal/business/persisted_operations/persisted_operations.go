@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	persistedOpsHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	persistedOpsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "graphql_protect",
 		Subsystem: "persisted_operations",
 		Name:      "counter",
@@ -84,7 +84,7 @@ type PersistedOperationsHandler struct {
 }
 
 func init() {
-	prometheus.MustRegister(persistedOpsHistogram, reloadCounter)
+	prometheus.MustRegister(persistedOpsCounter, reloadCounter)
 }
 
 func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
@@ -149,8 +149,6 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 			return
 		}
 
-		start := time.Now()
-
 		var errs gqlerror.List
 
 		payload, err := gql.ParseRequestPayload(r)
@@ -162,13 +160,13 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 
 		for i, data := range payload {
 			if !p.cfg.RejectOnFailure && data.Query != "" {
-				persistedOpsHistogram.WithLabelValues("unknown", "allowed").Observe(time.Since(start).Seconds())
+				persistedOpsCounter.WithLabelValues("unknown", "allowed").Inc()
 				continue
 			}
 
 			hash, err := hashFromPayload(data)
 			if err != nil {
-				persistedOpsHistogram.WithLabelValues("error", "rejected").Observe(time.Since(start).Seconds())
+				persistedOpsCounter.WithLabelValues("error", "rejected").Inc()
 				errs = append(errs, gqlerror.Wrap(ErrPersistedQueryNotFound))
 				continue
 			}
@@ -179,7 +177,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 
 			if !ok {
 				// hash not found, fail
-				persistedOpsHistogram.WithLabelValues("unknown", "rejected").Observe(time.Since(start).Seconds())
+				persistedOpsCounter.WithLabelValues("unknown", "rejected").Inc()
 				errs = append(errs, gqlerror.Wrap(ErrPersistedOperationNotFound))
 				continue
 			}
@@ -188,7 +186,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 			payload[i].Query = query
 			payload[i].Extensions.PersistedQuery = nil
 
-			persistedOpsHistogram.WithLabelValues("known", "allowed").Observe(time.Since(start).Seconds())
+			persistedOpsCounter.WithLabelValues("known", "allowed").Inc()
 		}
 
 		if len(errs) > 0 {

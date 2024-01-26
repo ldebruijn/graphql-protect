@@ -5,10 +5,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
-	"time"
 )
 
-var resultHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Namespace: "graphql_protect",
 	Subsystem: "max_depth",
 	Name:      "results",
@@ -24,15 +23,13 @@ type Config struct {
 }
 
 func init() {
-	prometheus.MustRegister(resultHistogram)
+	prometheus.MustRegister(resultCounter)
 }
 
 func NewMaxDepthRule(cfg Config) {
 	if cfg.Enabled {
 		validator.AddRule("MaxDepth", func(observers *validator.Events, addError validator.AddErrFunc) {
 			observers.OnOperation(func(walker *validator.Walker, operation *ast.OperationDefinition) {
-				start := time.Now()
-
 				var maxDepth = countDepth(operation.SelectionSet)
 
 				if maxDepth > cfg.Max {
@@ -42,12 +39,12 @@ func NewMaxDepthRule(cfg Config) {
 							validator.Message(err),
 							validator.At(operation.Position),
 						)
-						resultHistogram.WithLabelValues("rejected").Observe(time.Since(start).Seconds())
+						resultCounter.WithLabelValues("rejected").Inc()
 					} else {
-						resultHistogram.WithLabelValues("failed").Observe(time.Since(start).Seconds())
+						resultCounter.WithLabelValues("failed").Inc()
 					}
 				} else {
-					resultHistogram.WithLabelValues("allowed").Observe(time.Since(start).Seconds())
+					resultCounter.WithLabelValues("allowed").Inc()
 				}
 			})
 		})
