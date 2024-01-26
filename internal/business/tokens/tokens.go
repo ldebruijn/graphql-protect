@@ -5,10 +5,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/lexer"
-	"time"
 )
 
-var resultHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Namespace: "graphql_protect",
 	Subsystem: "max_tokens",
 	Name:      "results",
@@ -24,7 +23,7 @@ type Config struct {
 }
 
 func init() {
-	prometheus.MustRegister(resultHistogram)
+	prometheus.MustRegister(resultCounter)
 }
 
 type MaxTokensRule struct {
@@ -41,8 +40,6 @@ func (t *MaxTokensRule) Validate(source *ast.Source) error {
 	if !t.cfg.Enabled {
 		return nil
 	}
-
-	start := time.Now()
 
 	lex := lexer.New(source)
 	count := 0
@@ -63,11 +60,11 @@ func (t *MaxTokensRule) Validate(source *ast.Source) error {
 
 	if count > t.cfg.Max {
 		if t.cfg.RejectOnFailure {
-			resultHistogram.WithLabelValues("rejected").Observe(time.Since(start).Seconds())
+			resultCounter.WithLabelValues("rejected").Inc()
 			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, t.cfg.Max)
 		}
-		resultHistogram.WithLabelValues("failed").Observe(time.Since(start).Seconds())
+		resultCounter.WithLabelValues("failed").Inc()
 	}
-	resultHistogram.WithLabelValues("allowed").Observe(time.Since(start).Seconds())
+	resultCounter.WithLabelValues("allowed").Inc()
 	return nil
 }
