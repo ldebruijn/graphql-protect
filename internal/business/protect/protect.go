@@ -25,13 +25,14 @@ var (
 )
 
 type GraphQLProtect struct {
-	log      *slog.Logger
-	cfg      *config.Config
-	po       *persisted_operations.PersistedOperationsHandler
-	schema   *schema.Provider
-	tokens   *tokens.MaxTokensRule
-	maxBatch *batch.MaxBatchRule
-	next     http.Handler
+	log            *slog.Logger
+	cfg            *config.Config
+	po             *persisted_operations.PersistedOperationsHandler
+	schema         *schema.Provider
+	tokens         *tokens.MaxTokensRule
+	maxBatch       *batch.MaxBatchRule
+	next           http.Handler
+	preFilterChain func(handler http.Handler) http.Handler
 }
 
 func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider, upstreamProxy http.Handler) (*GraphQLProtect, error) {
@@ -51,12 +52,18 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_opera
 		schema:   schema,
 		tokens:   tokens.MaxTokens(cfg.MaxTokens),
 		maxBatch: maxBatch,
-		// TODO Make sure middleware gets executed before validateRules
-		next: disableMethod(po.Execute(upstreamProxy)),
+		preFilterChain: func(next http.Handler) http.Handler {
+			return disableMethod(po.Execute(next))
+		},
+		next: upstreamProxy,
 	}, nil
 }
 
 func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	p.preFilterChain(http.HandlerFunc(p.handle)).ServeHTTP(w, r)
+}
+
+func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
 	errs := p.validateRequest(r)
 
 	if len(errs) > 0 {
