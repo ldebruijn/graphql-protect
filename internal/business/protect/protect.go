@@ -89,8 +89,9 @@ func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
 
 func (p *GraphQLProtect) validateRequest(r *http.Request) gqlerror.List {
 	payload, err := gql.ParseRequestPayload(r)
-	// Review question: Before when an error occurred we proceeded without validating, I don't think we desire that behaviour?
-	if err != nil { // Why do we forward requests that are not parsable? Seems like a security risk?
+	// If the request cant be parsed, proceed without errors because the request is probably not a GraphQL Query
+	// https://github.com/ldebruijn/graphql-protect/pull/51#discussion_r1469678802
+	if err != nil {
 		return gqlerror.List{gqlerror.Wrap(err)}
 	}
 
