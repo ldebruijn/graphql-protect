@@ -16,10 +16,8 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
-	log2 "log"
 	"log/slog"
 	"net/http"
-	"net/http/httputil"
 )
 
 var (
@@ -27,101 +25,106 @@ var (
 )
 
 type GraphQLProtect struct {
-	log    *slog.Logger
-	cfg    *config.Config
-	po     *persisted_operations.PersistedOperationsHandler
-	schema *schema.Provider
-	next   http.Handler
+	log      *slog.Logger
+	cfg      *config.Config
+	po       *persisted_operations.PersistedOperationsHandler
+	schema   *schema.Provider
+	tokens   *tokens.MaxTokensRule
+	maxBatch *batch.MaxBatchRule
+	next     http.Handler
 }
 
-func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider, upstreamProxy *httputil.ReverseProxy) (*GraphQLProtect, error) {
+func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider, upstreamProxy http.Handler) (*GraphQLProtect, error) {
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	max_depth.NewMaxDepthRule(cfg.MaxDepth)
-	tks := tokens.MaxTokens(cfg.MaxTokens)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
 	if err != nil {
 		log.Warn("Error initializing maximum batch protection", err)
 	}
 
-	vr := ValidationRules(schema, tks, maxBatch, cfg.ObfuscateValidationErrors)
 	disableMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)
 
 	return &GraphQLProtect{
-		log:    log,
-		cfg:    cfg,
-		po:     po,
-		schema: schema,
-		next:   disableMethod(po.Execute(vr(upstreamProxy))),
+		log:      log,
+		cfg:      cfg,
+		po:       po,
+		schema:   schema,
+		tokens:   tokens.MaxTokens(cfg.MaxTokens),
+		maxBatch: maxBatch,
+		// TODO Make sure middleware gets executed before validateRules
+		next: disableMethod(po.Execute(upstreamProxy)),
 	}, nil
 }
 
 func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// TODO Include validation rules here?
+	errs := p.validateRequest(r)
+
+	if len(errs) > 0 {
+		if p.cfg.ObfuscateValidationErrors {
+			errs = gqlerror.List{gqlerror.Wrap(errRedacted)}
+		}
+
+		response := map[string]interface{}{
+			"data":   nil,
+			"errors": errs,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			p.log.Error("could not encode error", "err", err)
+		}
+		return
+	}
+
 	p.next.ServeHTTP(w, r)
 }
 
-func ValidationRules(schema *schema.Provider, tks *tokens.MaxTokensRule, batch *batch.MaxBatchRule, obfuscateErrors bool) func(next http.Handler) http.Handler { // nolint:funlen,cyclop
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			payload, err := gql.ParseRequestPayload(r)
-			if err != nil {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			var errs gqlerror.List
-
-			err = batch.Validate(payload)
-			if err != nil {
-				errs = append(errs, gqlerror.Wrap(err))
-			}
-
-			// only process the rest if no error yet
-			if err == nil {
-				for _, data := range payload {
-					operationSource := &ast.Source{
-						Input: data.Query,
-					}
-
-					err = tks.Validate(operationSource)
-					if err != nil {
-						errs = append(errs, gqlerror.Wrap(err))
-						continue // we could consider break-ing here. That would short-circuit on error, with the downside of not returning all potential errors
-					}
-
-					var query, err = parser.ParseQuery(operationSource)
-					if err != nil {
-						errs = append(errs, gqlerror.Wrap(err))
-						continue
-					}
-
-					errList := validator.Validate(schema.Get(), query)
-					if len(errList) > 0 {
-						errs = append(errs, errList...)
-						continue
-					}
-				}
-			}
-
-			if len(errs) > 0 {
-				if obfuscateErrors {
-					errs = gqlerror.List{gqlerror.Wrap(errRedacted)}
-				}
-
-				response := map[string]interface{}{
-					"data":   nil,
-					"errors": errs,
-				}
-
-				err = json.NewEncoder(w).Encode(response)
-				if err != nil {
-					log2.Println(err)
-				}
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		}
-		return http.HandlerFunc(fn)
+func (p *GraphQLProtect) validateRequest(r *http.Request) gqlerror.List {
+	payload, err := gql.ParseRequestPayload(r)
+	// Review question: Before when an error occurred we proceeded without validating, I don't think we desire that behaviour?
+	if err != nil { // Why do we forward requests that are not parsable? Seems like a security risk?
+		return gqlerror.List{gqlerror.Wrap(err)}
 	}
+
+	var errs gqlerror.List
+
+	err = p.maxBatch.Validate(payload)
+	if err != nil {
+		errs = append(errs, gqlerror.Wrap(err))
+	}
+
+	if err != nil {
+		return errs
+	}
+
+	// only process the rest if no error yet
+	if err == nil {
+		for _, data := range payload {
+			validationErrors := p.validateQuery(data)
+			if len(validationErrors) > 0 {
+				errs = append(errs, validationErrors...)
+			}
+		}
+	}
+
+	return errs
+}
+
+func (p *GraphQLProtect) validateQuery(data gql.RequestData) gqlerror.List {
+	operationSource := &ast.Source{
+		Input: data.Query,
+	}
+
+	err := p.tokens.Validate(operationSource)
+	if err != nil {
+		return gqlerror.List{gqlerror.Wrap(err)}
+	}
+
+	query, err := parser.ParseQuery(operationSource)
+	if err != nil {
+		return gqlerror.List{gqlerror.Wrap(err)}
+	}
+
+	return validator.Validate(p.schema.Get(), query)
 }
