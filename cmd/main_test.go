@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/stretchr/testify/assert"
 	"io"
 	log2 "log"
@@ -331,7 +332,7 @@ input ImageInput {
 				expected := map[string]interface{}{
 					"errors": []map[string]interface{}{
 						{
-							"message": "error(s) redacted",
+							"message": protect.ErrRedacted.Error(),
 						},
 					},
 				}
@@ -340,7 +341,7 @@ input ImageInput {
 				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
 				fmt.Println(string(actual))
-				assert.True(t, errorsContainsMessage("error(s) redacted", actual))
+				assert.True(t, errorsContainsMessage(protect.ErrRedacted.Error(), actual))
 			},
 		},
 		{

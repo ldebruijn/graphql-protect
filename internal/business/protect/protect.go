@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	errRedacted = errors.New("error(s) redacted")
+	ErrRedacted = errors.New("error(s) redacted")
 )
 
 type GraphQLProtect struct {
@@ -68,7 +68,7 @@ func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
 
 	if len(errs) > 0 {
 		if p.cfg.ObfuscateValidationErrors {
-			errs = gqlerror.List{gqlerror.Wrap(errRedacted)}
+			errs = gqlerror.List{gqlerror.Wrap(ErrRedacted)}
 		}
 
 		response := map[string]interface{}{
