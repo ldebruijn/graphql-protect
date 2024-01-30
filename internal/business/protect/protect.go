@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
-	"github.com/ldebruijn/graphql-protect/internal/business/aliases"
-	"github.com/ldebruijn/graphql-protect/internal/business/batch"
-	"github.com/ldebruijn/graphql-protect/internal/business/enforce_post"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
-	"github.com/ldebruijn/graphql-protect/internal/business/max_depth"
 	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/enforce_post"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/max_depth"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
-	"github.com/ldebruijn/graphql-protect/internal/business/tokens"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
@@ -104,13 +104,10 @@ func (p *GraphQLProtect) validateRequest(r *http.Request) gqlerror.List {
 		return errs
 	}
 
-	// only process the rest if no error yet
-	if err == nil {
-		for _, data := range payload {
-			validationErrors := p.validateQuery(data)
-			if len(validationErrors) > 0 {
-				errs = append(errs, validationErrors...)
-			}
+	for _, data := range payload {
+		validationErrors := p.validateQuery(data)
+		if len(validationErrors) > 0 {
+			errs = append(errs, validationErrors...)
 		}
 	}
 
