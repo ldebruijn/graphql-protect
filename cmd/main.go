@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
-	"github.com/ldebruijn/graphql-protect/internal/business/block_field_suggestions"
 	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/http/middleware"
 	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
@@ -114,7 +114,7 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { 
 
 	mux := http.NewServeMux()
 
-	mid := ProtectMiddlewareChain(log)
+	mid := protectMiddlewareChain(log)
 
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler())
@@ -158,7 +158,7 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { 
 	return nil
 }
 
-func ProtectMiddlewareChain(log *slog.Logger) func(next http.Handler) http.Handler {
+func protectMiddlewareChain(log *slog.Logger) func(next http.Handler) http.Handler {
 	rec := middleware.Recover(log)
 	httpInstrumentation := middleware.RequestMetricMiddleware()
 
