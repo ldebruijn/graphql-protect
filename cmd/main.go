@@ -78,10 +78,10 @@ func main() {
 	}
 }
 
-func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { // nolint:funlen
+func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { // nolint:funlen,cyclop
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
-	shutDownTracer, err := otel.SetupOTelSDK(context.Background(), build)
+	shutDownTracer, err := otel.SetupOTELSDK(context.Background(), build)
 	if err != nil {
 		log.Error("Could not setup OTEL Tracing, continuing without tracing")
 	}

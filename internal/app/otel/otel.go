@@ -11,7 +11,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 )
 
-func SetupOTelSDK(ctx context.Context, version string) (shutdown func(context.Context) error, err error) {
+func SetupOTELSDK(ctx context.Context, version string) (shutdown func(context.Context) error, err error) {
 	var shutdownFuncs []func(context.Context) error
 	// shutdown calls cleanup functions registered via shutdownFuncs.
 	// The errors from the calls are joined.
