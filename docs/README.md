@@ -24,3 +24,4 @@ This section contains in depth documentation for run strategies
 
 * [Kubernetes](run/kubernetes.md)
 * [Docker](run/docker.md)
+* [Tracing / OpenTelemetry](run/tracing.md)
