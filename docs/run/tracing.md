@@ -41,7 +41,7 @@ spec:
     spec:
       containers:
       - name: graphql-protect
-        image: eu.gcr.io/bolcom-stg-shop-api-a1c/graphql-protect:v0.11.0 # Replace with the appropriate version
+        image: eu.gcr.io/bolcom-stg-shop-api-a1c/graphql-protect:latest # Replace with the appropriate version
         env:
           - name: OTEL_EXPORTER_OTLP_PROTOCOL
             value: grpc
