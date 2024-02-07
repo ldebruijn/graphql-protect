@@ -20,7 +20,7 @@ type Config struct {
 }
 
 type TracingConfig struct {
-	RedactedHeaders []string `yaml:"redactedheaders"`
+	RedactedHeaders []string `yaml:"redacted_headers"`
 }
 
 func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler) (*httputil.ReverseProxy, error) {

@@ -17,6 +17,18 @@ The system uses [autoprop](https://pkg.go.dev/go.opentelemetry.io/contrib/propag
 configured through the `OTEL_PROPAGATORS` environment variable. Supported propagators include tracecontext, baggage, b3,
 and others. This configuration determines how trace context is maintained across different service calls.
 
+## Redacting headers
+OpenTelemetry might collect HTTP headers that contain sensitive information or PII which are usually not desirable to be
+logged in the traces. By default, OpenTelemetry redacts the following headers: `Authorization, WWW-Authenticate, Proxy-Authenticate
+Proxy-Authorization, Cookie, Set-Cookie`.
+If desired, additional headers can be redacted in `config.yml`.
+```yaml
+target:
+    redacted_headers:
+        - Some-Private-Header
+        - Some-Other-Private-Header
+```
+
 ### Kubernetes Configuration Example
 
 Below is an example configuration for Kubernetes, replace v0.11.0 with the version of Graphql Protect you are using.
