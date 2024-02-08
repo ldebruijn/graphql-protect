@@ -23,7 +23,9 @@ target:
   host: http://localhost:8081
   timeout: 10s
   keep_alive: 180s
-
+  target:
+    redacted_headers: []
+      
 schema:
   # Path to a local file in which the schema can be found
   path: "./schema.graphql"
