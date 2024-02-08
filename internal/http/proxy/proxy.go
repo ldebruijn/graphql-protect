@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -17,6 +16,11 @@ type Config struct {
 	Timeout   time.Duration `conf:"default:10s" yaml:"timeout"`
 	KeepAlive time.Duration `conf:"default:180s" yaml:"keep_alive"`
 	Host      string        `conf:"default:http://localhost:8081" yaml:"host"`
+	Tracing   TracingConfig `yaml:"tracing"`
+}
+
+type TracingConfig struct {
+	RedactedHeaders []string `yaml:"redacted_headers"`
 }
 
 func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler) (*httputil.ReverseProxy, error) {
@@ -24,15 +28,14 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 	if err != nil {
 		return nil, err
 	}
-	proxy := httputil.NewSingleHostReverseProxy(target)
-	proxy.Transport = &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   cfg.Timeout,
-			KeepAlive: cfg.KeepAlive,
-		}).DialContext,
+	proxy := &httputil.ReverseProxy{
+		Rewrite: func(r *httputil.ProxyRequest) {
+			r.SetURL(target)
+			r.Out.Host = r.In.Host
+		},
+		Transport:      NewTransport(cfg),
+		ModifyResponse: modifyResponse(blockFieldSuggestions), // nolint:bodyclose
 	}
-	proxy.ModifyResponse = modifyResponse(blockFieldSuggestions) // nolint:bodyclose
 
 	return proxy, nil
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	"github.com/ldebruijn/graphql-protect/internal/app/otel"
 	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
@@ -16,6 +17,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/http/readiness"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	log2 "log"
 	"log/slog"
 	"net/http"
@@ -76,8 +78,13 @@ func main() {
 	}
 }
 
-func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { // nolint:funlen
+func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { // nolint:funlen,cyclop
 	log.Info("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+
+	shutDownTracer, err := otel.SetupOTELSDK(context.Background(), build)
+	if err != nil {
+		log.Error("Could not setup OTEL Tracing, continuing without tracing")
+	}
 
 	log.Info("Starting proxy", "target", cfg.Target.Host)
 
@@ -153,6 +160,9 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { 
 			_ = api.Close()
 			return fmt.Errorf("could not stop server gracefully: %w", err)
 		}
+		if err := shutDownTracer(ctx); err != nil {
+			log.Error("Could not shutdown tracing gracefully", "err", err)
+		}
 	}
 
 	return nil
@@ -161,9 +171,10 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { 
 func protectMiddlewareChain(log *slog.Logger) func(next http.Handler) http.Handler {
 	rec := middleware.Recover(log)
 	httpInstrumentation := middleware.RequestMetricMiddleware()
+	otelHandler := otelhttp.NewMiddleware("GraphQL Protect")
 
 	fn := func(next http.Handler) http.Handler {
-		return rec(httpInstrumentation(next))
+		return rec(otelHandler(httpInstrumentation(next)))
 	}
 
 	return fn

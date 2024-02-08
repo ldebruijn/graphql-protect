@@ -16,12 +16,15 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
+	"go.opentelemetry.io/otel"
 	"log/slog"
 	"net/http"
 )
 
 var (
 	ErrRedacted = errors.New("error(s) redacted")
+
+	tracer = otel.Tracer("github.com/ldebruijn/graphql-protect/internal/business/protect")
 )
 
 type GraphQLProtect struct {
@@ -60,7 +63,9 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_opera
 }
 
 func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	p.preFilterChain(http.HandlerFunc(p.handle)).ServeHTTP(w, r)
+	ctx, span := tracer.Start(r.Context(), "Handle Request")
+	defer span.End()
+	p.preFilterChain(http.HandlerFunc(p.handle)).ServeHTTP(w, r.WithContext(ctx))
 }
 
 func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
