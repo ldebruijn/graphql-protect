@@ -149,12 +149,12 @@ func Test_modifyResponse(t *testing.T) {
 func TestForwardsXff(t *testing.T) {
 	rr := &RequestRecorder{}
 	testServer := httptest.NewServer(rr)
-	upstreamUrl, err := url.Parse(testServer.URL)
+	upstreamURL, err := url.Parse(testServer.URL)
 
 	cfg := Config{
 		Timeout:   1 * time.Second,
 		KeepAlive: 180 * time.Second,
-		Host:      "http://" + upstreamUrl.Host,
+		Host:      "http://" + upstreamURL.Host,
 		Tracing:   TracingConfig{},
 	}
 	proxy, err := NewProxy(cfg, nil)
@@ -177,7 +177,7 @@ type RequestRecorder struct {
 	lastRequest *http.Request
 }
 
-func (r *RequestRecorder) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (r *RequestRecorder) ServeHTTP(_ http.ResponseWriter, request *http.Request) {
 	r.lastRequest = request
 }
 
