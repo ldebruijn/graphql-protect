@@ -150,6 +150,7 @@ func TestForwardsXff(t *testing.T) {
 	rr := &RequestRecorder{}
 	testServer := httptest.NewServer(rr)
 	upstreamURL, err := url.Parse(testServer.URL)
+	assert.NoError(t, err)
 
 	cfg := Config{
 		Timeout:   1 * time.Second,
