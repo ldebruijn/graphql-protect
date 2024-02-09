@@ -30,6 +30,8 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 	}
 	proxy := &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
+			// Properly proxy XFF header as Rewrite removes it
+			r.Out.Header["X-Forwarded-For"] = r.In.Header["X-Forwarded-For"]
 			r.SetURL(target)
 			r.Out.Host = r.In.Host
 		},
