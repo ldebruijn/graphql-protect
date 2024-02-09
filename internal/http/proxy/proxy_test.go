@@ -5,8 +5,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 func Test_modifyResponse(t *testing.T) {
@@ -141,4 +144,43 @@ func Test_modifyResponse(t *testing.T) {
 			tt.want(tt.args.response)
 		})
 	}
+}
+
+func TestForwardsXff(t *testing.T) {
+	rr := &RequestRecorder{}
+	testServer := httptest.NewServer(rr)
+	upstreamUrl, err := url.Parse(testServer.URL)
+
+	cfg := Config{
+		Timeout:   1 * time.Second,
+		KeepAlive: 180 * time.Second,
+		Host:      "http://" + upstreamUrl.Host,
+		Tracing:   TracingConfig{},
+	}
+	proxy, err := NewProxy(cfg, nil)
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("x-forwarded-for", "123.456.789.0")
+
+	w := httptest.NewRecorder()
+
+	proxy.ServeHTTP(w, req)
+
+	rr.Assert(func(r *http.Request) {
+		val := r.Header.Get("x-forwarded-for")
+		assert.True(t, strings.HasPrefix(val, "123.456.789.0,")) // trailing , to make sure IP of protect is appended to list
+	})
+}
+
+type RequestRecorder struct {
+	lastRequest *http.Request
+}
+
+func (r *RequestRecorder) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	r.lastRequest = request
+}
+
+func (r *RequestRecorder) Assert(assert func(r *http.Request)) {
+	assert(r.lastRequest)
 }
