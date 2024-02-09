@@ -30,6 +30,8 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 	}
 	proxy := &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
+			r.Out.Header["X-Forwarded-For"] = r.In.Header["X-Forwarded-For"]
+			r.SetXForwarded()
 			r.SetURL(target)
 			r.Out.Host = r.In.Host
 		},
@@ -42,7 +44,7 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 
 func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler) func(res *http.Response) error {
 	return func(res *http.Response) error {
-		if !blockFieldSuggestions.Enabled() {
+		if blockFieldSuggestions == nil || !blockFieldSuggestions.Enabled() {
 			return nil
 		}
 
