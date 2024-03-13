@@ -19,7 +19,7 @@ var (
 	reloadFilesGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   "graphql_protect",
 		Subsystem:   "persisted_operations",
-		Name:        "GCS_downloaded_files",
+		Name:        "gcs_downloaded_files",
 		Help:        "number of files downloaded from gcs",
 		ConstLabels: nil,
 	},
@@ -57,7 +57,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 	it := g.client.Bucket(g.bucket).Objects(ctx, &storage.Query{
 		MatchGlob:  "**.json",
 		Versions:   false,
-		Projection: storage.Projection(2), // ProjectionNoACL to speed up downloading
+		Projection: storage.ProjectionNoACL,
 	})
 
 	numberOfFilesProcessed := 0

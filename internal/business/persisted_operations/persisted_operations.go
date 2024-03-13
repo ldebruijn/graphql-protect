@@ -36,14 +36,20 @@ var (
 		ConstLabels: nil,
 	},
 		[]string{"system", "result"})
-	reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	gcsFileDownloadDurationGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   "graphql_protect",
 		Subsystem:   "persisted_operations",
-		Name:        "GCS_download_speed",
-		Help:        "metrics on speed of downloading from gcs bucket",
+		Name:        "gcs_download_duration",
+		Help:        "metrics on duration of downloading from gcs bucket",
 		ConstLabels: nil,
-	},
-		[]string{})
+	}, []string{})
+	uniqueHashesInMemGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   "graphql_protect",
+		Subsystem:   "persisted_operations",
+		Name:        "unique_hashes_in_memory",
+		Help:        "number of unique hashes in memory",
+		ConstLabels: nil,
+	}, []string{})
 )
 
 type ErrorPayload struct {
@@ -93,7 +99,7 @@ type PersistedOperationsHandler struct {
 }
 
 func init() {
-	prometheus.MustRegister(persistedOpsCounter, reloadCounter, reloadGauge)
+	prometheus.MustRegister(persistedOpsCounter, reloadCounter, gcsFileDownloadDurationGauge, uniqueHashesInMemGauge)
 }
 
 func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
@@ -236,6 +242,7 @@ func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	p.lock.Unlock()
 
 	p.log.Info(fmt.Sprintf("Total number of unique operation hashes: %d", len(cache)))
+	uniqueHashesInMemGauge.WithLabelValues().Set(float64(len(cache)))
 	reloadCounter.WithLabelValues("local", "success").Inc()
 
 	return nil
@@ -280,7 +287,7 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	endTime := time.Since(startTime).Seconds()
 
 	p.log.Info(fmt.Sprintf("Loading files from bucket took: %f seconds", endTime))
-	reloadGauge.WithLabelValues().Set(endTime)
+	gcsFileDownloadDurationGauge.WithLabelValues().Set(endTime)
 
 	if err != nil {
 		reloadCounter.WithLabelValues("remote", "failure").Inc()
