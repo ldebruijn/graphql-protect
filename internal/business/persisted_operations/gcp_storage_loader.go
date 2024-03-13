@@ -11,7 +11,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -114,9 +113,9 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 
 /*
 GCS exposes files with their names including directories (e.g. 'folder/filename') since we only
-care about the actual filename, we split the filename on '/' and pick the last part e.g. /folder/filename becomes filename
+care about the actual filename, we use this function to only get the filename e.g. /folder/filename becomes filename
 */
 func getFileName(attrs *storage.ObjectAttrs) string {
-	fileNameSplit := strings.Split(attrs.Name, "/")
-	return fileNameSplit[len(fileNameSplit)-1]
+	_, file := filepath.Split(attrs.Name)
+	return file
 }
