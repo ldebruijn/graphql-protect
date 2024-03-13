@@ -101,12 +101,6 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		return nil, ErrNoLoaderSupplied
 	}
 
-	if remoteLoader != nil {
-		ctx := context.Background()
-		ctx, cancel := context.WithTimeout(ctx, cfg.Reload.Timeout)
-		defer cancel()
-	}
-
 	if cfg.Reload.Enabled && cfg.Reload.Interval < 10*time.Second {
 		return nil, ErrReloadIntervalTooShort
 	}
