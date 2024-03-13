@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/api/iterator"
 	"io"
 	"log/slog"
@@ -12,6 +13,17 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+)
+
+var (
+	reloadFilesGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   "graphql_protect",
+		Subsystem:   "persisted_operations",
+		Name:        "GCS_downloaded_files",
+		Help:        "number of files downloaded from gcs",
+		ConstLabels: nil,
+	},
+		[]string{})
 )
 
 // GcpStorageLoader loads persisted operations from a GCP Storage bucket.
@@ -22,6 +34,10 @@ type GcpStorageLoader struct {
 	bucket string
 	store  string
 	log    *slog.Logger
+}
+
+func init() {
+	prometheus.MustRegister(reloadFilesGauge)
 }
 
 func NewGcpStorageLoader(ctx context.Context, bucket string, store string, logger *slog.Logger) (*GcpStorageLoader, error) {
@@ -91,6 +107,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 	}
 
 	g.log.Info(fmt.Sprintf("Read %d manifest files from bucket", numberOfFilesProcessed))
+	reloadFilesGauge.WithLabelValues().Set(float64(numberOfFilesProcessed))
 
 	return errors.Join(errs...)
 }

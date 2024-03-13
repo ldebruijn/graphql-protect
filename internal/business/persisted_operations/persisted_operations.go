@@ -39,11 +39,11 @@ var (
 	reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   "graphql_protect",
 		Subsystem:   "persisted_operations",
-		Name:        "GCSdownload",
+		Name:        "GCS_download_speed",
 		Help:        "metrics on speed of downloading from gcs bucket",
 		ConstLabels: nil,
 	},
-		[]string{"system", "result"})
+		[]string{})
 )
 
 type ErrorPayload struct {
@@ -286,8 +286,7 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	endTime := time.Since(startTime).Seconds()
 
 	p.log.Info(fmt.Sprintf("Loading files from bucket took: %f seconds", endTime))
-
-	reloadGauge.WithLabelValues("remote", "downloadDuration").Set(endTime)
+	reloadGauge.WithLabelValues().Set(endTime)
 
 	if err != nil {
 		reloadCounter.WithLabelValues("remote", "failure").Inc()
