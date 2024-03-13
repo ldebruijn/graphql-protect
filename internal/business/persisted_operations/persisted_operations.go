@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -32,6 +33,14 @@ var (
 		Subsystem:   "persisted_operations",
 		Name:        "reload",
 		Help:        "Counter tracking reloading behavior and results",
+		ConstLabels: nil,
+	},
+		[]string{"system", "result"})
+	reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   "graphql_protect",
+		Subsystem:   "persisted_operations",
+		Name:        "GCSdownload",
+		Help:        "metrics on speed of downloading from gcs bucket",
 		ConstLabels: nil,
 	},
 		[]string{"system", "result"})
@@ -84,7 +93,7 @@ type PersistedOperationsHandler struct {
 }
 
 func init() {
-	prometheus.MustRegister(persistedOpsCounter, reloadCounter)
+	prometheus.MustRegister(persistedOpsCounter, reloadCounter, reloadGauge)
 }
 
 func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
@@ -232,7 +241,7 @@ func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	p.cache = cache
 	p.lock.Unlock()
 
-	p.log.Info("Loaded persisted operations", "amount", len(cache))
+	p.log.Info(fmt.Sprintf("Total number of unique operation hashes: %d", len(cache)))
 	reloadCounter.WithLabelValues("local", "success").Inc()
 
 	return nil
@@ -270,7 +279,16 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
 	defer cancel()
 
-	err := p.remoteLoader.Load(ctx)
+	startTime := time.Now()
+
+	err := p.remoteLoader.Load(ctx, p.log)
+
+	endTime := time.Now().Sub(startTime).Seconds()
+
+	p.log.Info(fmt.Sprintf("Loading files from bucket took: %f seconds", endTime))
+
+	reloadGauge.WithLabelValues("remote", "downloadDuration").Set(endTime)
+
 	if err != nil {
 		reloadCounter.WithLabelValues("remote", "failure").Inc()
 		return

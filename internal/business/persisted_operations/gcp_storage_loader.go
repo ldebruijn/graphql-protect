@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"google.golang.org/api/iterator"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -33,14 +35,20 @@ func NewGcpStorageLoader(ctx context.Context, bucket string, store string) (*Gcp
 		store:  store,
 	}, nil
 }
-func (g *GcpStorageLoader) Load(ctx context.Context) error {
+func (g *GcpStorageLoader) Load(ctx context.Context, log *slog.Logger) error {
 	it := g.client.Bucket(g.bucket).Objects(ctx, &storage.Query{
-		MatchGlob: "*.json",
+		MatchGlob:  "**.json",
+		Versions:   false,
+		Projection: storage.Projection(2), //ProjectionNoACL to speed up downloading
 	})
+
+	var numberOfFilesProcessed = 0
 
 	var errs []error
 	for {
 		attrs, err := it.Next()
+		numberOfFilesProcessed++
+
 		if errors.Is(err, iterator.Done) {
 			break
 		}
@@ -51,7 +59,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 
 		ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 
-		file, err := os.Create(filepath.Join(g.store, attrs.Name))
+		file, err := os.Create(filepath.Join(g.store, getFileName(attrs)))
 		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("os.Create: %w", err))
@@ -80,5 +88,13 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 		_ = reader.Close()
 	}
 
+	log.Info(fmt.Sprintf("Read %d manifest files from bucket", numberOfFilesProcessed))
+
 	return errors.Join(errs...)
+}
+
+func getFileName(attrs *storage.ObjectAttrs) string {
+	var fileNameSplit = strings.Split(attrs.Name, "/")
+	var fileName = fileNameSplit[len(fileNameSplit)-1]
+	return fileName
 }
