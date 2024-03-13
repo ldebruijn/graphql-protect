@@ -44,7 +44,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 		Projection: storage.Projection(2), // ProjectionNoACL to speed up downloading
 	})
 
-	var numberOfFilesProcessed = 0
+	numberOfFilesProcessed := 0
 
 	var errs []error
 	for {
@@ -95,8 +95,11 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 	return errors.Join(errs...)
 }
 
+/*
+GCS exposes files with their names including directories (e.g. 'folder/filename') since we only
+care about the actual filename, we split the filename on '/' and pick the last part e.g. /folder/filename becomes filename
+*/
 func getFileName(attrs *storage.ObjectAttrs) string {
-	var fileNameSplit = strings.Split(attrs.Name, "/")
-	var fileName = fileNameSplit[len(fileNameSplit)-1]
-	return fileName
+	fileNameSplit := strings.Split(attrs.Name, "/")
+	return fileNameSplit[len(fileNameSplit)-1]
 }
