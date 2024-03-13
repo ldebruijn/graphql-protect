@@ -281,7 +281,7 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 
 	startTime := time.Now()
 
-	err := p.remoteLoader.Load(ctx, p.log)
+	err := p.remoteLoader.Load(ctx)
 
 	endTime := time.Since(startTime).Seconds()
 

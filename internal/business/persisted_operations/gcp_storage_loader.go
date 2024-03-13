@@ -21,9 +21,10 @@ type GcpStorageLoader struct {
 	client *storage.Client
 	bucket string
 	store  string
+	log    *slog.Logger
 }
 
-func NewGcpStorageLoader(ctx context.Context, bucket string, store string) (*GcpStorageLoader, error) {
+func NewGcpStorageLoader(ctx context.Context, bucket string, store string, logger *slog.Logger) (*GcpStorageLoader, error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, err
@@ -33,9 +34,10 @@ func NewGcpStorageLoader(ctx context.Context, bucket string, store string) (*Gcp
 		client: client,
 		bucket: bucket,
 		store:  store,
+		log:    logger,
 	}, nil
 }
-func (g *GcpStorageLoader) Load(ctx context.Context, log *slog.Logger) error {
+func (g *GcpStorageLoader) Load(ctx context.Context) error {
 	it := g.client.Bucket(g.bucket).Objects(ctx, &storage.Query{
 		MatchGlob:  "**.json",
 		Versions:   false,
@@ -88,7 +90,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context, log *slog.Logger) error {
 		_ = reader.Close()
 	}
 
-	log.Info(fmt.Sprintf("Read %d manifest files from bucket", numberOfFilesProcessed))
+	g.log.Info(fmt.Sprintf("Read %d manifest files from bucket", numberOfFilesProcessed))
 
 	return errors.Join(errs...)
 }
