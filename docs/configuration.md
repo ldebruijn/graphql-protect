@@ -70,7 +70,7 @@ max_aliases:
 
 block_field_suggestions:
   enabled: true
-  mask: [redacted]
+  mask: "[redacted]"
   
 max_depth:
   enabled: true
