@@ -283,7 +283,7 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 
 	err := p.remoteLoader.Load(ctx, p.log)
 
-	endTime := time.Now().Sub(startTime).Seconds()
+	endTime := time.Since(startTime).Seconds()
 
 	p.log.Info(fmt.Sprintf("Loading files from bucket took: %f seconds", endTime))
 

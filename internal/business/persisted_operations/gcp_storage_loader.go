@@ -39,7 +39,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context, log *slog.Logger) error {
 	it := g.client.Bucket(g.bucket).Objects(ctx, &storage.Query{
 		MatchGlob:  "**.json",
 		Versions:   false,
-		Projection: storage.Projection(2), //ProjectionNoACL to speed up downloading
+		Projection: storage.Projection(2), // ProjectionNoACL to speed up downloading
 	})
 
 	var numberOfFilesProcessed = 0
