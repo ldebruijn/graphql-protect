@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -35,6 +36,20 @@ var (
 		ConstLabels: nil,
 	},
 		[]string{"system", "result"})
+	gcsFileDownloadDurationGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   "graphql_protect",
+		Subsystem:   "persisted_operations",
+		Name:        "gcs_download_duration",
+		Help:        "metrics on duration of downloading from gcs bucket",
+		ConstLabels: nil,
+	}, []string{})
+	uniqueHashesInMemGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   "graphql_protect",
+		Subsystem:   "persisted_operations",
+		Name:        "unique_hashes_in_memory",
+		Help:        "number of unique hashes in memory",
+		ConstLabels: nil,
+	}, []string{})
 )
 
 type ErrorPayload struct {
@@ -84,22 +99,12 @@ type PersistedOperationsHandler struct {
 }
 
 func init() {
-	prometheus.MustRegister(persistedOpsCounter, reloadCounter)
+	prometheus.MustRegister(persistedOpsCounter, reloadCounter, gcsFileDownloadDurationGauge, uniqueHashesInMemGauge)
 }
 
 func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
 	if loader == nil {
 		return nil, ErrNoLoaderSupplied
-	}
-
-	if remoteLoader != nil {
-		ctx := context.Background()
-		ctx, cancel := context.WithTimeout(ctx, cfg.Reload.Timeout)
-		defer cancel()
-		err := remoteLoader.Load(ctx)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	if cfg.Reload.Enabled && cfg.Reload.Interval < 10*time.Second {
@@ -236,7 +241,8 @@ func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	p.cache = cache
 	p.lock.Unlock()
 
-	p.log.Info("Loaded persisted operations", "amount", len(cache))
+	p.log.Info(fmt.Sprintf("Total number of unique operation hashes: %d", len(cache)))
+	uniqueHashesInMemGauge.WithLabelValues().Set(float64(len(cache)))
 	reloadCounter.WithLabelValues("local", "success").Inc()
 
 	return nil
@@ -274,7 +280,15 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
 	defer cancel()
 
+	startTime := time.Now()
+
 	err := p.remoteLoader.Load(ctx)
+
+	endTime := time.Since(startTime).Seconds()
+
+	p.log.Info(fmt.Sprintf("Loading files from bucket took: %f seconds", endTime))
+	gcsFileDownloadDurationGauge.WithLabelValues().Set(endTime)
+
 	if err != nil {
 		reloadCounter.WithLabelValues("remote", "failure").Inc()
 		return

@@ -3,6 +3,7 @@ package persisted_operations // nolint:revive
 import (
 	"context"
 	"errors"
+	"log/slog"
 )
 
 type LocalLoader interface {
@@ -17,8 +18,8 @@ var ErrNoRemoteLoaderSpecified = errors.New("no remote loader specified")
 
 // RemoteLoaderFromConfig looks at the configuration applied and figures out which remoteLoader to initialize and return
 // If no remoteLoader is configured an error is returned
-func RemoteLoaderFromConfig(cfg Config) (RemoteLoader, error) {
-	loader, err := determineLoader(cfg)
+func RemoteLoaderFromConfig(cfg Config, log *slog.Logger) (RemoteLoader, error) {
+	loader, err := determineLoader(cfg, log)
 	if err != nil {
 		return loader, err
 	}
@@ -26,9 +27,9 @@ func RemoteLoaderFromConfig(cfg Config) (RemoteLoader, error) {
 }
 
 // load loads persisted operations from various sources
-func determineLoader(cfg Config) (RemoteLoader, error) {
+func determineLoader(cfg Config, log *slog.Logger) (RemoteLoader, error) {
 	if cfg.Remote.GcpBucket != "" {
-		loader, err := NewGcpStorageLoader(context.Background(), cfg.Remote.GcpBucket, cfg.Store)
+		loader, err := NewGcpStorageLoader(context.Background(), cfg.Remote.GcpBucket, cfg.Store, log)
 		if err != nil {
 			return nil, errors.New("unable to instantiate GcpBucketLoader")
 		}

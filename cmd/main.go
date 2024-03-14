@@ -96,7 +96,7 @@ func run(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error { 
 		return nil
 	}
 
-	remoteLoader, err := persisted_operations.RemoteLoaderFromConfig(cfg.PersistedOperations)
+	remoteLoader, err := persisted_operations.RemoteLoaderFromConfig(cfg.PersistedOperations, log)
 	if err != nil && !errors.Is(err, persisted_operations.ErrNoRemoteLoaderSpecified) {
 		log.Warn("Error initializing remote loader", "err", err)
 	}
