@@ -44,20 +44,6 @@ func init() {
 	prometheus.MustRegister(appInfo)
 }
 
-func entry() {
-	if len(os.Args) < 2 {
-		fmt.Println("subcommand required")
-		os.Exit(1)
-	}
-
-	switch os.Args[1] {
-	case "serve":
-	// serve, also default
-	case "validate":
-		// run validations on operations
-	}
-}
-
 func main() {
 	flag.StringVar(&configPath, "f", "./protect.yml", "Defines the path at which the configuration file can be found")
 	flag.Parse()
