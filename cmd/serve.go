@@ -44,7 +44,7 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 		log.Warn("Error initializing remote loader", "err", err)
 	}
 
-	po, err := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations), remoteLoader)
+	po, err := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations, log), remoteLoader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
 		return nil

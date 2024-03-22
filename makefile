@@ -14,7 +14,7 @@ dev.setup:
 
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" ./cmd/main.go
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o main ./cmd/.
 
 .PHONY: test
 test:
