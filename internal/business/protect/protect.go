@@ -46,7 +46,7 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_opera
 		log.Warn("Error initializing maximum batch protection", err)
 	}
 
-	disableMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)
+	enforcePostMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)
 
 	return &GraphQLProtect{
 		log:      log,
@@ -56,7 +56,7 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_opera
 		tokens:   tokens.MaxTokens(cfg.MaxTokens),
 		maxBatch: maxBatch,
 		preFilterChain: func(next http.Handler) http.Handler {
-			return disableMethod(po.Execute(next))
+			return enforcePostMethod(po.SwapHashForQuery(next))
 		},
 		next: upstreamHandler,
 	}, nil

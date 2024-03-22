@@ -253,7 +253,7 @@ func TestNewPersistedOperations(t *testing.T) {
 			req := httptest.NewRequest("POST", "/", bytes.NewBuffer(tt.args.payload))
 			resp := httptest.NewRecorder()
 
-			po.Execute(tt.want(t)).ServeHTTP(resp, req)
+			po.SwapHashForQuery(tt.want(t)).ServeHTTP(resp, req)
 			res := resp.Result()
 			defer res.Body.Close()
 
