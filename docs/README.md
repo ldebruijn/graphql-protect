@@ -6,6 +6,16 @@ Please see each section for in-depth documentation
 
 [This section](configuration.md) describes the configuration options for GraphQL Protect.
 
+## Run modes
+
+Protect supports various running modes for different needs and purposes.
+
+* `serve` runs as an HTTP proxy protection your GraphQL during runtime. Check out the [Deployment Options](#run) section for more configuration options
+* `validate` runs as a CLI tool, validating your Peristed Operations against your schema and configured protections
+* `version` outputs versioning info of protect
+
+If no runmode is explicitly specified, `serve` is assumed as default
+
 ## Protections
 
 This section contains all the documentation about each protection feature.

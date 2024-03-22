@@ -110,7 +110,7 @@ func (p *GraphQLProtect) validateRequest(r *http.Request) gqlerror.List {
 	}
 
 	for _, data := range payload {
-		validationErrors := p.validateQuery(data)
+		validationErrors := p.ValidateQuery(data.Query)
 		if len(validationErrors) > 0 {
 			errs = append(errs, validationErrors...)
 		}
@@ -119,9 +119,9 @@ func (p *GraphQLProtect) validateRequest(r *http.Request) gqlerror.List {
 	return errs
 }
 
-func (p *GraphQLProtect) validateQuery(data gql.RequestData) gqlerror.List {
+func (p *GraphQLProtect) ValidateQuery(operation string) gqlerror.List {
 	operationSource := &ast.Source{
-		Input: data.Query,
+		Input: operation,
 	}
 
 	err := p.tokens.Validate(operationSource)
