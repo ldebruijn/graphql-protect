@@ -52,7 +52,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 			err = json.Unmarshal(contents, &result)
 
 			if err != nil {
-				d.log.Warn(fmt.Sprintf("error reading file %s error:%s", file.Name(), err))
+				d.log.Warn("error unmarshalling operation file", "filepath" filepath, "err", err)
 				continue
 			}
 		}
