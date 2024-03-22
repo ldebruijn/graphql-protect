@@ -3,7 +3,6 @@ package persisted_operations // nolint:revive
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -52,7 +51,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 			err = json.Unmarshal(contents, &result)
 
 			if err != nil {
-				d.log.Warn("error unmarshalling operation file", "filepath" filepath, "err", err)
+				d.log.Warn("error unmarshalling operation file", "filepath", filePath, "err", err)
 				continue
 			}
 		}
