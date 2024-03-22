@@ -145,9 +145,9 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 	return poh, nil
 }
 
-// Execute runs of the persisted operations handler
+// SwapHashForQuery runs of the persisted operations handler
 // it uses the configuration supplied to decide its behavior
-func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { // nolint:funlen,cyclop
+func (p *PersistedOperationsHandler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:funlen,cyclop
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !p.cfg.Enabled || r.Method != "POST" {
 			next.ServeHTTP(w, r)
@@ -190,6 +190,7 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 			// update the original data
 			payload[i].Query = query
 			payload[i].Extensions.PersistedQuery = nil
+			payload[i].OperationName = "" // TODO fixme use actual operationName here https://github.com/ldebruijn/graphql-protect/issues/69
 
 			persistedOpsCounter.WithLabelValues("known", "allowed").Inc()
 		}
