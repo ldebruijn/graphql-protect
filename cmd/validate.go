@@ -40,13 +40,13 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 		return nil
 	}
 
-	protectHandler, err := protect.NewGraphQLProtect(log, cfg, po, schemaProvider, nil)
+	protectChain, err := protect.NewGraphQLProtect(log, cfg, po, schemaProvider, nil)
 	if err != nil {
 		log.Error("Error initializing GraphQL Protect", "err", err)
 		return err
 	}
 
-	errs := po.Validate(protectHandler.ValidateQuery)
+	errs := po.Validate(protectChain.ValidateQuery)
 	if len(errs) > 0 {
 		log.Warn("Errors found during validation of operations")
 		formatErrors(errs)
