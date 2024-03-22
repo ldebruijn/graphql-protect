@@ -14,6 +14,8 @@ Protect supports various running modes for different needs and purposes.
 * `validate` runs as a CLI tool, validating your Peristed Operations against your schema and configured protections
 * `version` outputs versioning info of protect
 
+If no runmode is explicitly specified, `serve` is assumed as default
+
 ## Protections
 
 This section contains all the documentation about each protection feature.

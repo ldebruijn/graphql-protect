@@ -121,7 +121,7 @@ Usage: `graphql-protect [options] [arguments]`
 Examples:
 
 ```bash
-graphql-protect \
+graphql-protect [runmode] \
     --persisted-operations-enabled=true \
     --web-path=/graphql \
     --persisted-operations-store-gcp-bucket=gs://my-bucket
