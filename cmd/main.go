@@ -77,13 +77,11 @@ func main() {
 
 	switch action {
 	case "serve":
-		// serve, also default
 		if err := httpServer(log, cfg, shutdown); err != nil {
 			log.Error("startup", "msg", err)
 			os.Exit(1)
 		}
 	case "validate":
-		// run validations on operations
 		if err := validate(log, cfg, shutdown); err != nil {
 			log.Error("validate", "msg", err)
 			os.Exit(1)
