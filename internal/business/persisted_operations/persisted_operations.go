@@ -231,6 +231,19 @@ func (p *PersistedOperationsHandler) Execute(next http.Handler) http.Handler { /
 	return http.HandlerFunc(fn)
 }
 
+func (p *PersistedOperationsHandler) Validate(validate func(operation string) gqlerror.List) gqlerror.List {
+	var errs gqlerror.List
+	for hash, operation := range p.cache {
+		err := validate(operation)
+		if len(err) > 0 {
+			formattedErr := gqlerror.Wrap(fmt.Errorf("error validating hash [%s], %w", hash, err))
+			errs = append(errs, formattedErr)
+		}
+	}
+
+	return errs
+}
+
 func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	cache, err := p.dirLoader.Load(context.Background())
 	if err != nil {
