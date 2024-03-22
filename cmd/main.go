@@ -70,7 +70,7 @@ func main() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	action := "serve"
+	action := "validate"
 	if len(os.Args) > 1 {
 		action = os.Args[1]
 	}

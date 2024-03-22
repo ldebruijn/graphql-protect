@@ -11,6 +11,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log/slog"
 	"os"
+	"strings"
 )
 
 var ErrValidationErrorsFound = errors.New("errors found during validation")
@@ -54,19 +55,22 @@ func validate(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) err
 	return nil
 }
 
-type Row interface{}
-type Table struct {
-	Headers Row
-	Rows    []Row
-}
-
 func formatErrors(errs gqlerror.List) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"#", "Error"})
+	t.AppendHeader(table.Row{"#", "Hash", "Error"})
 
 	for i, err := range errs {
-		t.AppendRow(table.Row{i, err.Message})
+		// try and format this nicely
+		fIndex := strings.Index(err.Message, "[")
+		lIndex := strings.Index(err.Message, "], ")
+		if fIndex < 0 || lIndex < 0 || len(err.Message) < fIndex+1 || len(err.Message) < lIndex+3 {
+			// prevent breaking when the expected log format is not met
+			t.AppendRow(table.Row{i, "", err.Message})
+			continue
+		}
+		hash := err.Message[fIndex+1 : lIndex]
+		t.AppendRow(table.Row{i, hash, err.Message[lIndex+3:]})
 	}
 
 	t.AppendFooter(table.Row{"Total", len(errs)})
