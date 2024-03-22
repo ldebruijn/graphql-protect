@@ -8,9 +8,10 @@ import (
 )
 
 type RequestData struct {
-	Variables  map[string]interface{} `json:"variables,omitempty"`
-	Query      string                 `json:"query,omitempty"`
-	Extensions Extensions             `json:"extensions,omitempty"`
+	OperationName string                 `json:"operationName,omitempty"`
+	Variables     map[string]interface{} `json:"variables,omitempty"`
+	Query         string                 `json:"query,omitempty"`
+	Extensions    Extensions             `json:"extensions,omitempty"`
 }
 
 type Extensions struct {
