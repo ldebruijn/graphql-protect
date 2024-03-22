@@ -16,7 +16,7 @@ import (
 
 var ErrValidationErrorsFound = errors.New("errors found during validation")
 
-func validate(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) error {
+func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 	if !cfg.PersistedOperations.Enabled {
 		err := fmt.Errorf("persisted operations must be enabled to run validate")
 		log.Error("Error running validations", "err", err)
