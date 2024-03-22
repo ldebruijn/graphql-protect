@@ -16,6 +16,9 @@ dev.setup:
 build:
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o main ./cmd/.
 
+x-build:
+	GOOS=linux GOARCH=amd64 make build
+
 .PHONY: test
 test:
 	go test -v ./...
@@ -28,6 +31,9 @@ lint:
 .PHONY: build_container
 build_container: build
 	docker build . -t graphql-protect --build-arg BUILD_DATE=$(BUILD_DATE) --build-arg VERSION=$(VERSION) --build-arg REVISION=$(SHORT_HASH)
+
+x_build_container: build
+	docker buildx build --platform="linux/amd64" --push -t graphql-protect --build-arg BUILD_DATE=$(BUILD_DATE) --build-arg VERSION=$(VERSION) --build-arg REVISION=$(SHORT_HASH) .
 
 .PHONY: run_container
 run_container: build_container
