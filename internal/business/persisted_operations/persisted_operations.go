@@ -92,6 +92,7 @@ type PersistedOperationsHandler struct {
 	// Strategy for loading persisted operations from a remote location
 	remoteLoader  RemoteLoader
 	refreshTicker *time.Ticker
+	refreshLock   sync.Mutex
 
 	dirLoader LocalLoader
 	done      chan bool
@@ -129,6 +130,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		refreshTicker: refreshTicker,
 		done:          done,
 		lock:          sync.RWMutex{},
+		refreshLock:   sync.Mutex{},
 	}
 
 	if cfg.Enabled {
@@ -260,6 +262,9 @@ func (p *PersistedOperationsHandler) reload() {
 			case <-p.done:
 				return
 			case <-p.refreshTicker.C:
+				if !p.refreshLock.TryLock() {
+					continue
+				}
 				p.reloadFromRemote()
 				err := p.reloadFromLocalDir()
 				if err != nil {
@@ -268,6 +273,7 @@ func (p *PersistedOperationsHandler) reload() {
 					continue
 				}
 				reloadCounter.WithLabelValues("ticker", "success").Inc()
+				p.refreshLock.Unlock()
 			}
 		}
 	}()
