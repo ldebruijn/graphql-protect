@@ -138,6 +138,8 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		if err != nil {
 			return nil, err
 		}
+
+		poh.reloadProcessor()
 	}
 
 	return poh, nil
