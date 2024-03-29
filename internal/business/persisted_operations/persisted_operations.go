@@ -261,7 +261,7 @@ func (p *PersistedOperationsHandler) reloadProcessor() {
 				return
 			case <-p.refreshTicker.C:
 				if !p.refreshLock.TryLock() {
-					p.log.Warn("Refresh ticker still runnig while next tick")
+					p.log.Warn("Refresh ticker still running while next tick")
 					continue
 				}
 				err := p.reload()
