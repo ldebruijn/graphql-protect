@@ -32,8 +32,8 @@ lint:
 build_container: build
 	docker build . -t graphql-protect --build-arg BUILD_DATE=$(BUILD_DATE) --build-arg VERSION=$(VERSION) --build-arg REVISION=$(SHORT_HASH)
 
-x_build_container: build
-	docker buildx build --platform="linux/amd64" --push -t graphql-protect --build-arg BUILD_DATE=$(BUILD_DATE) --build-arg VERSION=$(VERSION) --build-arg REVISION=$(SHORT_HASH) .
+x_build_container: x-build
+	docker buildx build --platform="linux/amd64" -t graphql-protect --build-arg BUILD_DATE=$(BUILD_DATE) --build-arg VERSION=$(VERSION) --build-arg REVISION=$(SHORT_HASH) .
 
 .PHONY: run_container
 run_container: build_container
