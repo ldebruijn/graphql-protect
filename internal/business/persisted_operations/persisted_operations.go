@@ -92,6 +92,7 @@ type PersistedOperationsHandler struct {
 	// Strategy for loading persisted operations from a remote location
 	remoteLoader  RemoteLoader
 	refreshTicker *time.Ticker
+	refreshLock   sync.Mutex
 
 	dirLoader LocalLoader
 	done      chan bool
@@ -129,17 +130,16 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 		refreshTicker: refreshTicker,
 		done:          done,
 		lock:          sync.RWMutex{},
+		refreshLock:   sync.Mutex{},
 	}
 
 	if cfg.Enabled {
-		poh.reloadFromRemote()
-		err := poh.reloadFromLocalDir()
+		err := poh.reload()
 		if err != nil {
 			return nil, err
 		}
 
-		// start reloader
-		poh.reload()
+		poh.reloadProcessor()
 	}
 
 	return poh, nil
@@ -262,7 +262,7 @@ func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	return nil
 }
 
-func (p *PersistedOperationsHandler) reload() {
+func (p *PersistedOperationsHandler) reloadProcessor() {
 	if !p.cfg.Reload.Enabled {
 		return
 	}
@@ -273,19 +273,33 @@ func (p *PersistedOperationsHandler) reload() {
 			case <-p.done:
 				return
 			case <-p.refreshTicker.C:
-				p.reloadFromRemote()
-				err := p.reloadFromLocalDir()
-				if err != nil {
-					p.log.Warn("Error loading from local dir", "err", err)
-					reloadCounter.WithLabelValues("ticker", "failure").Inc()
+				if !p.refreshLock.TryLock() {
+					p.log.Warn("Refresh ticker still running while next tick")
 					continue
 				}
-				reloadCounter.WithLabelValues("ticker", "success").Inc()
+				err := p.reload()
+				if err != nil {
+					continue
+				}
+				p.refreshLock.Unlock()
 			}
 		}
 	}()
 }
 
+func (p *PersistedOperationsHandler) reload() error {
+	p.reloadFromRemote()
+	// sleep to ensure file commit happened, found > 1 second provided best results
+	time.Sleep(1 * time.Second)
+	err := p.reloadFromLocalDir()
+	if err != nil {
+		p.log.Warn("Error loading from local dir", "err", err)
+		reloadCounter.WithLabelValues("ticker", "failure").Inc()
+		return err
+	}
+	reloadCounter.WithLabelValues("ticker", "success").Inc()
+	return nil
+}
 func (p *PersistedOperationsHandler) reloadFromRemote() {
 	if p.remoteLoader == nil {
 		return
@@ -297,16 +311,16 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	startTime := time.Now()
 
 	err := p.remoteLoader.Load(ctx)
-
-	endTime := time.Since(startTime).Seconds()
-
-	p.log.Info(fmt.Sprintf("Loading files from bucket took: %f seconds", endTime))
-	gcsFileDownloadDurationGauge.WithLabelValues().Set(endTime)
-
 	if err != nil {
+		p.log.Error("Error loading files from bucket", "err", err)
 		reloadCounter.WithLabelValues("remote", "failure").Inc()
 		return
 	}
+
+	endTime := time.Since(startTime).Seconds()
+
+	p.log.Info("Loaded files from bucket took", "duration-seconds", endTime)
+	gcsFileDownloadDurationGauge.WithLabelValues().Set(endTime)
 
 	reloadCounter.WithLabelValues("remote", "success").Inc()
 }
