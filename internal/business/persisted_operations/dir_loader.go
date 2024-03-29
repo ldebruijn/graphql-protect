@@ -45,11 +45,11 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 			filePath := filepath.Join(d.path, file.Name())
 			contents, err := os.ReadFile(filePath)
 			if err != nil {
+				d.log.Warn("Error reading file", "err", err)
 				continue
 			}
 
 			err = json.Unmarshal(contents, &result)
-
 			if err != nil {
 				d.log.Warn("error unmarshalling operation file", "filepath", filePath, "err", err)
 				continue

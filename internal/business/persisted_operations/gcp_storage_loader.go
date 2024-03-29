@@ -90,9 +90,11 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 			continue
 		}
 
-		if _, err := io.Copy(file, reader); err != nil {
+		_, err = io.Copy(file, reader)
+		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("io.Copy: %w", err))
+			_ = reader.Close()
 			continue
 		}
 
@@ -105,7 +107,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 		_ = reader.Close()
 	}
 
-	g.log.Info(fmt.Sprintf("Read %d manifest files from bucket", numberOfFilesProcessed))
+	g.log.Info("Read manifest files from bucket", "numFiles", numberOfFilesProcessed, "numErrs", len(errs))
 	reloadFilesGauge.WithLabelValues().Set(float64(numberOfFilesProcessed))
 
 	return errors.Join(errs...)
