@@ -3,6 +3,7 @@ package persisted_operations // nolint:revive
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 )
 
@@ -31,7 +32,7 @@ func determineLoader(cfg Config, log *slog.Logger) (RemoteLoader, error) {
 	if cfg.Remote.GcpBucket != "" {
 		loader, err := NewGcpStorageLoader(context.Background(), cfg.Remote.GcpBucket, cfg.Store, log)
 		if err != nil {
-			return nil, errors.New("unable to instantiate GcpBucketLoader")
+			return nil, errors.New(fmt.Sprintf("unable to instantiate GcpBucketLoader err: %s", err))
 		}
 		return loader, nil
 	}
