@@ -32,7 +32,7 @@ func determineLoader(cfg Config, log *slog.Logger) (RemoteLoader, error) {
 	if cfg.Remote.GcpBucket != "" {
 		loader, err := NewGcpStorageLoader(context.Background(), cfg.Remote.GcpBucket, cfg.Store, log)
 		if err != nil {
-			return nil, fmt.Errorf("unable to instantiate GcpBucketLoader err: %s", err)
+			return nil, fmt.Errorf("unable to instantiate GcpBucketLoader err: %w", err)
 		}
 		return loader, nil
 	}
