@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"maps"
 	"os"
 	"path/filepath"
 )
@@ -35,7 +36,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 		}
 	}
 
-	var result map[string]string
+	result := map[string]string{}
 
 	for _, file := range files {
 		if file.IsDir() {
@@ -49,11 +50,14 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 				continue
 			}
 
-			err = json.Unmarshal(contents, &result)
+			var manifestHashes map[string]string
+			err = json.Unmarshal(contents, &manifestHashes)
 			if err != nil {
 				d.log.Warn("error unmarshalling operation file", "filepath", filePath, "err", err)
 				continue
 			}
+
+			maps.Copy(result, manifestHashes)
 		}
 	}
 
