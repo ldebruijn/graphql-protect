@@ -36,7 +36,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 		}
 	}
 
-	var result = map[string]string{}
+	result := map[string]string{}
 
 	for _, file := range files {
 		if file.IsDir() {
