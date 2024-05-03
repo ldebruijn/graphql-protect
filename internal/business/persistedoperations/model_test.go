@@ -53,6 +53,16 @@ func TestNewPersistedOperation(t *testing.T) {
 				Operation: "mutation{ product(id: 1) { id title as } }",
 			},
 		},
+		{
+			name: "excludes operation arguments",
+			args: args{
+				operation: "query Foobar($some: Int, $value: String){ product(id: 1) { id title as } }",
+			},
+			want: PersistedOperation{
+				Operation: "query Foobar($some: Int, $value: String){ product(id: 1) { id title as } }",
+				Name:      "Foobar",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

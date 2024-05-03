@@ -18,10 +18,16 @@ func NewPersistedOperation(operation string) PersistedOperation {
 func extractOperationNameFromPersistedOperation(payload string) string {
 	firstSpace := strings.Index(payload, " ")
 	firstBracket := strings.Index(payload, "{")
+	firstParenthesis := strings.Index(payload, "(")
 
-	if firstSpace > firstBracket {
+	until := firstBracket
+	if firstParenthesis < firstBracket {
+		until = firstParenthesis
+	}
+
+	if firstSpace > until {
 		return ""
 	}
 
-	return payload[firstSpace+1 : firstBracket]
+	return payload[firstSpace+1 : until]
 }
