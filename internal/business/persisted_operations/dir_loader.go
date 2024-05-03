@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // DirLoader loads persisted operations from a filesystem directory
@@ -49,6 +50,11 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 				continue
 			}
 
+			// Dont parse null values as null values causes the result map to be reset to null
+			if isNullValue(contents) {
+				continue
+			}
+
 			err = json.Unmarshal(contents, &result)
 			if err != nil {
 				d.log.Warn("error unmarshalling operation file", "filepath", filePath, "err", err)
@@ -58,4 +64,9 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 	}
 
 	return result, nil
+}
+
+func isNullValue(contents []byte) bool {
+	content := strings.ToLower(string(contents))
+	return strings.TrimSpace(content) == "null"
 }
