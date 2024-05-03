@@ -62,6 +62,10 @@ func main() {
 	action := "serve"
 	if len(os.Args) > 1 {
 		action = os.Args[1]
+		if action == "-f" {
+			// backwards compatible change
+			action = "serve"
+		}
 	}
 
 	switch action {
