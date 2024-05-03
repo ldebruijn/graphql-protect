@@ -235,7 +235,7 @@ func (p *PersistedOperationsHandler) SwapHashForQuery(next http.Handler) http.Ha
 func (p *PersistedOperationsHandler) Validate(validate func(operation string) gqlerror.List) gqlerror.List {
 	var errs gqlerror.List
 	for hash, operation := range p.cache {
-		err := validate(operation)
+		err := validate(operation.Operation)
 		if len(err) > 0 {
 			formattedErr := gqlerror.Wrap(fmt.Errorf("error validating hash [%s], %w", hash, err))
 			errs = append(errs, formattedErr)
@@ -300,6 +300,7 @@ func (p *PersistedOperationsHandler) reload() error {
 	reloadCounter.WithLabelValues("ticker", "success").Inc()
 	return nil
 }
+
 func (p *PersistedOperationsHandler) reloadFromRemote() {
 	if p.remoteLoader == nil {
 		return
