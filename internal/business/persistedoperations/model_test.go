@@ -63,6 +63,16 @@ func TestNewPersistedOperation(t *testing.T) {
 				Name:      "Foobar",
 			},
 		},
+		{
+			name: "no weird stuff when getting a completely malformed string",
+			args: args{
+				operation: "",
+			},
+			want: PersistedOperation{
+				Operation: "",
+				Name:      "",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

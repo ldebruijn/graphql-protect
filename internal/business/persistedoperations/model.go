@@ -25,7 +25,7 @@ func extractOperationNameFromPersistedOperation(payload string) string {
 		until = firstParenthesis
 	}
 
-	if firstSpace > until {
+	if firstSpace > until || until == -1 {
 		return ""
 	}
 
