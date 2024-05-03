@@ -12,7 +12,7 @@ import (
 
 func Test_MaxAliasesRule(t *testing.T) {
 	schema := `
-type Query {
+type Operation {
    getBook(title: String): Book
 }
 

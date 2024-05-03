@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"maps"
 	"os"
 	"path/filepath"
 )
@@ -26,7 +25,7 @@ func NewLocalDirLoader(cfg Config, log *slog.Logger) *DirLoader {
 	}
 }
 
-func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
+func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
 	files, err := os.ReadDir(d.path)
 	if err != nil {
 		// if we can't read the dir, try creating it
@@ -36,7 +35,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 		}
 	}
 
-	result := map[string]string{}
+	result := map[string]PersistedOperation{}
 
 	for _, file := range files {
 		if file.IsDir() {
@@ -57,7 +56,9 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 				continue
 			}
 
-			maps.Copy(result, manifestHashes)
+			for hash, operation := range manifestHashes {
+				result[hash] = NewPersistedOperation(operation)
+			}
 		}
 	}
 

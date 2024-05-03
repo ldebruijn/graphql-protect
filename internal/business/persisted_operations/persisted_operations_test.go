@@ -16,7 +16,7 @@ func TestNewPersistedOperations(t *testing.T) {
 	type args struct {
 		cfg     Config
 		payload []byte
-		cache   map[string]string
+		cache   map[string]PersistedOperation
 	}
 	tests := []struct {
 		name    string
@@ -90,7 +90,7 @@ func TestNewPersistedOperations(t *testing.T) {
 					return bts
 				}(),
 
-				cache: map[string]string{},
+				cache: map[string]PersistedOperation{},
 			},
 			want: func(t *testing.T) http.Handler {
 				fn := func(w http.ResponseWriter, r *http.Request) {
@@ -128,8 +128,8 @@ func TestNewPersistedOperations(t *testing.T) {
 					bts, _ := json.Marshal(data)
 					return bts
 				}(),
-				cache: map[string]string{
-					"foobar": "query { foobar }",
+				cache: map[string]PersistedOperation{
+					"foobar": NewPersistedOperation("query { foobar }"),
 				},
 			},
 			want: func(t *testing.T) http.Handler {
@@ -180,9 +180,9 @@ func TestNewPersistedOperations(t *testing.T) {
 					bts, _ := json.Marshal(data)
 					return bts
 				}(),
-				cache: map[string]string{
-					"foobar": "query { foobar }",
-					"baz":    "query { baz }",
+				cache: map[string]PersistedOperation{
+					"foobar": NewPersistedOperation("query { foobar }"),
+					"baz":    NewPersistedOperation("query { baz }"),
 				},
 			},
 			want: func(t *testing.T) http.Handler {
@@ -226,8 +226,8 @@ func TestNewPersistedOperations(t *testing.T) {
 					bts, _ := json.Marshal(data)
 					return bts
 				}(),
-				cache: map[string]string{
-					"foobar": "query { foobar }",
+				cache: map[string]PersistedOperation{
+					"foobar": NewPersistedOperation("query { foobar }"),
 				},
 			},
 			want: func(t *testing.T) http.Handler {

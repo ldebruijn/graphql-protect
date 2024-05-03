@@ -88,7 +88,7 @@ type PersistedOperationsHandler struct {
 	cfg Config
 	// this has the opportunity to grow indefinitely, might wat to replace with a fixed-cap cache
 	// or something like an LRU with a TTL
-	cache map[string]string
+	cache map[string]PersistedOperation
 	// Strategy for loading persisted operations from a remote location
 	remoteLoader  RemoteLoader
 	refreshTicker *time.Ticker
@@ -124,7 +124,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 	poh := &PersistedOperationsHandler{
 		log:           log,
 		cfg:           cfg,
-		cache:         map[string]string{},
+		cache:         map[string]PersistedOperation{},
 		remoteLoader:  remoteLoader,
 		dirLoader:     loader,
 		refreshTicker: refreshTicker,
@@ -177,7 +177,7 @@ func (p *PersistedOperationsHandler) SwapHashForQuery(next http.Handler) http.Ha
 			}
 
 			p.lock.RLock()
-			query, ok := p.cache[hash]
+			operation, ok := p.cache[hash]
 			p.lock.RUnlock()
 
 			if !ok {
@@ -188,9 +188,9 @@ func (p *PersistedOperationsHandler) SwapHashForQuery(next http.Handler) http.Ha
 			}
 
 			// update the original data
-			payload[i].Query = query
+			payload[i].Query = operation.Operation
 			payload[i].Extensions.PersistedQuery = nil
-			payload[i].OperationName = "" // TODO fixme use actual operationName here https://github.com/ldebruijn/graphql-protect/issues/69
+			payload[i].OperationName = operation.Name
 
 			persistedOpsCounter.WithLabelValues("known", "allowed").Inc()
 		}
