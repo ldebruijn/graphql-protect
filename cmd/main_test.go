@@ -45,7 +45,7 @@ func TestHttpServerIntegration(t *testing.T) {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 
@@ -101,7 +101,7 @@ type Product {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 
@@ -157,7 +157,7 @@ type Product {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 
@@ -240,7 +240,7 @@ query Foo($image: ImageInput!) {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	uploadImage(image: ImageInput!): String
 }
 
@@ -306,7 +306,7 @@ query Foo($image: ImageInput!) {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	uploadImage(image: ImageInput!): String
 }
 
@@ -357,7 +357,7 @@ input ImageInput {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 
@@ -421,7 +421,7 @@ type Product {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 
@@ -476,7 +476,7 @@ type Product {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 
@@ -522,7 +522,7 @@ type Product {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 
@@ -584,7 +584,7 @@ type Product {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 
@@ -642,7 +642,7 @@ type Product {
 					return r
 				}(),
 				schema: `
-extend type Operation {
+extend type Query {
 	product(id: ID!): Product
 }
 

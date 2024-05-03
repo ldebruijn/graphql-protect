@@ -12,7 +12,7 @@ import (
 
 func Test_MaxDepthRule(t *testing.T) {
 	schema := `
-type Operation {
+type Query {
    getBook(title: String): Book
 }
 
