@@ -50,7 +50,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]string, error) {
 				continue
 			}
 
-			// Dont parse null values as null values causes the result map to be reset to null
+			// Dont parse null values, as this causes the hash/operations map to be reset to null
 			if isNullValue(contents) {
 				continue
 			}
