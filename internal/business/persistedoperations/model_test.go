@@ -73,6 +73,16 @@ func TestNewPersistedOperation(t *testing.T) {
 				Name:      "",
 			},
 		},
+		{
+			name: "handles white space around operation name",
+			args: args{
+				operation: "query Foobar ($some: Int, $value: String){ product(id: 1) { id title as } }",
+			},
+			want: PersistedOperation{
+				Operation: "query Foobar ($some: Int, $value: String){ product(id: 1) { id title as } }",
+				Name:      "Foobar",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

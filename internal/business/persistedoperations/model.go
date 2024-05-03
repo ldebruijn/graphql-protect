@@ -29,5 +29,5 @@ func extractOperationNameFromPersistedOperation(payload string) string {
 		return ""
 	}
 
-	return payload[firstSpace+1 : until]
+	return strings.TrimSpace(payload[firstSpace+1 : until])
 }
