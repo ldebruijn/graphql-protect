@@ -12,5 +12,5 @@ TODO.md
 # ignore binary
 main
 
-schema.graphql
 store/
+schema.graphql

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
+	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
@@ -26,7 +26,7 @@ func TestNewConfig(t *testing.T) {
 	}{
 		{
 			name: "Assures defaults are applied correctly",
-			applyConfig: func(file *os.File) {
+			applyConfig: func(_ *os.File) {
 
 			},
 			want: &Config{
@@ -68,7 +68,7 @@ func TestNewConfig(t *testing.T) {
 					KeepAlive: 3 * time.Minute,
 					Host:      "http://localhost:8081",
 				},
-				PersistedOperations: persisted_operations.Config{
+				PersistedOperations: persistedoperations.Config{
 					Enabled: false,
 					Store:   "./store",
 					Reload: struct {
@@ -222,7 +222,7 @@ enforce_post:
 					KeepAlive: 1 * time.Second,
 					Host:      "host",
 				},
-				PersistedOperations: persisted_operations.Config{
+				PersistedOperations: persistedoperations.Config{
 					Enabled: true,
 					Store:   "store",
 					Reload: struct {

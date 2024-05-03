@@ -1,4 +1,4 @@
-package persisted_operations // nolint:revive
+package persistedoperations // nolint:revive
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 )
 
 type LocalLoader interface {
-	Load(ctx context.Context) (map[string]string, error)
+	Load(ctx context.Context) (map[string]PersistedOperation, error)
 }
 
 type RemoteLoader interface {

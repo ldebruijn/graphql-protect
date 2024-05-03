@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/conf/v3/yaml"
-	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
+	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
@@ -32,7 +32,7 @@ type Config struct {
 	ObfuscateValidationErrors bool                           `conf:"default:false" yaml:"obfuscate_validation_errors"`
 	Schema                    schema.Config                  `yaml:"schema"`
 	Target                    proxy.Config                   `yaml:"target"`
-	PersistedOperations       persisted_operations.Config    `yaml:"persisted_operations"`
+	PersistedOperations       persistedoperations.Config     `yaml:"persisted_operations"`
 	BlockFieldSuggestions     block_field_suggestions.Config `yaml:"block_field_suggestions"`
 	MaxTokens                 tokens.Config                  `yaml:"max_tokens"`
 	MaxAliases                aliases.Config                 `yaml:"max_aliases"`

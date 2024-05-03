@@ -29,7 +29,7 @@ func init() {
 func NewMaxDepthRule(cfg Config) {
 	if cfg.Enabled {
 		validator.AddRule("MaxDepth", func(observers *validator.Events, addError validator.AddErrFunc) {
-			observers.OnOperation(func(walker *validator.Walker, operation *ast.OperationDefinition) {
+			observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
 				var maxDepth = countDepth(operation.SelectionSet)
 
 				if maxDepth > cfg.Max {
