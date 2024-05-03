@@ -1,4 +1,4 @@
-package persisted_operations // nolint:revive
+package persistedoperations // nolint:revive
 
 import (
 	"bytes"
@@ -83,7 +83,7 @@ var ErrPersistedQueryNotFound = errors.New("PersistedQueryNotFound")
 var ErrPersistedOperationNotFound = errors.New("PersistedOperationNotFound")
 var ErrReloadIntervalTooShort = errors.New("reload interval cannot be less than 10 seconds")
 
-type PersistedOperationsHandler struct {
+type Handler struct {
 	log *slog.Logger
 	cfg Config
 	// this has the opportunity to grow indefinitely, might wat to replace with a fixed-cap cache
@@ -103,7 +103,7 @@ func init() {
 	prometheus.MustRegister(persistedOpsCounter, reloadCounter, gcsFileDownloadDurationGauge, uniqueHashesInMemGauge)
 }
 
-func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*PersistedOperationsHandler, error) {
+func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*Handler, error) {
 	if loader == nil {
 		return nil, ErrNoLoaderSupplied
 	}
@@ -121,7 +121,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 	// buffered in case we dont have reloading enabled
 	done := make(chan bool, 1)
 
-	poh := &PersistedOperationsHandler{
+	poh := &Handler{
 		log:           log,
 		cfg:           cfg,
 		cache:         map[string]PersistedOperation{},
@@ -147,7 +147,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, re
 
 // SwapHashForQuery runs of the persisted operations handler
 // it uses the configuration supplied to decide its behavior
-func (p *PersistedOperationsHandler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:funlen,cyclop
+func (p *Handler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:funlen,cyclop
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !p.cfg.Enabled || r.Method != "POST" {
 			next.ServeHTTP(w, r)
@@ -232,7 +232,7 @@ func (p *PersistedOperationsHandler) SwapHashForQuery(next http.Handler) http.Ha
 	return http.HandlerFunc(fn)
 }
 
-func (p *PersistedOperationsHandler) Validate(validate func(operation string) gqlerror.List) gqlerror.List {
+func (p *Handler) Validate(validate func(operation string) gqlerror.List) gqlerror.List {
 	var errs gqlerror.List
 	for hash, operation := range p.cache {
 		err := validate(operation.Operation)
@@ -245,7 +245,7 @@ func (p *PersistedOperationsHandler) Validate(validate func(operation string) gq
 	return errs
 }
 
-func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
+func (p *Handler) reloadFromLocalDir() error {
 	cache, err := p.dirLoader.Load(context.Background())
 	if err != nil {
 		reloadCounter.WithLabelValues("local", "failure").Inc()
@@ -262,7 +262,7 @@ func (p *PersistedOperationsHandler) reloadFromLocalDir() error {
 	return nil
 }
 
-func (p *PersistedOperationsHandler) reloadProcessor() {
+func (p *Handler) reloadProcessor() {
 	if !p.cfg.Reload.Enabled {
 		return
 	}
@@ -287,7 +287,7 @@ func (p *PersistedOperationsHandler) reloadProcessor() {
 	}()
 }
 
-func (p *PersistedOperationsHandler) reload() error {
+func (p *Handler) reload() error {
 	p.reloadFromRemote()
 	// sleep to ensure file commit happened, found > 1 second provided best results
 	time.Sleep(1 * time.Second)
@@ -301,7 +301,7 @@ func (p *PersistedOperationsHandler) reload() error {
 	return nil
 }
 
-func (p *PersistedOperationsHandler) reloadFromRemote() {
+func (p *Handler) reloadFromRemote() {
 	if p.remoteLoader == nil {
 		return
 	}
@@ -326,7 +326,7 @@ func (p *PersistedOperationsHandler) reloadFromRemote() {
 	reloadCounter.WithLabelValues("remote", "success").Inc()
 }
 
-func (p *PersistedOperationsHandler) Shutdown() {
+func (p *Handler) Shutdown() {
 	p.done <- true
 }
 

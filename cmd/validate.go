@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
-	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
+	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -23,12 +23,12 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 		return err
 	}
 
-	remoteLoader, err := persisted_operations.RemoteLoaderFromConfig(cfg.PersistedOperations, log)
-	if err != nil && !errors.Is(err, persisted_operations.ErrNoRemoteLoaderSpecified) {
+	remoteLoader, err := persistedoperations.RemoteLoaderFromConfig(cfg.PersistedOperations, log)
+	if err != nil && !errors.Is(err, persistedoperations.ErrNoRemoteLoaderSpecified) {
 		log.Warn("Error initializing remote loader", "err", err)
 	}
 
-	po, err := persisted_operations.NewPersistedOperations(log, cfg.PersistedOperations, persisted_operations.NewLocalDirLoader(cfg.PersistedOperations, log), remoteLoader)
+	po, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, persistedoperations.NewLocalDirLoader(cfg.PersistedOperations, log), remoteLoader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
 		return nil

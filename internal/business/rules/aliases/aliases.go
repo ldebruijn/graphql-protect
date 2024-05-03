@@ -35,7 +35,7 @@ func NewMaxAliasesRule(cfg Config) {
 			// keep track of # of aliases per fragment definition
 			visitedFragments := make(map[string]int)
 
-			observers.OnFragmentSpread(func(walker *validator.Walker, fragmentSpread *ast.FragmentSpread) {
+			observers.OnFragmentSpread(func(_ *validator.Walker, fragmentSpread *ast.FragmentSpread) {
 				definition := fragmentSpread.Definition
 				if _, ok := visitedFragments[definition.Name]; !ok {
 					count := countSelectionSet(definition.SelectionSet)
@@ -45,7 +45,7 @@ func NewMaxAliasesRule(cfg Config) {
 				aliases += visitedFragments[definition.Name]
 			})
 
-			observers.OnOperation(func(walker *validator.Walker, operation *ast.OperationDefinition) {
+			observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
 				aliases += countAliases(operation)
 
 				if aliases > cfg.Max {

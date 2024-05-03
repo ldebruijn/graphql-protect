@@ -1,4 +1,4 @@
-package persisted_operations
+package persistedoperations
 
 import "strings"
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
-	"github.com/ldebruijn/graphql-protect/internal/business/persisted_operations"
+	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/enforce_post"
@@ -30,7 +30,7 @@ var (
 type GraphQLProtect struct {
 	log            *slog.Logger
 	cfg            *config.Config
-	po             *persisted_operations.PersistedOperationsHandler
+	po             *persistedoperations.Handler
 	schema         *schema.Provider
 	tokens         *tokens.MaxTokensRule
 	maxBatch       *batch.MaxBatchRule
@@ -38,7 +38,7 @@ type GraphQLProtect struct {
 	preFilterChain func(handler http.Handler) http.Handler
 }
 
-func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persisted_operations.PersistedOperationsHandler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
+func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperations.Handler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	max_depth.NewMaxDepthRule(cfg.MaxDepth)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)

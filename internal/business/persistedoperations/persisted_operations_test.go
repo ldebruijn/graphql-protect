@@ -1,4 +1,4 @@
-package persisted_operations // nolint:revive
+package persistedoperations // nolint:revive
 
 import (
 	"bytes"
@@ -31,12 +31,12 @@ func TestNewPersistedOperations(t *testing.T) {
 					Enabled: false,
 				},
 			},
-			want: func(t *testing.T) http.Handler {
-				fn := func(w http.ResponseWriter, r *http.Request) {
+			want: func(_ *testing.T) http.Handler {
+				fn := func(_ http.ResponseWriter, _ *http.Request) {
 				}
 				return http.HandlerFunc(fn)
 			},
-			resWant: func(t *testing.T, res *http.Response) {
+			resWant: func(_ *testing.T, _ *http.Response) {
 
 			},
 		},
@@ -56,7 +56,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				}(),
 			},
 			want: func(t *testing.T) http.Handler {
-				fn := func(w http.ResponseWriter, r *http.Request) {
+				fn := func(_ http.ResponseWriter, r *http.Request) {
 					decoder := json.NewDecoder(r.Body)
 
 					var payload gql.RequestData
@@ -92,8 +92,8 @@ func TestNewPersistedOperations(t *testing.T) {
 
 				cache: map[string]PersistedOperation{},
 			},
-			want: func(t *testing.T) http.Handler {
-				fn := func(w http.ResponseWriter, r *http.Request) {
+			want: func(_ *testing.T) http.Handler {
+				fn := func(_ http.ResponseWriter, _ *http.Request) {
 
 				}
 				return http.HandlerFunc(fn)
@@ -133,7 +133,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				},
 			},
 			want: func(t *testing.T) http.Handler {
-				fn := func(w http.ResponseWriter, r *http.Request) {
+				fn := func(_ http.ResponseWriter, r *http.Request) {
 					decoder := json.NewDecoder(r.Body)
 
 					var payload gql.RequestData
@@ -186,7 +186,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				},
 			},
 			want: func(t *testing.T) http.Handler {
-				fn := func(w http.ResponseWriter, r *http.Request) {
+				fn := func(_ http.ResponseWriter, r *http.Request) {
 					payload, err := io.ReadAll(r.Body)
 					assert.NoError(t, err)
 
@@ -231,7 +231,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				},
 			},
 			want: func(t *testing.T) http.Handler {
-				fn := func(w http.ResponseWriter, r *http.Request) {
+				fn := func(_ http.ResponseWriter, _ *http.Request) {
 					assert.Fail(t, "should not reach here")
 				}
 				return http.HandlerFunc(fn)
