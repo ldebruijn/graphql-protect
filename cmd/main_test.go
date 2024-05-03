@@ -704,7 +704,7 @@ type Product {
 			cfg.Schema.Path = file.Name()
 
 			go func() {
-				err := run(slog.Default(), cfg, shutdown)
+				err := httpServer(slog.Default(), cfg, shutdown)
 				if err != nil {
 					assert.NoError(t, err, "error starting server for", tt.name)
 					return
