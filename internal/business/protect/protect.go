@@ -6,6 +6,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/enforce_post"
@@ -34,6 +35,7 @@ type GraphQLProtect struct {
 	schema         *schema.Provider
 	tokens         *tokens.MaxTokensRule
 	maxBatch       *batch.MaxBatchRule
+	accessLogging  *accesslogging.AccessLogging
 	next           http.Handler
 	preFilterChain func(handler http.Handler) http.Handler
 }
@@ -42,6 +44,7 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperat
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	max_depth.NewMaxDepthRule(cfg.MaxDepth)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
+	accessLogging := accesslogging.NewAccessLogging(log, cfg.AccessLogging)
 	if err != nil {
 		log.Warn("Error initializing maximum batch protection", err)
 	}
@@ -49,12 +52,13 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperat
 	enforcePostMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)
 
 	return &GraphQLProtect{
-		log:      log,
-		cfg:      cfg,
-		po:       po,
-		schema:   schema,
-		tokens:   tokens.MaxTokens(cfg.MaxTokens),
-		maxBatch: maxBatch,
+		log:           log,
+		cfg:           cfg,
+		po:            po,
+		schema:        schema,
+		tokens:        tokens.MaxTokens(cfg.MaxTokens),
+		maxBatch:      maxBatch,
+		accessLogging: accessLogging,
 		preFilterChain: func(next http.Handler) http.Handler {
 			return enforcePostMethod(po.SwapHashForQuery(next))
 		},
@@ -69,7 +73,9 @@ func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
-	errs := p.validateRequest(r)
+	payloads, errs := p.validateRequest(r)
+
+	p.accessLogging.Log(payloads, r.Header)
 
 	if len(errs) > 0 {
 		if p.cfg.ObfuscateValidationErrors {
@@ -92,10 +98,10 @@ func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
 	p.next.ServeHTTP(w, r)
 }
 
-func (p *GraphQLProtect) validateRequest(r *http.Request) gqlerror.List {
+func (p *GraphQLProtect) validateRequest(r *http.Request) ([]gql.RequestData, gqlerror.List) {
 	payload, err := gql.ParseRequestPayload(r)
 	if err != nil {
-		return gqlerror.List{gqlerror.Wrap(err)}
+		return nil, gqlerror.List{gqlerror.Wrap(err)}
 	}
 
 	var errs gqlerror.List
@@ -106,7 +112,7 @@ func (p *GraphQLProtect) validateRequest(r *http.Request) gqlerror.List {
 	}
 
 	if err != nil {
-		return errs
+		return nil, errs
 	}
 
 	for _, data := range payload {
@@ -116,7 +122,7 @@ func (p *GraphQLProtect) validateRequest(r *http.Request) gqlerror.List {
 		}
 	}
 
-	return errs
+	return payload, errs
 }
 
 func (p *GraphQLProtect) ValidateQuery(operation string) gqlerror.List {
