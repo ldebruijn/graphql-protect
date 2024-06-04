@@ -47,7 +47,7 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 	toLog := map[string]interface{}{}
 
 	logHeaders := map[string]interface{}{}
-	for key, _ := range a.includeHeaders {
+	for key := range a.includeHeaders {
 		logHeaders[key] = headers.Values(key)
 	}
 
