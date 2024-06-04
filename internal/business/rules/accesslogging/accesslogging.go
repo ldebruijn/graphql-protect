@@ -54,6 +54,6 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 
 		toLog["headers"] = logHeaders
 
-		a.log.Info("Access Logging", "payload", toLog)
+		a.log.Info("access-logging", "payload", toLog)
 	}
 }
