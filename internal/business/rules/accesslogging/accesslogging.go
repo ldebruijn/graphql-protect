@@ -2,6 +2,7 @@ package accesslogging
 
 import (
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"log/slog"
 	"net/http"
 	"slices"
@@ -10,7 +11,7 @@ import (
 type Config struct {
 	Enable               bool     `config:"default:true" yaml:"enabled"`
 	IncludedHeaders      []string `yaml:"included_headers"`
-	IncludeOperationName bool     `config:"default:true" yaml:"include_operationName"`
+	IncludeOperationName bool     `config:"default:true" yaml:"include_operation_name"`
 	IncludeVariables     bool     `config:"default:true" yaml:"include_variables"`
 	IncludePayload       bool     `config:"default:false" yaml:"include_payload"`
 }
@@ -20,9 +21,10 @@ type AccessLogging struct {
 	cfg Config
 }
 
-func NewAccessLogging(log *slog.Logger, cfg Config) *AccessLogging {
+func NewAccessLogging(cfg Config) *AccessLogging {
 	return &AccessLogging{
-		log: log.WithGroup("access-logging"),
+		// otelslog bridge for pushing otellogs directly to connector
+		log: otelslog.NewLogger("access-logging"),
 		cfg: cfg,
 	}
 }

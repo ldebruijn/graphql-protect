@@ -44,7 +44,7 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperat
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	max_depth.NewMaxDepthRule(cfg.MaxDepth)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
-	accessLogging := accesslogging.NewAccessLogging(log, cfg.AccessLogging)
+	accessLogging := accesslogging.NewAccessLogging(cfg.AccessLogging)
 	if err != nil {
 		log.Warn("Error initializing maximum batch protection", err)
 	}

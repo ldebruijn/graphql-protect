@@ -26,6 +26,7 @@ This section contains all the documentation about each protection feature.
 * [Max Tokens](protections/max_tokens.md)
 * [Enforce POST](protections/enforce_post.md)
 * [Max Batch](protections/max_batch.md)
+* [Access Logging](protections/access_logging.md)
 
 
 ## Run
