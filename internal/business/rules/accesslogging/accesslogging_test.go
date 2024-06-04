@@ -12,11 +12,6 @@ import (
 type testLogHandler struct {
 	assert func(ctx context.Context, record slog.Record) error
 	count  int
-	t      *testing.T
-}
-
-func (t *testLogHandler) setT(testing *testing.T) {
-	t.t = testing
 }
 
 func (t *testLogHandler) Enabled(context.Context, slog.Level) bool {
@@ -26,10 +21,10 @@ func (t *testLogHandler) Handle(ctx context.Context, record slog.Record) error {
 	t.count++
 	return t.assert(ctx, record)
 }
-func (t *testLogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+func (t *testLogHandler) WithAttrs(_ []slog.Attr) slog.Handler {
 	return t
 }
-func (t *testLogHandler) WithGroup(name string) slog.Handler {
+func (t *testLogHandler) WithGroup(_ string) slog.Handler {
 	return t
 }
 
@@ -70,7 +65,7 @@ func TestAccessLogging_Log(t *testing.T) {
 				},
 				count: 1,
 			},
-			want: func(ctx context.Context, record slog.Record) error {
+			want: func(_ context.Context, record slog.Record) error {
 				assert.Equal(t, 1, record.NumAttrs())
 				record.Attrs(func(a slog.Attr) bool {
 					assert.Equal(t, "payload", a.Key)
@@ -115,7 +110,7 @@ func TestAccessLogging_Log(t *testing.T) {
 				},
 				count: 0,
 			},
-			want: func(ctx context.Context, record slog.Record) error {
+			want: func(_ context.Context, _ slog.Record) error {
 				assert.Fail(t, "should never reach here")
 				return nil
 			},
