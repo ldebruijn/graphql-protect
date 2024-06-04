@@ -2,7 +2,6 @@ package accesslogging
 
 import (
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
-	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"log/slog"
 	"net/http"
 	"slices"
@@ -21,10 +20,9 @@ type AccessLogging struct {
 	cfg Config
 }
 
-func NewAccessLogging(cfg Config) *AccessLogging {
+func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 	return &AccessLogging{
-		// otelslog bridge for pushing otellogs directly to connector
-		log: otelslog.NewLogger("access-logging"),
+		log: log.WithGroup("access-logging"),
 		cfg: cfg,
 	}
 }

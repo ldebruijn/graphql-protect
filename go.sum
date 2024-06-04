@@ -129,8 +129,6 @@ go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=
 go.opencensus.io v0.24.0/go.mod h1:vNK8G9p7aAivkbmorf4v+7Hgx+Zs0yY+0fOtgBfjQKo=
 go.opentelemetry.io/collector/pdata v1.7.0 h1:/WNsBbE6KM3TTPUb9v/5B7IDqnDkgf8GyFhVJJqu7II=
 go.opentelemetry.io/collector/pdata v1.7.0/go.mod h1:ehCBBA5GoFrMZkwyZAKGY/lAVSgZf6rzUt3p9mddmPU=
-go.opentelemetry.io/contrib/bridges/otelslog v0.2.0 h1:8wisJ9dZUU1YZGJDsQgfCkexQ/zsZF1SZB6Z86j4WJA=
-go.opentelemetry.io/contrib/bridges/otelslog v0.2.0/go.mod h1:/fUobpnNkWPrkMb7HKL80Ewfkqzyko1KUUX0h7aNtxo=
 go.opentelemetry.io/contrib/bridges/prometheus v0.52.0 h1:NNkEjNcUXeNcxDTNLyyAmFHefByhj8YU1AojgcPqbfs=
 go.opentelemetry.io/contrib/bridges/prometheus v0.52.0/go.mod h1:Dv7d2yUvusfblvi9qMQby+youF09GiUVWRWkdogrDtE=
 go.opentelemetry.io/contrib/exporters/autoexport v0.52.0 h1:G/AGl5O78ZKHs63Rl65P1HyZfDnTyxjv8r7dbdZ9fB0=
@@ -169,8 +167,6 @@ go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.27.0 h1:/jlt1Y8gXWiHG9
 go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.27.0/go.mod h1:bmToOGOBZ4hA9ghphIc1PAf66VA8KOtsuy3+ScStG20=
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.27.0 h1:/0YaXu3755A/cFbtXp+21lkXgI0QE5avTWA2HjU9/WE=
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.27.0/go.mod h1:m7SFxp0/7IxmJPLIY3JhOcU9CoFzDaCPL6xxQIxhA+o=
-go.opentelemetry.io/otel/log v0.3.0 h1:kJRFkpUFYtny37NQzL386WbznUByZx186DpEMKhEGZs=
-go.opentelemetry.io/otel/log v0.3.0/go.mod h1:ziCwqZr9soYDwGNbIL+6kAvQC+ANvjgG367HVcyR/ys=
 go.opentelemetry.io/otel/metric v1.27.0 h1:hvj3vdEKyeCi4YaYfNjv2NUje8FqKqUY8IlF0FxV/ik=
 go.opentelemetry.io/otel/metric v1.27.0/go.mod h1:mVFgmRlhljgBiuk/MP/oKylr4hs85GZAylncepAX/ak=
 go.opentelemetry.io/otel/sdk v1.27.0 h1:mlk+/Y1gLPLn84U4tI8d3GNJmGT/eXe3ZuOXN9kTWmI=

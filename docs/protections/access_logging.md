@@ -1,6 +1,7 @@
 # Access Logging
 
 In some cases you want to keep a record of what operations were performed against your landscape. The access logging protection can provide that for you.
+Access logging is done to STDOUT.
 
 <!-- TOC -->
 
