@@ -44,8 +44,8 @@ func TestAccessLogging_Log(t *testing.T) {
 			name: "logs expected fields when enabled",
 			args: args{
 				cfg: Config{
-					Enable:               true,
-					IncludedHeaders:      []string{"Authorization"},
+					Enabled:              true,
+					IncludedHeaders:      []string{"Authorization", "not-case-sensitive"},
 					IncludeOperationName: true,
 					IncludeVariables:     true,
 					IncludePayload:       true,
@@ -60,8 +60,9 @@ func TestAccessLogging_Log(t *testing.T) {
 					},
 				},
 				headers: map[string][]string{
-					"Authorization": {"bearer hello"},
-					"Content-Type":  {"application/json"},
+					"Authorization":      {"bearer hello"},
+					"Content-Type":       {"application/json"},
+					"Not-Case-Sensitive": {"yes"},
 				},
 				count: 1,
 			},
@@ -76,7 +77,8 @@ func TestAccessLogging_Log(t *testing.T) {
 						"foo": "bar",
 					}, val["variables"])
 					assert.Equal(t, map[string]interface{}{
-						"Authorization": []string{"bearer hello"},
+						"Authorization":      []string{"bearer hello"},
+						"not-case-sensitive": []string{"yes"},
 					}, val["headers"])
 
 					return true
@@ -89,7 +91,7 @@ func TestAccessLogging_Log(t *testing.T) {
 			name: "logs nothing when disabled",
 			args: args{
 				cfg: Config{
-					Enable:               false,
+					Enabled:              false,
 					IncludedHeaders:      []string{"Authorization"},
 					IncludeOperationName: true,
 					IncludeVariables:     true,
@@ -121,10 +123,7 @@ func TestAccessLogging_Log(t *testing.T) {
 			handler := &testLogHandler{assert: tt.want}
 			log := slog.New(handler)
 
-			a := &AccessLogging{
-				log: log,
-				cfg: tt.args.cfg,
-			}
+			a := NewAccessLogging(tt.args.cfg, log)
 			a.Log(tt.args.payloads, tt.args.headers)
 
 			assert.Equal(t, tt.args.count, a.log.Handler().(*testLogHandler).count)

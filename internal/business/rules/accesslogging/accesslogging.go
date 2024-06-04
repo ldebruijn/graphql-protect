@@ -4,11 +4,10 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"log/slog"
 	"net/http"
-	"slices"
 )
 
 type Config struct {
-	Enable               bool     `config:"default:true" yaml:"enabled"`
+	Enabled              bool     `config:"default:true" yaml:"enabled"`
 	IncludedHeaders      []string `yaml:"included_headers"`
 	IncludeOperationName bool     `config:"default:true" yaml:"include_operation_name"`
 	IncludeVariables     bool     `config:"default:true" yaml:"include_variables"`
@@ -16,44 +15,55 @@ type Config struct {
 }
 
 type AccessLogging struct {
-	log *slog.Logger
-	cfg Config
+	log                  *slog.Logger
+	enabled              bool
+	includeHeaders       map[string]bool
+	includeOperationName bool
+	includeVariables     bool
+	includePayload       bool
 }
 
 func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
+	headers := map[string]bool{}
+	for _, header := range cfg.IncludedHeaders {
+		headers[header] = true
+	}
+
 	return &AccessLogging{
-		log: log.WithGroup("access-logging"),
-		cfg: cfg,
+		log:                  log.WithGroup("access-logging"),
+		enabled:              cfg.Enabled,
+		includeHeaders:       headers,
+		includeOperationName: cfg.IncludeOperationName,
+		includeVariables:     cfg.IncludeVariables,
+		includePayload:       cfg.IncludePayload,
 	}
 }
 
 func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
-	if !a.cfg.Enable {
+	if !a.enabled {
 		return
 	}
 
 	toLog := map[string]interface{}{}
 
+	logHeaders := map[string]interface{}{}
+	for key := range a.includeHeaders {
+		logHeaders[key] = headers.Values(key)
+	}
+
 	for _, req := range payloads {
-		if a.cfg.IncludeOperationName {
+		if a.includeOperationName {
 			toLog["operationName"] = req.OperationName
 		}
-		if a.cfg.IncludeVariables {
+		if a.includeVariables {
 			toLog["variables"] = req.Variables
 		}
-		if a.cfg.IncludePayload {
+		if a.includePayload {
 			toLog["payload"] = req.Query
-		}
-
-		logHeaders := map[string]interface{}{}
-		for name, values := range headers {
-			if slices.Contains(a.cfg.IncludedHeaders, name) {
-				logHeaders[name] = values
-			}
 		}
 
 		toLog["headers"] = logHeaders
 
-		a.log.Info("access-logging", "payload", toLog)
+		a.log.Info("record", "payload", toLog)
 	}
 }
