@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
@@ -116,6 +117,13 @@ func TestNewConfig(t *testing.T) {
 					Max:             5,
 					RejectOnFailure: true,
 				},
+				AccessLogging: accesslogging.Config{
+					Enabled:              true,
+					IncludedHeaders:      nil,
+					IncludeOperationName: true,
+					IncludeVariables:     true,
+					IncludePayload:       false,
+				},
 			},
 			wantErr: false,
 		},
@@ -181,6 +189,14 @@ max_batch:
 
 enforce_post:
   enabled: false
+
+access_logging:
+  enabled: false
+  include_headers:
+    - Authorization
+  include_operation_name: false
+  include_variables: false
+  include_payload: true
 `))
 			},
 			want: &Config{
@@ -269,6 +285,13 @@ enforce_post:
 					Enabled:         false,
 					Max:             1,
 					RejectOnFailure: false,
+				},
+				AccessLogging: accesslogging.Config{
+					Enabled:              false,
+					IncludedHeaders:      []string{"Authorization"},
+					IncludeOperationName: false,
+					IncludeVariables:     false,
+					IncludePayload:       true,
 				},
 			},
 			wantErr: false,

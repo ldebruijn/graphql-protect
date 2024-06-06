@@ -7,11 +7,11 @@ import (
 )
 
 type Config struct {
-	Enabled              bool     `config:"default:true" yaml:"enabled"`
-	IncludedHeaders      []string `yaml:"included_headers"`
-	IncludeOperationName bool     `config:"default:true" yaml:"include_operation_name"`
-	IncludeVariables     bool     `config:"default:true" yaml:"include_variables"`
-	IncludePayload       bool     `config:"default:false" yaml:"include_payload"`
+	Enabled              bool     `conf:"default:true" yaml:"enabled"`
+	IncludedHeaders      []string `yaml:"include_headers"`
+	IncludeOperationName bool     `conf:"default:true" yaml:"include_operation_name"`
+	IncludeVariables     bool     `conf:"default:true" yaml:"include_variables"`
+	IncludePayload       bool     `conf:"default:false" yaml:"include_payload"`
 }
 
 type AccessLogging struct {
