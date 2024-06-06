@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Enabled              bool     `conf:"default:true" yaml:"enabled"`
-	IncludedHeaders      []string `yaml:"included_headers"`
+	IncludedHeaders      []string `yaml:"include_headers"`
 	IncludeOperationName bool     `conf:"default:true" yaml:"include_operation_name"`
 	IncludeVariables     bool     `conf:"default:true" yaml:"include_variables"`
 	IncludePayload       bool     `conf:"default:false" yaml:"include_payload"`
