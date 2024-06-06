@@ -12,8 +12,8 @@ You can configure `graphql-protect` to enable access logging for incoming operai
 ```yaml
 access_logging:
   # Enable the feature, 
-  enable: true
-  included_headers:
+  enabled: true
+  include_headers:
     # Include any headers of interest here
     - Authorization
   # Include the operation name in the access log record
