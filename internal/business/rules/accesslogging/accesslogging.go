@@ -4,6 +4,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"log/slog"
 	"net/http"
+	"os"
 )
 
 type Config struct {
@@ -29,8 +30,12 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 		headers[header] = true
 	}
 
+	if log == nil {
+		log = slog.New(slog.NewJSONHandler(os.Stdout, nil)).WithGroup("access-logging")
+	}
+
 	return &AccessLogging{
-		log:                  log.WithGroup("access-logging"),
+		log:                  log,
 		enabled:              cfg.Enabled,
 		includeHeaders:       headers,
 		includeOperationName: cfg.IncludeOperationName,
@@ -44,26 +49,32 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 		return
 	}
 
-	toLog := map[string]interface{}{}
-
-	logHeaders := map[string]interface{}{}
+	headersToInclude := map[string]interface{}{}
 	for key := range a.includeHeaders {
-		logHeaders[key] = headers.Values(key)
+		headersToInclude[key] = headers.Values(key)
 	}
 
 	for _, req := range payloads {
+		al := accesslog{}
+
 		if a.includeOperationName {
-			toLog["operationName"] = req.OperationName
+			al.WithOperationName(req.OperationName)
 		}
 		if a.includeVariables {
-			toLog["variables"] = req.Variables
+			al.WithVariables(req.Variables)
 		}
 		if a.includePayload {
-			toLog["payload"] = req.Query
+			al.WithPayload(req.Query)
 		}
 
-		toLog["headers"] = logHeaders
+		al.WithHeaders(headersToInclude)
 
-		a.log.Info("record", "payload", toLog)
+		payload, err := al.JSON()
+		if err != nil {
+			a.log.Warn("error marshalling access log", "err", err)
+			continue
+		}
+
+		a.log.Info("record", "payload", payload)
 	}
 }

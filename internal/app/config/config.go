@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/conf/v3/yaml"
+	"github.com/ldebruijn/graphql-protect/internal/app/env"
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
@@ -20,7 +21,8 @@ import (
 )
 
 type Config struct {
-	Web struct {
+	Environment env.Environment
+	Web         struct {
 		ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
 		WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
 		IdleTimeout     time.Duration `conf:"default:120s" yaml:"idle_timeout"`
@@ -68,6 +70,8 @@ func NewConfig(configPath string) (*Config, error) {
 			return nil, err
 		}
 	}
+
+	cfg.Environment = env.Detect()
 
 	return &cfg, nil
 }

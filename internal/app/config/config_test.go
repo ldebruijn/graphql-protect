@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/ldebruijn/graphql-protect/internal/app/env"
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
@@ -31,6 +32,7 @@ func TestNewConfig(t *testing.T) {
 
 			},
 			want: &Config{
+				Environment: env.Pro,
 				Web: struct {
 					ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
 					WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
@@ -131,6 +133,7 @@ func TestNewConfig(t *testing.T) {
 			name: "YAML overrides are applied",
 			applyConfig: func(file *os.File) {
 				_, _ = file.Write([]byte(`
+environment: dev
 web:
   read_timeout: 1s
   write_timeout: 1s
@@ -200,6 +203,7 @@ access_logging:
 `))
 			},
 			want: &Config{
+				Environment: env.Dev,
 				Web: struct {
 					ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
 					WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
@@ -306,7 +310,8 @@ access_logging:
 
 			tt.applyConfig(file)
 
-			got, _ := NewConfig(file.Name())
+			got, err := NewConfig(file.Name())
+			assert.NoError(t, err)
 
 			assert.Equal(t, tt.want, got)
 		})
