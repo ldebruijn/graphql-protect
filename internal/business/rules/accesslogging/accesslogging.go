@@ -29,10 +29,8 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 		headers[header] = true
 	}
 
-	log.WithGroup("access-logging")
-
 	return &AccessLogging{
-		log:                  log,
+		log:                  log.WithGroup("access-logging"),
 		enabled:              cfg.Enabled,
 		includeHeaders:       headers,
 		includeOperationName: cfg.IncludeOperationName,
