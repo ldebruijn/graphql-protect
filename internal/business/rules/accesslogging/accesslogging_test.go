@@ -72,11 +72,7 @@ func TestAccessLogging_Log(t *testing.T) {
 				record.Attrs(func(a slog.Attr) bool {
 					assert.Equal(t, "payload", a.Key)
 
-					payload := a.Value.Any().([]byte)
-
-					al := accesslog{}
-					err := al.fromJSON(payload)
-					assert.NoError(t, err)
+					al := a.Value.Any().(accessLog)
 
 					assert.Equal(t, "Foobar", al.OperationName)
 					assert.Equal(t, "query Foo { id name }", al.Payload)
@@ -84,8 +80,8 @@ func TestAccessLogging_Log(t *testing.T) {
 						"foo": "bar",
 					}, al.Variables)
 					assert.Equal(t, map[string]interface{}{
-						"Authorization":      []interface{}{"bearer hello"},
-						"not-case-sensitive": []interface{}{"yes"},
+						"Authorization":      []string{"bearer hello"},
+						"not-case-sensitive": []string{"yes"},
 					}, al.Headers)
 
 					return true
@@ -138,6 +134,6 @@ func TestAccessLogging_Log(t *testing.T) {
 	}
 }
 
-func (a *accesslog) fromJSON(payload []byte) error {
+func (a *accessLog) fromJSON(payload []byte) error {
 	return json.Unmarshal(payload, a)
 }

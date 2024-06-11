@@ -50,7 +50,7 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 	}
 
 	for _, req := range payloads {
-		al := accesslog{}
+		al := accessLog{}
 
 		if a.includeOperationName {
 			al.WithOperationName(req.OperationName)
@@ -64,12 +64,6 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 
 		al.WithHeaders(headersToInclude)
 
-		payload, err := al.JSON()
-		if err != nil {
-			a.log.Warn("error marshalling access log", "err", err)
-			continue
-		}
-
-		a.log.Info("record", "payload", payload)
+		a.log.Info("record", "payload", al)
 	}
 }
