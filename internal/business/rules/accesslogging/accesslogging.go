@@ -4,7 +4,6 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"log/slog"
 	"net/http"
-	"os"
 )
 
 type Config struct {
@@ -30,9 +29,7 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 		headers[header] = true
 	}
 
-	if log == nil {
-		log = slog.New(slog.NewJSONHandler(os.Stdout, nil)).WithGroup("access-logging")
-	}
+	log.WithGroup("access-logging")
 
 	return &AccessLogging{
 		log:                  log,
