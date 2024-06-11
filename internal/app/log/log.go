@@ -6,12 +6,12 @@ import (
 )
 
 type Config struct {
-	Format string `conf:"default:json"`
+	Format string `conf:"default:json" yaml:"format"`
 }
 
 var (
-	JSONFormat string = "json"
-	TextFormat string = "text"
+	JSONFormat = "json"
+	TextFormat = "text"
 )
 
 func NewLogger(cfg Config) *slog.Logger {
