@@ -4,14 +4,6 @@ graphql-protect can be configured in various ways, though we recommend configuri
 
 <!-- TOC -->
 
-# environment
-
-```
-ENVIRONMENT=dev|pro
-```
-
-Specifies the environment that protect runs on, which affect some non-functional configurations like logging. The default environment if none is specified is `pro`.
-
 # protect.yml
 
 The best way to configure `graphql-protect` is by specifying a `protect.yml` in the same directory as you're running the binary.

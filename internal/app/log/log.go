@@ -1,13 +1,21 @@
 package log
 
 import (
-	"github.com/ldebruijn/graphql-protect/internal/app/env"
 	"log/slog"
 	"os"
 )
 
-func NewLogger(environment env.Environment) *slog.Logger {
-	if environment == env.Dev {
+type Config struct {
+	Format string `conf:"default:json"`
+}
+
+var (
+	JSONFormat string = "json"
+	TextFormat string = "text"
+)
+
+func NewLogger(cfg Config) *slog.Logger {
+	if cfg.Format == TextFormat {
 		return slog.Default()
 	}
 	return slog.New(slog.NewJSONHandler(os.Stdout, nil))

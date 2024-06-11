@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
-	"github.com/ldebruijn/graphql-protect/internal/app/env"
 	"github.com/ldebruijn/graphql-protect/internal/app/log"
 	"github.com/prometheus/client_golang/prometheus"
 	log2 "log"
@@ -37,19 +36,16 @@ func main() {
 	flag.StringVar(&configPath, "f", "./protect.yml", "Defines the path at which the configuration file can be found")
 	flag.Parse()
 
-	environment := env.Detect()
-
-	logger := log.NewLogger(environment)
-
 	// cfg
 	cfg, err := config.NewConfig(configPath)
 	if err != nil {
-		logger.Error("Error loading application configuration", "err", err)
+		log2.Println("Error loading application configuration", "err", err)
 		os.Exit(1)
 	}
 	cfgAsString, _ := conf.String(cfg)
 	log2.Println(cfgAsString)
 
+	logger := log.NewLogger(cfg.Log)
 	logger.Info("Starting Protect", "version", build)
 
 	appInfo.With(prometheus.Labels{

@@ -126,6 +126,7 @@ func TestAccessLogging_Log(t *testing.T) {
 			log := slog.New(handler)
 
 			a := NewAccessLogging(tt.args.cfg, log)
+			a.log = log
 			a.Log(tt.args.payloads, tt.args.headers)
 
 			assert.Equal(t, tt.args.count, a.log.Handler().(*testLogHandler).count)
