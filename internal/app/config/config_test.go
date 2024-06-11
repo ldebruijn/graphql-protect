@@ -133,7 +133,6 @@ func TestNewConfig(t *testing.T) {
 			name: "YAML overrides are applied",
 			applyConfig: func(file *os.File) {
 				_, _ = file.Write([]byte(`
-environment: dev
 web:
   read_timeout: 1s
   write_timeout: 1s
@@ -203,7 +202,7 @@ access_logging:
 `))
 			},
 			want: &Config{
-				Environment: env.Dev,
+				Environment: env.Pro,
 				Web: struct {
 					ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
 					WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
