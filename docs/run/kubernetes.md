@@ -40,6 +40,11 @@ spec:
             path: /internal/healthz/readiness
             port: 8080
           timeoutSeconds: 1
+        env:
+          - name: GOMAXPROCS
+            valueFrom:
+              resourceFieldRef:
+                resource: requests.cpu
         volumeMounts:
           # Mount GraphQL Protect file in container local file system
           - mountPath: /app/config

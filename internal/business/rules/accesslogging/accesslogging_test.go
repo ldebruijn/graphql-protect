@@ -70,16 +70,18 @@ func TestAccessLogging_Log(t *testing.T) {
 				assert.Equal(t, 1, record.NumAttrs())
 				record.Attrs(func(a slog.Attr) bool {
 					assert.Equal(t, "payload", a.Key)
-					val := a.Value.Any().(map[string]interface{})
-					assert.Equal(t, "Foobar", val["operationName"])
-					assert.Equal(t, "query Foo { id name }", val["payload"])
+
+					al := a.Value.Any().(accessLog)
+
+					assert.Equal(t, "Foobar", al.OperationName)
+					assert.Equal(t, "query Foo { id name }", al.Payload)
 					assert.Equal(t, map[string]interface{}{
 						"foo": "bar",
-					}, val["variables"])
+					}, al.Variables)
 					assert.Equal(t, map[string]interface{}{
 						"Authorization":      []string{"bearer hello"},
 						"not-case-sensitive": []string{"yes"},
-					}, val["headers"])
+					}, al.Headers)
 
 					return true
 				})
@@ -124,6 +126,7 @@ func TestAccessLogging_Log(t *testing.T) {
 			log := slog.New(handler)
 
 			a := NewAccessLogging(tt.args.cfg, log)
+			a.log = log
 			a.Log(tt.args.payloads, tt.args.headers)
 
 			assert.Equal(t, tt.args.count, a.log.Handler().(*testLogHandler).count)
