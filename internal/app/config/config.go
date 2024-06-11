@@ -71,7 +71,5 @@ func NewConfig(configPath string) (*Config, error) {
 		}
 	}
 
-	cfg.Environment = env.Detect()
-
 	return &cfg, nil
 }

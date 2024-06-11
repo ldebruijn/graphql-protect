@@ -4,9 +4,10 @@ import (
 	"flag"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	"github.com/ldebruijn/graphql-protect/internal/app/env"
+	"github.com/ldebruijn/graphql-protect/internal/app/log"
 	"github.com/prometheus/client_golang/prometheus"
 	log2 "log"
-	"log/slog"
 	"os"
 	"os/signal"
 	"runtime"
@@ -36,18 +37,20 @@ func main() {
 	flag.StringVar(&configPath, "f", "./protect.yml", "Defines the path at which the configuration file can be found")
 	flag.Parse()
 
-	log := slog.Default()
+	environment := env.Detect()
+
+	logger := log.NewLogger(environment)
 
 	// cfg
 	cfg, err := config.NewConfig(configPath)
 	if err != nil {
-		log.Error("Error loading application configuration", "err", err)
+		logger.Error("Error loading application configuration", "err", err)
 		os.Exit(1)
 	}
 	cfgAsString, _ := conf.String(cfg)
 	log2.Println(cfgAsString)
 
-	log.Info("Starting Protect", "version", build)
+	logger.Info("Starting Protect", "version", build)
 
 	appInfo.With(prometheus.Labels{
 		"version":    build,
@@ -70,20 +73,20 @@ func main() {
 
 	switch action {
 	case "serve":
-		if err := httpServer(log, cfg, shutdown); err != nil {
-			log.Error("startup", "msg", err)
+		if err := httpServer(logger, cfg, shutdown); err != nil {
+			logger.Error("startup", "msg", err)
 			os.Exit(1)
 		}
 	case "validate":
-		if err := validate(log, cfg, shutdown); err != nil {
-			log.Error("validate", "msg", err)
+		if err := validate(logger, cfg, shutdown); err != nil {
+			logger.Error("validate", "msg", err)
 			os.Exit(1)
 		}
 	case "version":
-		log.Info("GraphQL Protect", "version", build, "go_version", runtime.Version(), "short_hash", shortHash)
+		logger.Info("GraphQL Protect", "version", build, "go_version", runtime.Version(), "short_hash", shortHash)
 		os.Exit(0)
 	default:
-		log.Error("Subcommand required", "subcommand", action)
+		logger.Error("Subcommand required", "subcommand", action)
 		os.Exit(1)
 	}
 }

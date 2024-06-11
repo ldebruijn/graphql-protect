@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/ldebruijn/graphql-protect/internal/app/env"
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
@@ -32,7 +31,6 @@ func TestNewConfig(t *testing.T) {
 
 			},
 			want: &Config{
-				Environment: env.Pro,
 				Web: struct {
 					ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
 					WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
@@ -202,7 +200,6 @@ access_logging:
 `))
 			},
 			want: &Config{
-				Environment: env.Pro,
 				Web: struct {
 					ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
 					WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
