@@ -2,7 +2,6 @@ package accesslogging
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/stretchr/testify/assert"
 	"log/slog"
@@ -132,8 +131,4 @@ func TestAccessLogging_Log(t *testing.T) {
 			assert.Equal(t, tt.args.count, a.log.Handler().(*testLogHandler).count)
 		})
 	}
-}
-
-func (a *accessLog) fromJSON(payload []byte) error {
-	return json.Unmarshal(payload, a)
 }
