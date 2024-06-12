@@ -44,26 +44,26 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 		return
 	}
 
-	toLog := map[string]interface{}{}
-
-	logHeaders := map[string]interface{}{}
+	headersToInclude := map[string]interface{}{}
 	for key := range a.includeHeaders {
-		logHeaders[key] = headers.Values(key)
+		headersToInclude[key] = headers.Values(key)
 	}
 
 	for _, req := range payloads {
+		al := accessLog{}
+
 		if a.includeOperationName {
-			toLog["operationName"] = req.OperationName
+			al.WithOperationName(req.OperationName)
 		}
 		if a.includeVariables {
-			toLog["variables"] = req.Variables
+			al.WithVariables(req.Variables)
 		}
 		if a.includePayload {
-			toLog["payload"] = req.Query
+			al.WithPayload(req.Query)
 		}
 
-		toLog["headers"] = logHeaders
+		al.WithHeaders(headersToInclude)
 
-		a.log.Info("record", "payload", toLog)
+		a.log.Info("record", "payload", al)
 	}
 }

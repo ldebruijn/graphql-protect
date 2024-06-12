@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/ldebruijn/graphql-protect/internal/app/log"
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
@@ -124,6 +125,9 @@ func TestNewConfig(t *testing.T) {
 					IncludeVariables:     true,
 					IncludePayload:       false,
 				},
+				Log: log.Config{
+					Format: log.JSONFormat,
+				},
 			},
 			wantErr: false,
 		},
@@ -197,6 +201,10 @@ access_logging:
   include_operation_name: false
   include_variables: false
   include_payload: true
+
+log:
+  format: text
+
 `))
 			},
 			want: &Config{
@@ -293,6 +301,9 @@ access_logging:
 					IncludeVariables:     false,
 					IncludePayload:       true,
 				},
+				Log: log.Config{
+					Format: log.TextFormat,
+				},
 			},
 			wantErr: false,
 		},
@@ -306,7 +317,8 @@ access_logging:
 
 			tt.applyConfig(file)
 
-			got, _ := NewConfig(file.Name())
+			got, err := NewConfig(file.Name())
+			assert.NoError(t, err)
 
 			assert.Equal(t, tt.want, got)
 		})

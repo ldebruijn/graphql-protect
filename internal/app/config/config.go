@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ardanlabs/conf/v3"
 	"github.com/ardanlabs/conf/v3/yaml"
+	"github.com/ldebruijn/graphql-protect/internal/app/log"
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
@@ -41,6 +42,7 @@ type Config struct {
 	MaxDepth                  max_depth.Config               `yaml:"max_depth"`
 	MaxBatch                  batch.Config                   `yaml:"max_batch"`
 	AccessLogging             accesslogging.Config           `yaml:"access_logging"`
+	Log                       log.Config                     `yaml:"log"`
 }
 
 func NewConfig(configPath string) (*Config, error) {
