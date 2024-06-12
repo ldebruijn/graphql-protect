@@ -31,7 +31,6 @@ var (
 type GraphQLProtect struct {
 	log            *slog.Logger
 	cfg            *config.Config
-	po             *persistedoperations.Handler
 	schema         *schema.Provider
 	tokens         *tokens.MaxTokensRule
 	maxBatch       *batch.MaxBatchRule
@@ -54,7 +53,6 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperat
 	return &GraphQLProtect{
 		log:           log,
 		cfg:           cfg,
-		po:            po,
 		schema:        schema,
 		tokens:        tokens.MaxTokens(cfg.MaxTokens),
 		maxBatch:      maxBatch,
