@@ -8,6 +8,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/enforce_post"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/exclude_subgraph_errors"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/max_depth"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
@@ -94,6 +95,9 @@ func TestNewConfig(t *testing.T) {
 				BlockFieldSuggestions: block_field_suggestions.Config{
 					Enabled: true,
 					Mask:    "[redacted]",
+				},
+				ExcludeSubgraphErrors: exclude_subgraph_errors.Config{
+					Enabled: true,
 				},
 				MaxTokens: tokens.Config{
 					Enabled:         true,

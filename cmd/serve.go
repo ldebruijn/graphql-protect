@@ -9,6 +9,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/exclude_subgraph_errors"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/http/middleware"
 	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
@@ -32,8 +33,9 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 	log.Info("Starting proxy", "target", cfg.Target.Host)
 
 	blockFieldSuggestions := block_field_suggestions.NewBlockFieldSuggestionsHandler(cfg.BlockFieldSuggestions)
+	excludeSubgraphErrors := exclude_subgraph_errors.NewExcludeSubgraphErrors(cfg.ExcludeSubgraphErrors)
 
-	pxy, err := proxy.NewProxy(cfg.Target, blockFieldSuggestions)
+	pxy, err := proxy.NewProxy(cfg.Target, blockFieldSuggestions, excludeSubgraphErrors)
 	if err != nil {
 		log.Error("ErrorPayload creating proxy", "err", err)
 		return nil

@@ -41,6 +41,10 @@ schema:
 # Configures whether we obfuscate graphql-protect validation errors such as max_aliases/max_tokens
 # Recommended to set it to 'true' for public environments
 obfuscate_validation_errors: false    
+
+# Hides Subgraph errors from getting exposed
+exclude_subgraph_errors:
+  enabled: true #default true
     
 persisted_operations:
   # Enable or disable the feature, enabled by default

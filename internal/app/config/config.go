@@ -12,6 +12,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/enforce_post"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/exclude_subgraph_errors"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/max_depth"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
@@ -36,6 +37,7 @@ type Config struct {
 	Target                    proxy.Config                   `yaml:"target"`
 	PersistedOperations       persistedoperations.Config     `yaml:"persisted_operations"`
 	BlockFieldSuggestions     block_field_suggestions.Config `yaml:"block_field_suggestions"`
+	ExcludeSubgraphErrors     exclude_subgraph_errors.Config `yaml:"exclude_subgraph_errors"`
 	MaxTokens                 tokens.Config                  `yaml:"max_tokens"`
 	MaxAliases                aliases.Config                 `yaml:"max_aliases"`
 	EnforcePost               enforce_post.Config            `yaml:"enforce_post"`
