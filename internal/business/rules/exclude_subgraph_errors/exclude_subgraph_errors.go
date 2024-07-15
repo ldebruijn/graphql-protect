@@ -1,15 +1,10 @@
-package exclude_subgraph_errors
-
-import (
-	"log/slog"
-)
+package exclude_subgraph_errors // nolint:revive
 
 type Config struct {
 	Enabled bool `conf:"default:true" yaml:"enabled"`
 }
 
 type ExcludeSubgraphErrors struct {
-	log     *slog.Logger
 	enabled bool
 }
 
