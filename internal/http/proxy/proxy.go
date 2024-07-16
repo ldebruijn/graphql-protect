@@ -89,9 +89,3 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 		return nil
 	}
 }
-
-type GraphqlError struct {
-	Message    string   `json:"message,omitempty"`
-	Path       []string `json:"path,omitempty"`
-	Extensions any      `json:"extensions,omitempty"`
-}
