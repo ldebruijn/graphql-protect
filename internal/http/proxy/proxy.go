@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/obfuscate_upstream_errors"
 	"io"
 	"net/http"
 	"net/http/httputil"
@@ -23,7 +24,7 @@ type TracingConfig struct {
 	RedactedHeaders []string `yaml:"redacted_headers"`
 }
 
-func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler) (*httputil.ReverseProxy, error) {
+func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, obfuscateUpstreamErrors *obfuscate_upstream_errors.ObfuscateUpstreamErrors) (*httputil.ReverseProxy, error) {
 	target, err := url.Parse(cfg.Host)
 	if err != nil {
 		return nil, err
@@ -31,22 +32,20 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 	proxy := &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.Out.Header["X-Forwarded-For"] = r.In.Header["X-Forwarded-For"]
+			r.Out.Header.Del("Accept-Encoding") // Disabled as compression has no direct benefit for us within our cloud setup, this can be removed if proper parsing for all types of compression is implemented
 			r.SetXForwarded()
 			r.SetURL(target)
 			r.Out.Host = r.In.Host
 		},
 		Transport:      NewTransport(cfg),
-		ModifyResponse: modifyResponse(blockFieldSuggestions), // nolint:bodyclose
+		ModifyResponse: modifyResponse(blockFieldSuggestions, obfuscateUpstreamErrors), // nolint:bodyclose
 	}
 
 	return proxy, nil
 }
 
-func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler) func(res *http.Response) error {
+func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, obfuscateUpstreamErrors *obfuscate_upstream_errors.ObfuscateUpstreamErrors) func(res *http.Response) error {
 	return func(res *http.Response) error {
-		if blockFieldSuggestions == nil || !blockFieldSuggestions.Enabled() {
-			return nil
-		}
 
 		// read raw response bytes
 		bodyBytes, _ := io.ReadAll(res.Body)
@@ -61,8 +60,15 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 			return nil
 		}
 
-		modified := blockFieldSuggestions.ProcessBody(response)
-		bts, err := json.Marshal(modified)
+		if blockFieldSuggestions != nil && blockFieldSuggestions.Enabled() {
+			response = blockFieldSuggestions.ProcessBody(response)
+		}
+
+		if obfuscateUpstreamErrors != nil && obfuscateUpstreamErrors.Enabled() {
+			response = obfuscateUpstreamErrors.ProcessBody(response)
+		}
+
+		bts, err := json.Marshal(response)
 		if err != nil {
 			// if we cannot marshall just return
 			// make sure to set body back to original bytes

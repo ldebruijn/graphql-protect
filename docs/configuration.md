@@ -26,6 +26,7 @@ target:
   target:
     redacted_headers: []
       
+      
 schema:
   # Path to a local file in which the schema can be found
   path: "./schema.graphql"
@@ -38,9 +39,14 @@ schema:
     # The interval in which the schema file should be reloaded
     interval: 5m
     
+    
 # Configures whether we obfuscate graphql-protect validation errors such as max_aliases/max_tokens
 # Recommended to set it to 'true' for public environments
-obfuscate_validation_errors: false    
+obfuscate_validation_errors: false
+
+# Configures if upstream errors need to be obfuscated, this can help you hide internals of your upstream landscape
+obfuscate_upstream_errors: true
+
     
 persisted_operations:
   # Enable or disable the feature, enabled by default
@@ -60,6 +66,11 @@ persisted_operations:
     # Will look at all the objects in the bucket and try to load any object with a `.json` extension
     gcp_bucket: ""
 
+block_field_suggestions:
+  enabled: true
+  mask: "[redacted]"
+
+
 max_aliases:
   # Enable the feature
   enabled: true
@@ -68,10 +79,6 @@ max_aliases:
   # Reject the request when the rule fails. Disable this to allow the request
   reject_on_failure: true
 
-block_field_suggestions:
-  enabled: true
-  mask: "[redacted]"
-  
 max_depth:
   enabled: true
   # The maximum allowed depth within a single request.
@@ -94,6 +101,7 @@ max_batch:
   max: 5
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
   reject_on_failure: true
+
 
 enforce_post:
   # Enable the feature

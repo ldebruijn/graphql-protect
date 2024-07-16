@@ -14,6 +14,7 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 
 * [Persisted Operations](docs/protections/persisted_operations.md)
 * [Block Field Suggestions](docs/protections/block_field_suggestions.md)
+* [Obfuscate upstream errors](docs/protections/obfuscate_upstream_errors.md)
 * [Max Aliases](docs/protections/max_aliases.md)
 * [Max Tokens](docs/protections/max_tokens.md)
 * [Max Depth](docs/protections/max_depth.md)
@@ -22,7 +23,12 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 * _Max Directives (coming soon)_
 * _Cost Limit (coming soon)_
 
+
 Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
+
+## Nice to know
+Currently handling response encoding from the upstream is not supported, we're open for contributions : )
+
 
 ## Installation
 

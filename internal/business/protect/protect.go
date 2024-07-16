@@ -71,18 +71,18 @@ func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
-	payloads, errs := p.validateRequest(r)
+	payloads, validationErrors := p.validateRequest(r)
 
 	p.accessLogging.Log(payloads, r.Header)
 
-	if len(errs) > 0 {
+	if len(validationErrors) > 0 {
 		if p.cfg.ObfuscateValidationErrors {
-			errs = gqlerror.List{gqlerror.Wrap(ErrRedacted)}
+			validationErrors = gqlerror.List{gqlerror.Wrap(ErrRedacted)}
 		}
 
 		response := map[string]interface{}{
 			"data":   nil,
-			"errors": errs,
+			"errors": validationErrors,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
