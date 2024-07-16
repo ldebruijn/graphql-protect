@@ -17,7 +17,7 @@ func NewExcludeSubgraphErrors(cfg Config) *ExcludeSubgraphErrors {
 func (a *ExcludeSubgraphErrors) ProcessBody(payload map[string]interface{}) map[string]interface{} {
 	redactedErrorArray := []map[string]interface{}{
 		{
-			"message": "Subgraph errors redacted",
+			"message": "Error(s) redacted",
 		},
 	}
 
