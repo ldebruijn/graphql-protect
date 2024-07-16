@@ -27,7 +27,7 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
 
 ## Nice to know
-Currently request compression is not supported, we're open for contributions : )
+Currently handling response encoding from the upstream is not supported, we're open for contributions : )
 
 
 ## Installation
