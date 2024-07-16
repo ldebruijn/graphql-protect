@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
-	"github.com/ldebruijn/graphql-protect/internal/business/rules/exclude_subgraph_errors"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/obfuscate_upstream_errors"
 	"io"
 	"net/http"
 	"net/http/httputil"
@@ -24,7 +24,7 @@ type TracingConfig struct {
 	RedactedHeaders []string `yaml:"redacted_headers"`
 }
 
-func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, excludeSubgraphErrors *exclude_subgraph_errors.ExcludeSubgraphErrors) (*httputil.ReverseProxy, error) {
+func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, obfuscateUpstreamErrors *obfuscate_upstream_errors.ObfuscateUpstreamErrors) (*httputil.ReverseProxy, error) {
 	target, err := url.Parse(cfg.Host)
 	if err != nil {
 		return nil, err
@@ -38,13 +38,13 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 			r.Out.Host = r.In.Host
 		},
 		Transport:      NewTransport(cfg),
-		ModifyResponse: modifyResponse(blockFieldSuggestions, excludeSubgraphErrors), // nolint:bodyclose
+		ModifyResponse: modifyResponse(blockFieldSuggestions, obfuscateUpstreamErrors), // nolint:bodyclose
 	}
 
 	return proxy, nil
 }
 
-func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, excludeSubgraphErrors *exclude_subgraph_errors.ExcludeSubgraphErrors) func(res *http.Response) error {
+func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, obfuscateUpstreamErrors *obfuscate_upstream_errors.ObfuscateUpstreamErrors) func(res *http.Response) error {
 	return func(res *http.Response) error {
 
 		// read raw response bytes
@@ -64,8 +64,8 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 			response = blockFieldSuggestions.ProcessBody(response)
 		}
 
-		if excludeSubgraphErrors != nil && excludeSubgraphErrors.Enabled() {
-			response = excludeSubgraphErrors.ProcessBody(response)
+		if obfuscateUpstreamErrors != nil && obfuscateUpstreamErrors.Enabled() {
+			response = obfuscateUpstreamErrors.ProcessBody(response)
 		}
 
 		bts, err := json.Marshal(response)

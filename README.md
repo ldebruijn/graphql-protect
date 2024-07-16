@@ -14,7 +14,7 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 
 * [Persisted Operations](docs/protections/persisted_operations.md)
 * [Block Field Suggestions](docs/protections/block_field_suggestions.md)
-* [Exclude subgraph errors](docs/protections/exclude_subgraph_errors.md)
+* [Obfuscate upstream errors](docs/protections/obfuscate_upstream_errors.md)
 * [Max Aliases](docs/protections/max_aliases.md)
 * [Max Tokens](docs/protections/max_tokens.md)
 * [Max Depth](docs/protections/max_depth.md)

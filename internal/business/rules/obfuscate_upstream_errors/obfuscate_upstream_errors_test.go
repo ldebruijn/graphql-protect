@@ -1,4 +1,4 @@
-package exclude_subgraph_errors // nolint:revive
+package obfuscate_upstream_errors // nolint:revive
 
 import (
 	"reflect"
@@ -39,7 +39,7 @@ func TestProcessBody(t *testing.T) {
 			want: map[string]interface{}{
 				"errors": []map[string]interface{}{
 					{
-						"message": "Subgraph errors redacted",
+						"message": "Error(s) redacted",
 					},
 				},
 			},
@@ -58,7 +58,7 @@ func TestProcessBody(t *testing.T) {
 			want: map[string]interface{}{
 				"errors": []map[string]interface{}{
 					{
-						"message": "Subgraph errors redacted",
+						"message": "Error(s) redacted",
 					},
 				},
 			},
@@ -77,7 +77,7 @@ func TestProcessBody(t *testing.T) {
 			want: map[string]interface{}{
 				"errors": []map[string]interface{}{
 					{
-						"message": "Subgraph errors redacted",
+						"message": "Error(s) redacted",
 					},
 				},
 			},
@@ -92,7 +92,7 @@ func TestProcessBody(t *testing.T) {
 					},
 					"errors": []map[string]interface{}{
 						{
-							"message": "Subgraph errors redacted",
+							"message": "Error(s) redacted",
 						},
 					},
 				},
@@ -104,7 +104,7 @@ func TestProcessBody(t *testing.T) {
 				},
 				"errors": []map[string]interface{}{
 					{
-						"message": "Subgraph errors redacted",
+						"message": "Error(s) redacted",
 					},
 				},
 			},
@@ -112,9 +112,7 @@ func TestProcessBody(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := NewExcludeSubgraphErrors(Config{
-				Enabled: true,
-			})
+			b := NewObfuscateUpstreamErrors(true)
 
 			if got := b.ProcessBody(tt.args.payload); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ProcessBody() = %v, want %v", got, tt.want)
