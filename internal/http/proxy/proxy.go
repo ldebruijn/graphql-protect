@@ -62,7 +62,7 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 		}
 
 		if logGraphqlErrors {
-			logErrors(response, log)
+			log.Info("Error occurred at", "error", response["errors"])
 		}
 
 		if blockFieldSuggestions != nil && blockFieldSuggestions.Enabled() {
@@ -88,27 +88,6 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 
 		return nil
 	}
-}
-
-func logErrors(payload map[string]interface{}, log *slog.Logger) map[string]interface{} {
-	errorsPayload := payload["errors"]
-
-	log.Info("Error occurred at", "error", errorsPayload)
-
-	//if errorsPayload != nil {
-	//	errorsJSON, _ := json.Marshal(errorsPayload)
-	//
-	//	var graphqlErrors []GraphqlError
-	//	err := json.Unmarshal(errorsJSON, &graphqlErrors)
-	//
-	//	if err == nil {
-	//		for _, graphqlError := range graphqlErrors {
-	//			//log.Info("Error occurred at", "path", strings.Join(graphqlError.Path, "->"), "message", graphqlError.Message)
-	//		}
-	//	}
-	//}
-
-	return payload
 }
 
 type GraphqlError struct {
