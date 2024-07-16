@@ -32,7 +32,7 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 	proxy := &httputil.ReverseProxy{
 		Rewrite: func(r *httputil.ProxyRequest) {
 			r.Out.Header["X-Forwarded-For"] = r.In.Header["X-Forwarded-For"]
-			r.Out.Header.Del("Accept-Encoding") //Disabled as compression has no direct benefit for us within our cloud setup, this can be removed if proper parsing for all types of compression is implemented
+			r.Out.Header.Del("Accept-Encoding") // Disabled as compression has no direct benefit for us within our cloud setup, this can be removed if proper parsing for all types of compression is implemented
 			r.SetXForwarded()
 			r.SetURL(target)
 			r.Out.Host = r.In.Host
