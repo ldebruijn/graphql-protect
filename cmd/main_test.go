@@ -167,6 +167,7 @@ type Product {
 }
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.ObfuscateUpstreamErrors = false
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
 					cfg.PersistedOperations.RejectOnFailure = false
@@ -370,6 +371,7 @@ type Product {
 					cfg.PersistedOperations.Enabled = true
 					cfg.PersistedOperations.Store = "./"
 					cfg.PersistedOperations.RejectOnFailure = false
+					cfg.ObfuscateUpstreamErrors = false
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
