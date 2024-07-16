@@ -6,6 +6,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/obfuscate_upstream_errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -24,7 +25,7 @@ type TracingConfig struct {
 	RedactedHeaders []string `yaml:"redacted_headers"`
 }
 
-func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, obfuscateUpstreamErrors *obfuscate_upstream_errors.ObfuscateUpstreamErrors) (*httputil.ReverseProxy, error) {
+func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, obfuscateUpstreamErrors *obfuscate_upstream_errors.ObfuscateUpstreamErrors, logGraphqlErrors bool, log *slog.Logger) (*httputil.ReverseProxy, error) {
 	target, err := url.Parse(cfg.Host)
 	if err != nil {
 		return nil, err
@@ -38,13 +39,13 @@ func NewProxy(cfg Config, blockFieldSuggestions *block_field_suggestions.BlockFi
 			r.Out.Host = r.In.Host
 		},
 		Transport:      NewTransport(cfg),
-		ModifyResponse: modifyResponse(blockFieldSuggestions, obfuscateUpstreamErrors), // nolint:bodyclose
+		ModifyResponse: modifyResponse(blockFieldSuggestions, obfuscateUpstreamErrors, logGraphqlErrors, log), // nolint:bodyclose
 	}
 
 	return proxy, nil
 }
 
-func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, obfuscateUpstreamErrors *obfuscate_upstream_errors.ObfuscateUpstreamErrors) func(res *http.Response) error {
+func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSuggestionsHandler, obfuscateUpstreamErrors *obfuscate_upstream_errors.ObfuscateUpstreamErrors, logGraphqlErrors bool, log *slog.Logger) func(res *http.Response) error {
 	return func(res *http.Response) error {
 
 		// read raw response bytes
@@ -58,6 +59,10 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 			// make sure to set body back to original bytes
 			res.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			return nil
+		}
+
+		if logGraphqlErrors {
+			log.Info("Error occurred at", "error", response["errors"])
 		}
 
 		if blockFieldSuggestions != nil && blockFieldSuggestions.Enabled() {
