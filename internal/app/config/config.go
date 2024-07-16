@@ -35,7 +35,7 @@ type Config struct {
 	Target                    proxy.Config                   `yaml:"target"`
 	PersistedOperations       persistedoperations.Config     `yaml:"persisted_operations"`
 	ObfuscateValidationErrors bool                           `conf:"default:false" yaml:"obfuscate_validation_errors"`
-	ObfuscateUpstreamError    bool                           `conf:"default:true" yaml:"obfuscate_upstream_errors"`
+	ObfuscateUpstreamErrors   bool                           `conf:"default:true" yaml:"obfuscate_upstream_errors"`
 	BlockFieldSuggestions     block_field_suggestions.Config `yaml:"block_field_suggestions"`
 	MaxTokens                 tokens.Config                  `yaml:"max_tokens"`
 	MaxAliases                aliases.Config                 `yaml:"max_aliases"`

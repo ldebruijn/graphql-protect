@@ -95,7 +95,7 @@ func TestNewConfig(t *testing.T) {
 					Enabled: true,
 					Mask:    "[redacted]",
 				},
-				ObfuscateUpstreamError: true,
+				ObfuscateUpstreamErrors: true,
 				MaxTokens: tokens.Config{
 					Enabled:         true,
 					Max:             1000,
@@ -156,6 +156,7 @@ schema:
     interval: 1s
     
 obfuscate_validation_errors: true    
+obfuscate_upstream_errors: false
     
 persisted_operations:
   enabled: true
@@ -232,6 +233,7 @@ log:
 					Path:            "path",
 				}),
 				ObfuscateValidationErrors: true,
+				ObfuscateUpstreamErrors:   false,
 				Schema: schema.Config{
 					Path: "path",
 					AutoReload: struct {

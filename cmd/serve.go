@@ -33,7 +33,7 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 	log.Info("Starting proxy", "target", cfg.Target.Host)
 
 	blockFieldSuggestions := block_field_suggestions.NewBlockFieldSuggestionsHandler(cfg.BlockFieldSuggestions)
-	obfuscateUpstreamErrors := obfuscate_upstream_errors.NewObfuscateUpstreamErrors(cfg.ObfuscateUpstreamError)
+	obfuscateUpstreamErrors := obfuscate_upstream_errors.NewObfuscateUpstreamErrors(cfg.ObfuscateUpstreamErrors)
 
 	pxy, err := proxy.NewProxy(cfg.Target, blockFieldSuggestions, obfuscateUpstreamErrors)
 	if err != nil {
