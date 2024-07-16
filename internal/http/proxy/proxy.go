@@ -11,7 +11,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -94,18 +93,20 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 func logErrors(payload map[string]interface{}, log *slog.Logger) map[string]interface{} {
 	errorsPayload := payload["errors"]
 
-	if errorsPayload != nil {
-		errorsJSON, _ := json.Marshal(errorsPayload)
+	log.Info("Error occurred at", "error", errorsPayload)
 
-		var graphqlErrors []GraphqlError
-		err := json.Unmarshal(errorsJSON, &graphqlErrors)
-
-		if err == nil {
-			for _, graphqlError := range graphqlErrors {
-				log.Error("Error occurred at", "path", strings.Join(graphqlError.Path, "->"), "message", graphqlError.Message)
-			}
-		}
-	}
+	//if errorsPayload != nil {
+	//	errorsJSON, _ := json.Marshal(errorsPayload)
+	//
+	//	var graphqlErrors []GraphqlError
+	//	err := json.Unmarshal(errorsJSON, &graphqlErrors)
+	//
+	//	if err == nil {
+	//		for _, graphqlError := range graphqlErrors {
+	//			//log.Info("Error occurred at", "path", strings.Join(graphqlError.Path, "->"), "message", graphqlError.Message)
+	//		}
+	//	}
+	//}
 
 	return payload
 }

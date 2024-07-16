@@ -44,6 +44,7 @@ type Config struct {
 	MaxBatch                  batch.Config                   `yaml:"max_batch"`
 	AccessLogging             accesslogging.Config           `yaml:"access_logging"`
 	Log                       log.Config                     `yaml:"log"`
+	LogGraphqlErrors          bool                           `conf:"default:false" yaml:"log_graphql_errors"`
 }
 
 func NewConfig(configPath string) (*Config, error) {
