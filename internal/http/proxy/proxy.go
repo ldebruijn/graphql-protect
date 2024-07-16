@@ -93,11 +93,13 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 
 func logErrors(payload map[string]interface{}, log *slog.Logger) map[string]interface{} {
 	errorsPayload := payload["errors"]
-	if errorsPayload != nil {
-		var graphqlErrors []GraphqlError
 
-		errorsJson, _ := json.Marshal(errorsPayload)
-		err := json.Unmarshal(errorsJson, &graphqlErrors)
+	if errorsPayload != nil {
+		errorsJSON, _ := json.Marshal(errorsPayload)
+
+		var graphqlErrors []GraphqlError
+		err := json.Unmarshal(errorsJSON, &graphqlErrors)
+
 		if err == nil {
 			for _, graphqlError := range graphqlErrors {
 				log.Error("Error occurred at", "path", strings.Join(graphqlError.Path, "->"), "message", graphqlError.Message)
