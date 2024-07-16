@@ -138,7 +138,7 @@ func Test_modifyResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(_ *testing.T) {
-			result := modifyResponse(tt.args.blockFieldSuggestions, nil) // nolint:bodyclose
+			result := modifyResponse(tt.args.blockFieldSuggestions, nil, false, nil) // nolint:bodyclose
 
 			_ = result(tt.args.response)
 			tt.want(tt.args.response)
@@ -158,7 +158,7 @@ func TestForwardsXff(t *testing.T) {
 		Host:      "http://" + upstreamURL.Host,
 		Tracing:   TracingConfig{},
 	}
-	proxy, err := NewProxy(cfg, nil, nil)
+	proxy, err := NewProxy(cfg, nil, nil, false, nil)
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)

@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	Format string `conf:"default:json" yaml:"format"`
+	Format           string `conf:"default:json" yaml:"format"`
+	LogGraphqlErrors bool   `conf:"default:false" yaml:"log_graphql_errors"`
 }
 
 var (

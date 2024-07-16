@@ -35,7 +35,7 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 	blockFieldSuggestions := block_field_suggestions.NewBlockFieldSuggestionsHandler(cfg.BlockFieldSuggestions)
 	obfuscateUpstreamErrors := obfuscate_upstream_errors.NewObfuscateUpstreamErrors(cfg.ObfuscateUpstreamErrors)
 
-	pxy, err := proxy.NewProxy(cfg.Target, blockFieldSuggestions, obfuscateUpstreamErrors)
+	pxy, err := proxy.NewProxy(cfg.Target, blockFieldSuggestions, obfuscateUpstreamErrors, cfg.Log.LogGraphqlErrors, log)
 	if err != nil {
 		log.Error("ErrorPayload creating proxy", "err", err)
 		return nil

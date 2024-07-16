@@ -106,6 +106,10 @@ max_batch:
 enforce_post:
   # Enable the feature
   enabled: true
+
+log:
+  format: text #text or json
+  log_graphql_errors: false #enable/disables logging of graphql errors
 ```
 
 For a more in-depth view of each option visit the accompanying documentation page of each individual protection.
