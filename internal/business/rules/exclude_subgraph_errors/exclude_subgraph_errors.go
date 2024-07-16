@@ -31,9 +31,3 @@ func (a *ExcludeSubgraphErrors) ProcessBody(payload map[string]interface{}) map[
 func (a *ExcludeSubgraphErrors) Enabled() bool {
 	return a.enabled
 }
-
-type GraphqlError struct {
-	Message    string                 `json:"message"`
-	Path       []string               `json:"path"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
