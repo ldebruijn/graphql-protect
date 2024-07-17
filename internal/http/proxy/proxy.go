@@ -62,7 +62,7 @@ func modifyResponse(blockFieldSuggestions *block_field_suggestions.BlockFieldSug
 		}
 
 		if logGraphqlErrors && response["errors"] != nil {
-			log.Info("Graphql error", response["errors"])
+			log.Info("Graphql error", "body", response["errors"])
 		}
 
 		if blockFieldSuggestions != nil && blockFieldSuggestions.Enabled() {
