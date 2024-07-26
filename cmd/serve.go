@@ -42,8 +42,8 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 	}
 
 	remoteLoader, err := persistedoperations.RemoteLoaderFromConfig(cfg.PersistedOperations, log)
-	if err != nil && !errors.Is(err, persistedoperations.ErrNoRemoteLoaderSpecified) {
-		log.Warn("Error initializing remote loader", "err", err)
+	if err != nil && errors.Is(err, persistedoperations.ErrCreatingGCPStorageLoader) {
+		log.Error("Error initializing remote loader", "err", err)
 	}
 
 	po, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, persistedoperations.NewLocalDirLoader(cfg.PersistedOperations, log), remoteLoader)
