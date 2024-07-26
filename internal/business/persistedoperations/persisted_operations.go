@@ -86,7 +86,7 @@ var ErrReloadIntervalTooShort = errors.New("reload interval cannot be less than 
 type Handler struct {
 	log *slog.Logger
 	cfg Config
-	// this has the opportunity to grow indefinitely, might wat to replace with a fixed-cap cache
+	// this has the opportunity to grow indefinitely, might want to replace with a fixed-cap cache
 	// or something like an LRU with a TTL
 	cache map[string]PersistedOperation
 	// Strategy for loading persisted operations from a remote location
@@ -328,6 +328,14 @@ func (p *Handler) reloadFromRemote() {
 
 func (p *Handler) Shutdown() {
 	p.done <- true
+}
+
+func (p *Handler) Config() Config {
+	return p.cfg
+}
+
+func (p *Handler) PersistedOpsInMemory() int {
+	return len(p.cache)
 }
 
 func hashFromPayload(payload gql.RequestData) (string, error) {

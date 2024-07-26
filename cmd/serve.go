@@ -69,7 +69,7 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 	mid := protectMiddlewareChain(log)
 
 	mux.Handle("/metrics", promhttp.Handler())
-	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler())
+	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler(po))
 	mux.Handle(cfg.Web.Path, mid(protectHandler))
 
 	api := http.Server{

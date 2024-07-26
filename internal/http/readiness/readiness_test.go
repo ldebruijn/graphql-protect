@@ -26,7 +26,7 @@ func TestNewReadinessHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
 
-			handler := NewReadinessHandler()
+			handler := NewReadinessHandler(nil)
 			resp := httptest.NewRecorder()
 
 			handler.ServeHTTP(resp, req)
