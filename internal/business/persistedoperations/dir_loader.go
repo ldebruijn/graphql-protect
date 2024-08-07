@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	fileLoaderCounter = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	fileLoaderGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   "graphql_protect",
 		Subsystem:   "dir_loader",
 		Name:        "files_loaded_gauge",
@@ -37,7 +37,7 @@ func NewLocalDirLoader(cfg Config, log *slog.Logger) *DirLoader {
 }
 
 func init() {
-	prometheus.MustRegister(fileLoaderCounter)
+	prometheus.MustRegister(fileLoaderGauge)
 }
 
 func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
@@ -80,7 +80,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 		}
 	}
 
-	fileLoaderCounter.WithLabelValues().Set(float64(filesProcessed))
+	fileLoaderGauge.WithLabelValues().Set(float64(filesProcessed))
 
 	return result, nil
 }
