@@ -13,7 +13,7 @@ var (
 	fileLoaderCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace:   "graphql_protect",
 		Subsystem:   "dir_loader",
-		Name:        "count",
+		Name:        "files_loaded_count",
 		Help:        "number of files loaded from disk",
 		ConstLabels: nil,
 	}, []string{})
