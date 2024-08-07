@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	fileLoaderCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	fileLoaderCounter = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   "graphql_protect",
 		Subsystem:   "dir_loader",
-		Name:        "files_loaded_count",
+		Name:        "files_loaded_gauge",
 		Help:        "number of files loaded from disk",
 		ConstLabels: nil,
 	}, []string{})
@@ -52,6 +52,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 	}
 
 	result := map[string]PersistedOperation{}
+	var filesProcessed = 0
 	for _, file := range files {
 		if file.IsDir() {
 			continue
@@ -64,7 +65,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 				continue
 			}
 
-			fileLoaderCounter.WithLabelValues().Inc()
+			filesProcessed++
 
 			var manifestHashes map[string]string
 			err = json.Unmarshal(contents, &manifestHashes)
@@ -78,6 +79,8 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 			}
 		}
 	}
+
+	fileLoaderCounter.WithLabelValues().Set(float64(filesProcessed))
 
 	return result, nil
 }
