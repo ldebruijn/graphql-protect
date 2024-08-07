@@ -3,9 +3,20 @@ package persistedoperations // nolint:revive
 import (
 	"context"
 	"encoding/json"
+	"github.com/prometheus/client_golang/prometheus"
 	"log/slog"
 	"os"
 	"path/filepath"
+)
+
+var (
+	fileLoaderGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   "graphql_protect",
+		Subsystem:   "dir_loader",
+		Name:        "files_loaded_gauge",
+		Help:        "number of files loaded from disk",
+		ConstLabels: nil,
+	}, []string{})
 )
 
 // DirLoader loads persisted operations from a filesystem directory
@@ -25,8 +36,13 @@ func NewLocalDirLoader(cfg Config, log *slog.Logger) *DirLoader {
 	}
 }
 
+func init() {
+	prometheus.MustRegister(fileLoaderGauge)
+}
+
 func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
 	files, err := os.ReadDir(d.path)
+
 	if err != nil {
 		// if we can't read the dir, try creating it
 		err := os.Mkdir(d.path, 0750)
@@ -36,7 +52,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 	}
 
 	result := map[string]PersistedOperation{}
-
+	var filesProcessed = 0
 	for _, file := range files {
 		if file.IsDir() {
 			continue
@@ -48,6 +64,8 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 				d.log.Warn("Error reading file", "err", err)
 				continue
 			}
+
+			filesProcessed++
 
 			var manifestHashes map[string]string
 			err = json.Unmarshal(contents, &manifestHashes)
@@ -61,6 +79,8 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 			}
 		}
 	}
+
+	fileLoaderGauge.WithLabelValues().Set(float64(filesProcessed))
 
 	return result, nil
 }
