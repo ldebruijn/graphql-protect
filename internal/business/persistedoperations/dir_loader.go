@@ -70,7 +70,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 			var manifestHashes map[string]string
 			err = json.Unmarshal(contents, &manifestHashes)
 			if err != nil {
-				d.log.Warn("error unmarshalling operation file", "filepath", filePath, "err", err)
+				d.log.Warn("error unmarshalling operation file", "bytes", len(contents), "contents", string(contents), "filepath", filePath, "err", err)
 				continue
 			}
 

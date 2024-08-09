@@ -290,6 +290,10 @@ func (p *Handler) reloadProcessor() {
 func (p *Handler) reload() error {
 	_ = p.reloadFromRemote()
 
+	// sleep to ensure file commit happened, found > 1 second provided best results
+	// This is still a workaround but we haven't found a root cause yet
+	time.Sleep(1 * time.Second)
+
 	err := p.reloadFromLocalDir()
 	if err != nil {
 		p.log.Warn("Error loading from local dir", "err", err)
