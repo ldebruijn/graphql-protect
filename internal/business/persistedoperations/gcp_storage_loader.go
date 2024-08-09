@@ -52,7 +52,7 @@ func NewGcpStorageLoader(ctx context.Context, bucket string, store string, logge
 		log:    logger,
 	}, nil
 }
-func (g *GcpStorageLoader) Load(ctx context.Context) error {
+func (g *GcpStorageLoader) Load(ctx context.Context) error { // nolint:funlen
 	it := g.client.Bucket(g.bucket).Objects(ctx, &storage.Query{
 		MatchGlob:  "**.json",
 		Versions:   false,
@@ -101,6 +101,10 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 		if err = file.Close(); err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("file.Close: %w", err))
+		}
+
+		if err = file.Sync(); err != nil {
+			errs = append(errs, fmt.Errorf("file.Sync: %w", err))
 		}
 
 		cancel()
