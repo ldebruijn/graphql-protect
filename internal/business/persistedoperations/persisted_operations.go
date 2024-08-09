@@ -288,9 +288,8 @@ func (p *Handler) reloadProcessor() {
 }
 
 func (p *Handler) reload() error {
-	p.reloadFromRemote()
-	// sleep to ensure file commit happened, found > 1 second provided best results
-	time.Sleep(1 * time.Second)
+	_ = p.reloadFromRemote()
+
 	err := p.reloadFromLocalDir()
 	if err != nil {
 		p.log.Warn("Error loading from local dir", "err", err)
@@ -301,9 +300,9 @@ func (p *Handler) reload() error {
 	return nil
 }
 
-func (p *Handler) reloadFromRemote() {
+func (p *Handler) reloadFromRemote() error {
 	if p.remoteLoader == nil {
-		return
+		return nil
 	}
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
@@ -313,9 +312,9 @@ func (p *Handler) reloadFromRemote() {
 
 	err := p.remoteLoader.Load(ctx)
 	if err != nil {
-		p.log.Error("Error loading files from bucket", "err", err)
+		p.log.Error("Error(s) loading files from remote", "err", err)
 		reloadCounter.WithLabelValues("remote", "failure").Inc()
-		return
+		return err
 	}
 
 	endTime := time.Since(startTime).Seconds()
@@ -324,6 +323,7 @@ func (p *Handler) reloadFromRemote() {
 	gcsFileDownloadDurationGauge.WithLabelValues().Set(endTime)
 
 	reloadCounter.WithLabelValues("remote", "success").Inc()
+	return nil
 }
 
 func (p *Handler) Shutdown() {
