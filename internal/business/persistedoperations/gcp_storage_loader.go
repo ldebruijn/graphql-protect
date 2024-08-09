@@ -98,13 +98,13 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error { // nolint:funlen
 			continue
 		}
 
+		if err = file.Sync(); err != nil {
+			errs = append(errs, fmt.Errorf("file.Sync: %w", err))
+		}
+
 		if err = file.Close(); err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("file.Close: %w", err))
-		}
-
-		if err = file.Sync(); err != nil {
-			errs = append(errs, fmt.Errorf("file.Sync: %w", err))
 		}
 
 		cancel()
