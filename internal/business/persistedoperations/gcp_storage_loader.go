@@ -64,12 +64,13 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error {
 	var errs []error
 	for {
 		attrs, err := it.Next()
-		numberOfFilesProcessed++
 
 		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
+			// if any error is returned, any subsequent call returns the same error
+			// so we break here
 			errs = append(errs, err)
 			break
 		}
