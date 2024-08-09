@@ -288,13 +288,9 @@ func (p *Handler) reloadProcessor() {
 }
 
 func (p *Handler) reload() error {
-	err := p.reloadFromRemote()
-	if err != nil {
-		// warn about the errors, do not stop reloading
-		p.log.Warn("Error(s) observed loading persisted operations from remote", "err", err)
-	}
+	_ = p.reloadFromRemote()
 
-	err = p.reloadFromLocalDir()
+	err := p.reloadFromLocalDir()
 	if err != nil {
 		p.log.Warn("Error loading from local dir", "err", err)
 		reloadCounter.WithLabelValues("ticker", "failure").Inc()
@@ -316,7 +312,7 @@ func (p *Handler) reloadFromRemote() error {
 
 	err := p.remoteLoader.Load(ctx)
 	if err != nil {
-		p.log.Error("Error loading files from bucket", "err", err)
+		p.log.Error("Error(s) loading files from remote", "err", err)
 		reloadCounter.WithLabelValues("remote", "failure").Inc()
 		return err
 	}
