@@ -107,6 +107,10 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error { // nolint:funlen
 			errs = append(errs, fmt.Errorf("file.Close: %w", err))
 		}
 
+		if err = file.Sync(); err != nil {
+			errs = append(errs, fmt.Errorf("file.Sync: %w", err))
+		}
+
 		cancel()
 		_ = reader.Close()
 	}
