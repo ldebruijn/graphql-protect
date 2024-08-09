@@ -52,7 +52,7 @@ func NewGcpStorageLoader(ctx context.Context, bucket string, store string, logge
 		log:    logger,
 	}, nil
 }
-func (g *GcpStorageLoader) Load(ctx context.Context) error { // nolint:funlen
+func (g *GcpStorageLoader) Load(ctx context.Context) error {
 	it := g.client.Bucket(g.bucket).Objects(ctx, &storage.Query{
 		MatchGlob:  "**.json",
 		Versions:   false,
@@ -64,57 +64,61 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error { // nolint:funlen
 	var errs []error
 	for {
 		attrs, err := it.Next()
-		numberOfFilesProcessed++
 
 		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
+			// if any error is returned, any subsequent call returns the same error
+			// so we break here
 			errs = append(errs, err)
 			break
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, time.Second*50)
-
-		file, err := os.Create(filepath.Join(g.store, getFileName(attrs)))
+		err = g.processFile(ctx, attrs)
 		if err != nil {
-			cancel()
-			errs = append(errs, fmt.Errorf("os.Create: %w", err))
-			continue
+			errs = append(errs, err)
 		}
 
-		reader, err := g.client.Bucket(g.bucket).Object(attrs.Name).NewReader(ctx)
-		if err != nil {
-			cancel()
-			errs = append(errs, fmt.Errorf("Object(%q).NewReader: %w", attrs.Name, err))
-			continue
-		}
-
-		_, err = io.Copy(file, reader)
-		if err != nil {
-			cancel()
-			errs = append(errs, fmt.Errorf("io.Copy: %w", err))
-			_ = reader.Close()
-			continue
-		}
-
-		if err = file.Sync(); err != nil {
-			errs = append(errs, fmt.Errorf("file.Sync: %w", err))
-		}
-
-		if err = file.Close(); err != nil {
-			cancel()
-			errs = append(errs, fmt.Errorf("file.Close: %w", err))
-		}
-
-		cancel()
-		_ = reader.Close()
+		numberOfFilesProcessed++
 	}
 
 	g.log.Info("Read manifest files from bucket", "numFiles", numberOfFilesProcessed, "numErrs", len(errs))
 	reloadFilesGauge.WithLabelValues().Set(float64(numberOfFilesProcessed))
 
 	return errors.Join(errs...)
+}
+
+func (g *GcpStorageLoader) processFile(ctx context.Context, attrs *storage.ObjectAttrs) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
+	defer cancel()
+
+	file, err := os.Create(filepath.Join(g.store, getFileName(attrs)))
+	if err != nil {
+		return fmt.Errorf("os.Create: %w", err)
+	}
+	defer file.Close()
+
+	reader, err := g.client.Bucket(g.bucket).Object(attrs.Name).NewReader(ctx)
+	if err != nil {
+		cancel()
+		return fmt.Errorf("Object(%q).NewReader: %w", attrs.Name, err)
+	}
+	defer reader.Close()
+
+	written, err := io.Copy(file, reader)
+	if err != nil {
+		cancel()
+		return fmt.Errorf("io.Copy: %w", err)
+	}
+
+	g.log.Info("Remote file downloaded", "file", file.Name(), "numBytes", written)
+
+	if err = file.Sync(); err != nil {
+		return fmt.Errorf("file.Sync: %w", err)
+	}
+
+	return nil
 }
 
 /*
