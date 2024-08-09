@@ -82,6 +82,7 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error { // nolint:funlen
 			errs = append(errs, fmt.Errorf("os.Create: %w", err))
 			continue
 		}
+		defer file.Close()
 
 		reader, err := g.client.Bucket(g.bucket).Object(attrs.Name).NewReader(ctx)
 		if err != nil {
@@ -89,12 +90,12 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error { // nolint:funlen
 			errs = append(errs, fmt.Errorf("Object(%q).NewReader: %w", attrs.Name, err))
 			continue
 		}
+		defer reader.Close()
 
 		_, err = io.Copy(file, reader)
 		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("io.Copy: %w", err))
-			_ = reader.Close()
 			continue
 		}
 
@@ -108,7 +109,6 @@ func (g *GcpStorageLoader) Load(ctx context.Context) error { // nolint:funlen
 		}
 
 		cancel()
-		_ = reader.Close()
 	}
 
 	g.log.Info("Read manifest files from bucket", "numFiles", numberOfFilesProcessed, "numErrs", len(errs))
