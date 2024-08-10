@@ -47,7 +47,7 @@ These loaders can be specified to look at local directories, or remote locations
 
 Currently we have support for the following loaders, specified by the `type` field in the loader configuration:
 
-* `local` - load persisted operations from local file system, this is the default strategy
+* `local` - load persisted operations from local file system, this is the default strategy. If need be this allows you to download files from an unsupported remote location to local storage, and have `graphql-protect` pick up on them.
 * `gcp` - load persisted operations from a GCP bucket
 * `noop` - no persisted operations are loaded. This is the strategy applied when an unknown type is supplied.
 
