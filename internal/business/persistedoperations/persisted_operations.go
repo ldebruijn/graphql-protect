@@ -24,33 +24,27 @@ var (
 	persistedOpsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "graphql_protect",
 		Subsystem: "persisted_operations",
-		Name:      "counter",
+		Name:      "result_count",
 		Help:      "The results of the persisted operations rule",
 	},
 		[]string{"state", "result"},
 	)
-	reloadCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace:   "graphql_protect",
-		Subsystem:   "persisted_operations",
-		Name:        "load",
-		Help:        "Counter tracking reloading behavior and results",
-		ConstLabels: nil,
+	loadingResultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "persisted_operations",
+		Name:      "load_result_count",
+		Help:      "Counter tracking loading behavior and results",
 	},
-		[]string{"system", "result"})
-	gcsFileDownloadDurationGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace:   "graphql_protect",
-		Subsystem:   "persisted_operations",
-		Name:        "gcs_download_duration",
-		Help:        "metrics on duration of downloading from gcs bucket",
-		ConstLabels: nil,
-	}, []string{})
+		[]string{"system", "result"},
+	)
 	uniqueHashesInMemGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace:   "graphql_protect",
 		Subsystem:   "persisted_operations",
-		Name:        "unique_hashes_in_memory",
+		Name:        "unique_hashes_in_memory_count",
 		Help:        "number of unique hashes in memory",
 		ConstLabels: nil,
-	}, []string{})
+	}, []string{},
+	)
 )
 
 type ErrorPayload struct {
@@ -100,7 +94,7 @@ type Handler struct {
 }
 
 func init() {
-	prometheus.MustRegister(persistedOpsCounter, reloadCounter, gcsFileDownloadDurationGauge, uniqueHashesInMemGauge)
+	prometheus.MustRegister(persistedOpsCounter, loadingResultCounter, uniqueHashesInMemGauge)
 }
 
 func NewPersistedOperations(log *slog.Logger, cfg Config, loader Loader) (*Handler, error) {
@@ -243,9 +237,10 @@ func (p *Handler) Validate(validate func(operation string) gqlerror.List) gqlerr
 func (p *Handler) load() error {
 	newState, err := p.loader.Load(context.Background())
 	if err != nil {
-		reloadCounter.WithLabelValues(p.loader.Type(), "failure").Inc()
+		loadingResultCounter.WithLabelValues(p.loader.Type(), "failure").Inc()
 		return err
 	}
+
 	p.lock.Lock()
 	// we specifically don't overwrite the existing cache, but only add the new state to prevent
 	// removed operations when errors occur during loading
@@ -254,7 +249,8 @@ func (p *Handler) load() error {
 
 	p.log.Info(fmt.Sprintf("Total number of unique operation hashes: %d", len(newState)))
 	uniqueHashesInMemGauge.WithLabelValues().Set(float64(len(newState)))
-	reloadCounter.WithLabelValues(p.loader.Type(), "success").Inc()
+
+	loadingResultCounter.WithLabelValues(p.loader.Type(), "success").Inc()
 
 	return nil
 }

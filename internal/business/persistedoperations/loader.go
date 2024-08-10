@@ -2,7 +2,6 @@ package persistedoperations // nolint:revive
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 )
 
@@ -21,5 +20,3 @@ func LoaderFromConfig(cfg Config, log *slog.Logger) (Loader, error) {
 		return NewNoOpLoader()
 	}
 }
-
-var ErrNoRemoteLoaderSpecified = errors.New("no remote loader specified")

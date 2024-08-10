@@ -15,6 +15,17 @@ import (
 
 var _ Loader = &GcpLoader{}
 
+var (
+	filesLoadedCounter = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace:   "graphql_protect",
+		Subsystem:   "persisted_operations",
+		Name:        "gcs_loader_files_loaded_count",
+		Help:        "number of files downloaded using gcs loader",
+		ConstLabels: nil,
+	},
+		[]string{})
+)
+
 // GcpStorageLoader loads persisted operations from a GCP Storage bucket.
 // It matches files based on a `*.json` glob pattern and attempts to unmarshall them into
 // a persisted operations map structure
@@ -29,7 +40,7 @@ func (g *GcpLoader) Type() string {
 }
 
 func init() {
-	prometheus.MustRegister(reloadFilesGauge)
+	prometheus.MustRegister(filesLoadedCounter)
 }
 
 func NewGcpLoader(cfg LoaderConfig, log *slog.Logger) (*GcpLoader, error) {
@@ -79,7 +90,7 @@ func (g *GcpLoader) Load(ctx context.Context) (map[string]PersistedOperation, er
 	}
 
 	g.log.Info("Read manifest files from bucket", "numFiles", numberOfFilesProcessed, "numErrs", len(errs))
-	reloadFilesGauge.WithLabelValues().Set(float64(numberOfFilesProcessed))
+	filesLoadedCounter.WithLabelValues().Set(float64(numberOfFilesProcessed))
 
 	return result, errors.Join(errs...)
 }
