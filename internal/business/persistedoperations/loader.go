@@ -17,6 +17,7 @@ func NewLoaderFromConfig(cfg Config, log *slog.Logger) (Loader, error) {
 	case "gcp":
 		return NewGcpLoader(cfg.Loader, log)
 	default:
+		log.Info("Loader strategy defaulted to noop loader for type", "type", cfg.Loader.Type)
 		return NewNoOpLoader()
 	}
 }

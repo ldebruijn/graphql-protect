@@ -35,14 +35,13 @@ var (
 		Name:      "load_result_count",
 		Help:      "Counter tracking loading behavior and results",
 	},
-		[]string{"system", "result"},
+		[]string{"type", "result"},
 	)
 	uniqueHashesInMemGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace:   "graphql_protect",
-		Subsystem:   "persisted_operations",
-		Name:        "unique_hashes_in_memory_count",
-		Help:        "number of unique hashes in memory",
-		ConstLabels: nil,
+		Namespace: "graphql_protect",
+		Subsystem: "persisted_operations",
+		Name:      "unique_hashes_in_memory_count",
+		Help:      "number of unique hashes in memory",
 	}, []string{},
 	)
 )

@@ -16,33 +16,40 @@ You can configure `graphql-protect` to enable Persisted Operations.
 # ...
 
 persisted_operations:
-  # Enable or disable the feature, enabled by default
+  # Enable or disable the feature, disabled by default
   enabled: false
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
   reject_on_failure: true
-  # Store is the location on local disk where graphql-protect can find the persisted operations, it loads any `*.json` files on disk
-  store: "./store"
-  reload:
-    enabled: true
-    # The interval in which the local store dir is read and refreshes the internal state
-    interval: 5m
-    # The timeout for the remote operation
-    timeout: 10s
-  remote:
-    # Load persisted operations from a GCP Cloud Storage bucket.
-    # Will look at all the objects in the bucket and try to load any object with a `.json` extension
-    gcp_bucket: ""
+  # Loader decides how persisted operations are loaded, see loader chapter for more details
+  loader:
+    # Type of loader to use
+    type: disk
+    # Location to load persisted operations from
+    location: ./store
+    # Whether to reload persisted operations periodically
+    reload:
+      enabled: true
+      # The interval in which the persisted operations are refreshed
+      interval: 5m0s
+      # The timeout for the refreshing operation
+      timeout: 10s
 
 # ...
 ```
 
 ## How it works
 
-`graphql-protect` looks at the `store` location on local disk to find any `*.json` files it can parse for persisted operations. 
+`graphql-protect` looks at the location specified for the `loader` and looks for any `*.json` files it can parse for persisted operations.
+These loaders can be specified to look at local directories, or remote locations like GCP buckets.
+`graphql-protect` will load the persisted operations from the location and update its internal state with any new operations.
 
-It can be configured to look at this directory and reload based on the files on local disk.
+## Loader
 
-Additionally, it can be configured to fetch operations from a remote location onto the local disk.
+Currently we have support for the following loaders, specified by the `type` field in the loader configuration:
+
+* `local` - load persisted operations from local file system, this is the default strategy
+* `gcp` - load persisted operations from a GCP bucket
+* `noop` - no persisted operations are loaded. This is the strategy applied when an unknown type is supplied.
 
 ## Parsing Structure
 
@@ -85,7 +92,7 @@ In order to utilize this feature you need to generate the persisted operations t
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-graphql_protect_persisted_operations_results{state, result}
+graphql_protect_persisted_operations_result_count{state, result}
 ```
 
 | `state`  | Description                                                                                                                                                   |
@@ -101,13 +108,26 @@ graphql_protect_persisted_operations_results{state, result}
 | `rejected` | The rule rejected the request |
 
 ```
-graphql_protect_persisted_operations_reload{system}
+graphql_protect_persisted_operations_load_result_count{type, result}
 ```
 
 
-| `system` | Description                                                                                           |
-|--------|-------------------------------------------------------------------------------------------------------|
-| `local`  | The rule reloaded its state from local storage                                                        |
-| `remote` | The rule reloaded the remote state onto local disk. This does not refresh the local state on its own. |
+| `type`  | Description                   |
+|---------|-------------------------------|
+| `local` | Loaded using the local loader |
+| `gcp`   | Loaded using the gcp loader   |
+| `noop`  | Loaded using the noop loader  |
+
+
+| `result`  | Description               |
+|-----------|---------------------------|
+| `success` | loading was successful    |
+| `failure` | loading produced an error |
+
+No metrics are produced when the rule is disabled.
+
+```
+graphql_protect_persisted_operations_unique_hashes_in_memory_count{}
+```
 
 No metrics are produced when the rule is disabled.
