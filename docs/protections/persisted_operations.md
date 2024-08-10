@@ -23,7 +23,7 @@ persisted_operations:
   # Loader decides how persisted operations are loaded, see loader chapter for more details
   loader:
     # Type of loader to use
-    type: disk
+    type: local
     # Location to load persisted operations from
     location: ./store
     # Whether to reload persisted operations periodically

@@ -73,7 +73,7 @@ func TestNewConfig(t *testing.T) {
 				PersistedOperations: persistedoperations.Config{
 					Enabled: false,
 					Loader: persistedoperations.LoaderConfig{
-						Type:     "disk",
+						Type:     "local",
 						Location: "./store",
 						Reload: struct {
 							Enabled  bool          `conf:"default:true" yaml:"enabled"`

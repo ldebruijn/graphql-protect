@@ -49,22 +49,23 @@ obfuscate_upstream_errors: true
 
     
 persisted_operations:
-  # Enable or disable the feature, enabled by default
+  # Enable or disable the feature, disabled by default
   enabled: false
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
   reject_on_failure: true
-  # Store is the location on local disk where graphql-protect can find the persisted operations, it loads any `*.json` files on disk
-  store: "./store"
-  reload:
-    enabled: true
-    # The interval in which the local store dir is read and refreshes the internal state
-    interval: 5m
-    # The timeout for the remote operation
-    timeout: 10s
-  remote:
-    # Load persisted operations from a GCP Cloud Storage bucket.
-    # Will look at all the objects in the bucket and try to load any object with a `.json` extension
-    gcp_bucket: ""
+  # Loader decides how persisted operations are loaded, see loader chapter for more details
+  loader:
+    # Type of loader to use
+    type: local
+    # Location to load persisted operations from
+    location: ./store
+    # Whether to reload persisted operations periodically
+    reload:
+      enabled: true
+      # The interval in which the persisted operations are refreshed
+      interval: 5m0s
+      # The timeout for the refreshing operation
+      timeout: 10s
 
 block_field_suggestions:
   enabled: true

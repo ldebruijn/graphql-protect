@@ -112,7 +112,7 @@ type Product {
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Loader.Type = "disk"
+					cfg.PersistedOperations.Loader.Type = "local"
 					cfg.PersistedOperations.Loader.Location = "./"
 					return cfg
 				},
@@ -170,7 +170,7 @@ type Product {
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.ObfuscateUpstreamErrors = false
 					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Loader.Type = "disk"
+					cfg.PersistedOperations.Loader.Type = "local"
 					cfg.PersistedOperations.Loader.Location = "./"
 					cfg.PersistedOperations.RejectOnFailure = false
 					return cfg
@@ -371,7 +371,7 @@ type Product {
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Loader.Type = "disk"
+					cfg.PersistedOperations.Loader.Type = "local"
 					cfg.PersistedOperations.Loader.Location = "./"
 					cfg.PersistedOperations.RejectOnFailure = false
 					cfg.ObfuscateUpstreamErrors = false
@@ -437,7 +437,7 @@ type Product {
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Loader.Type = "disk"
+					cfg.PersistedOperations.Loader.Type = "local"
 					cfg.PersistedOperations.Loader.Location = "./"
 					cfg.PersistedOperations.RejectOnFailure = false
 					return cfg

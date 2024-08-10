@@ -61,7 +61,7 @@ type Config struct {
 }
 
 type LoaderConfig struct {
-	Type     string `conf:"default:disk" yaml:"type"`
+	Type     string `conf:"default:local" yaml:"type"`
 	Location string `conf:"default:./store" yaml:"location"`
 	// Configuration for auto-reloading persisted operations
 	Reload struct {
