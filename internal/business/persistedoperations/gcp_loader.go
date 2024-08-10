@@ -89,7 +89,7 @@ func (g *GcpLoader) Load(ctx context.Context) (map[string]PersistedOperation, er
 		numberOfFilesProcessed++
 	}
 
-	g.log.Info("Read manifest files from bucket", "numFiles", numberOfFilesProcessed, "numErrs", len(errs))
+	g.log.Info("Loaded files from gcp bucket", "numFiles", numberOfFilesProcessed, "numErrs", len(errs))
 	filesLoadedCounter.WithLabelValues().Set(float64(numberOfFilesProcessed))
 
 	return result, errors.Join(errs...)
