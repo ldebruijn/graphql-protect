@@ -80,7 +80,6 @@ func (d *LocalLoader) Load(_ context.Context) (map[string]PersistedOperation, er
 
 			maps.Copy(result, data)
 		}
-		return result, err
 	}
 
 	fileLoaderGauge.WithLabelValues().Set(float64(filesProcessed))
