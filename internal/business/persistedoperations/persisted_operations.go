@@ -56,15 +56,14 @@ type ErrorMessage struct {
 }
 
 type Config struct {
-	Enabled         bool `conf:"default:false" yaml:"enabled"`
-	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
-
-	Loader LoaderConfig
+	Enabled         bool         `conf:"default:false" yaml:"enabled"`
+	RejectOnFailure bool         `conf:"default:true" yaml:"reject_on_failure"`
+	Loader          LoaderConfig `yaml:"loader"`
 }
 
 type LoaderConfig struct {
-	Type     string `conf:"" yaml:"type"`
-	Location string `conf:"" yaml:"location"`
+	Type     string `conf:"default:disk" yaml:"type"`
+	Location string `conf:"default:./store" yaml:"location"`
 	// Configuration for auto-reloading persisted operations
 	Reload struct {
 		Enabled  bool          `conf:"default:true" yaml:"enabled"`
@@ -130,6 +129,8 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader Loader) (*Handl
 	if err != nil {
 		return nil, err
 	}
+
+	poh.reloadProcessor()
 
 	return poh, nil
 }
@@ -242,8 +243,6 @@ func (p *Handler) load() error {
 	}
 
 	p.lock.Lock()
-	// we specifically don't overwrite the existing cache, but only add the new state to prevent
-	// removed operations when errors occur during loading
 	maps.Copy(p.cache, newState)
 	p.lock.Unlock()
 

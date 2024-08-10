@@ -112,7 +112,8 @@ type Product {
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.Loader.Type = "disk"
+					cfg.PersistedOperations.Loader.Location = "./"
 					return cfg
 				},
 				mockResponse: map[string]interface{}{
@@ -169,7 +170,8 @@ type Product {
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.ObfuscateUpstreamErrors = false
 					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.Loader.Type = "disk"
+					cfg.PersistedOperations.Loader.Location = "./"
 					cfg.PersistedOperations.RejectOnFailure = false
 					return cfg
 				},
@@ -369,7 +371,8 @@ type Product {
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.Loader.Type = "disk"
+					cfg.PersistedOperations.Loader.Location = "./"
 					cfg.PersistedOperations.RejectOnFailure = false
 					cfg.ObfuscateUpstreamErrors = false
 					return cfg
@@ -434,7 +437,8 @@ type Product {
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
 					cfg.PersistedOperations.Enabled = true
-					cfg.PersistedOperations.Store = "./"
+					cfg.PersistedOperations.Loader.Type = "disk"
+					cfg.PersistedOperations.Loader.Location = "./"
 					cfg.PersistedOperations.RejectOnFailure = false
 					return cfg
 				},

@@ -10,7 +10,7 @@ type Loader interface {
 	Type() string
 }
 
-func LoaderFromConfig(cfg Config, log *slog.Logger) (Loader, error) {
+func NewLoaderFromConfig(cfg Config, log *slog.Logger) (Loader, error) {
 	switch cfg.Loader.Type {
 	case "local":
 		return NewLocalDirLoader(cfg, log), nil

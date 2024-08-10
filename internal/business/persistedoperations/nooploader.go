@@ -15,6 +15,6 @@ func NewNoOpLoader() (*NoOpLoader, error) {
 	return &NoOpLoader{}, nil
 }
 
-func (n *NoOpLoader) Load(ctx context.Context) (map[string]PersistedOperation, error) {
+func (n *NoOpLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
 	return nil, nil
 }
