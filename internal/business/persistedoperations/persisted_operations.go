@@ -10,7 +10,6 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"io"
 	"log/slog"
-	"maps"
 	"net/http"
 	"sync"
 	"time"
@@ -242,7 +241,7 @@ func (p *Handler) load() error {
 	}
 
 	p.lock.Lock()
-	maps.Copy(p.cache, newState)
+	p.cache = newState
 	p.lock.Unlock()
 
 	p.log.Info(fmt.Sprintf("Total number of unique operation hashes: %d", len(newState)))

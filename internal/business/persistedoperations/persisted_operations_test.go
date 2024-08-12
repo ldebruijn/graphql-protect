@@ -300,7 +300,7 @@ func TestLoader(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "loader state appends to cache, does not delete",
+			name: "loader state overwrites cache, does not append",
 			args: args{
 				loader: func() Loader {
 					data := map[string]PersistedOperation{}
@@ -315,8 +315,8 @@ func TestLoader(t *testing.T) {
 				}(),
 				state: map[string]PersistedOperation{
 					"456": {
-						Operation: "i am an operation that does not get deleted",
-						Name:      "i am a name that doest not get deleted",
+						Operation: "i am an operation that does get deleted",
+						Name:      "i am a name that doest get deleted",
 					},
 				},
 			},
@@ -324,10 +324,6 @@ func TestLoader(t *testing.T) {
 				"123": {
 					Operation: "i am an operation",
 					Name:      "i am a name",
-				},
-				"456": {
-					Operation: "i am an operation that does not get deleted",
-					Name:      "i am a name that doest not get deleted",
 				},
 			},
 			wantErr: nil,
