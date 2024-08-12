@@ -2,12 +2,14 @@ package persistedoperations // nolint:revive
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/prometheus/client_golang/prometheus"
 	"log/slog"
+	"maps"
 	"os"
 	"path/filepath"
 )
+
+var _ Loader = &LocalLoader{}
 
 var (
 	fileLoaderGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -19,20 +21,24 @@ var (
 	}, []string{})
 )
 
-// DirLoader loads persisted operations from a filesystem directory
+// LocalLoader loads persisted operations from a filesystem directory
 // It looks at all files in the directory, but doesn't traverse subdirectories
 // If it finds a file with a `.json` extension it attempts to unmarshall it and use it as
 // a source for persisted operations/
 // If it fails to load a file it moves on to the next file in the directory
-type DirLoader struct {
-	path string
-	log  *slog.Logger
+type LocalLoader struct {
+	cfg Config
+	log *slog.Logger
 }
 
-func NewLocalDirLoader(cfg Config, log *slog.Logger) *DirLoader {
-	return &DirLoader{
-		path: cfg.Store,
-		log:  log,
+func (d *LocalLoader) Type() string {
+	return "local"
+}
+
+func NewLocalDirLoader(cfg Config, log *slog.Logger) *LocalLoader {
+	return &LocalLoader{
+		cfg: cfg,
+		log: log,
 	}
 }
 
@@ -40,12 +46,11 @@ func init() {
 	prometheus.MustRegister(fileLoaderGauge)
 }
 
-func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
-	files, err := os.ReadDir(d.path)
-
+func (d *LocalLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
+	files, err := os.ReadDir(d.cfg.Loader.Location)
 	if err != nil {
 		// if we can't read the dir, try creating it
-		err := os.Mkdir(d.path, 0750)
+		err := os.Mkdir(d.cfg.Loader.Location, 0750)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +63,7 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 			continue
 		}
 		if filepath.Ext(file.Name()) == ".json" {
-			filePath := filepath.Join(d.path, file.Name())
+			filePath := filepath.Join(d.cfg.Loader.Location, file.Name())
 			contents, err := os.ReadFile(filePath)
 			if err != nil {
 				d.log.Warn("Error reading file", "err", err)
@@ -67,16 +72,13 @@ func (d *DirLoader) Load(_ context.Context) (map[string]PersistedOperation, erro
 
 			filesProcessed++
 
-			var manifestHashes map[string]string
-			err = json.Unmarshal(contents, &manifestHashes)
+			data, err := UnmarshallPersistedOperations(contents)
 			if err != nil {
 				d.log.Warn("error unmarshalling operation file", "bytes", len(contents), "contents", string(contents), "filepath", filePath, "err", err)
 				continue
 			}
 
-			for hash, operation := range manifestHashes {
-				result[hash] = NewPersistedOperation(operation)
-			}
+			maps.Copy(result, data)
 		}
 	}
 

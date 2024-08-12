@@ -2,7 +2,9 @@ package persistedoperations // nolint:revive
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -247,7 +249,7 @@ func TestNewPersistedOperations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			log := slog.Default()
-			po, _ := NewPersistedOperations(log, tt.args.cfg, newMemoryLoader(tt.args.cache), nil)
+			po, _ := NewPersistedOperations(log, tt.args.cfg, newMemoryLoader(tt.args.cache))
 			po.cache = tt.args.cache
 
 			req := httptest.NewRequest("POST", "/", bytes.NewBuffer(tt.args.payload))
@@ -260,4 +262,133 @@ func TestNewPersistedOperations(t *testing.T) {
 			tt.resWant(t, res)
 		})
 	}
+}
+
+func TestLoader(t *testing.T) {
+	type args struct {
+		state  map[string]PersistedOperation
+		loader Loader
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    map[string]PersistedOperation
+		wantErr error
+	}{
+		{
+			name: "loader state is added to cache",
+			args: args{
+				loader: func() Loader {
+					data := map[string]PersistedOperation{}
+					data["123"] = PersistedOperation{
+						Operation: "i am an operation",
+						Name:      "i am a name",
+					}
+
+					loader := newMemoryLoader(data)
+
+					return loader
+				}(),
+				state: map[string]PersistedOperation{},
+			},
+			want: map[string]PersistedOperation{
+				"123": {
+					Operation: "i am an operation",
+					Name:      "i am a name",
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "loader state overwrites cache, does not append",
+			args: args{
+				loader: func() Loader {
+					data := map[string]PersistedOperation{}
+					data["123"] = PersistedOperation{
+						Operation: "i am an operation",
+						Name:      "i am a name",
+					}
+
+					loader := newMemoryLoader(data)
+
+					return loader
+				}(),
+				state: map[string]PersistedOperation{
+					"456": {
+						Operation: "i am an operation that does get deleted",
+						Name:      "i am a name that doest get deleted",
+					},
+				},
+			},
+			want: map[string]PersistedOperation{
+				"123": {
+					Operation: "i am an operation",
+					Name:      "i am a name",
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "loader error does not update cache",
+			args: args{
+				loader: func() Loader {
+					loader := &errorLoader{
+						err:             errors.New("this is unexpected"),
+						willReturnError: false,
+					}
+
+					return loader
+				}(),
+				state: map[string]PersistedOperation{
+					"456": {
+						Operation: "i am an operation that does not get deleted",
+						Name:      "i am a name that doest not get deleted",
+					},
+				},
+			},
+			want: map[string]PersistedOperation{
+				"456": {
+					Operation: "i am an operation that does not get deleted",
+					Name:      "i am a name that doest not get deleted",
+				},
+			},
+			wantErr: errors.New("this is unexpected"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			log := slog.Default()
+			po, _ := NewPersistedOperations(log, Config{}, tt.args.loader)
+			po.cache = tt.args.state
+
+			err := po.load()
+			if tt.wantErr != nil {
+				assert.Error(t, tt.wantErr, err)
+			}
+
+			assert.Equal(t, tt.want, po.cache)
+		})
+	}
+}
+
+var _ Loader = &errorLoader{}
+
+// ErrorLoader is a loader for testing purposes
+type errorLoader struct {
+	err             error
+	willReturnError bool
+}
+
+func (e *errorLoader) Type() string {
+	return "error"
+}
+
+func (e *errorLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
+	if e.willReturnError {
+		return nil, e.err
+	}
+	// return error after the first call
+	e.willReturnError = true
+
+	return map[string]PersistedOperation{}, nil
 }

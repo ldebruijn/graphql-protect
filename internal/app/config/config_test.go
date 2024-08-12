@@ -72,23 +72,19 @@ func TestNewConfig(t *testing.T) {
 				},
 				PersistedOperations: persistedoperations.Config{
 					Enabled: false,
-					Store:   "./store",
-					Reload: struct {
-						Enabled  bool          `conf:"default:true" yaml:"enabled"`
-						Interval time.Duration `conf:"default:5m" yaml:"interval"`
-						Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
-					}(struct {
-						Enabled  bool
-						Interval time.Duration
-						Timeout  time.Duration
-					}{
-						Enabled:  true,
-						Interval: 5 * time.Minute,
-						Timeout:  10 * time.Second,
-					}),
-					Remote: struct {
-						GcpBucket string `yaml:"gcp_bucket"`
-					}(struct{ GcpBucket string }{GcpBucket: ""}),
+					Loader: persistedoperations.LoaderConfig{
+						Type:     "local",
+						Location: "./store",
+						Reload: struct {
+							Enabled  bool          `conf:"default:true" yaml:"enabled"`
+							Interval time.Duration `conf:"default:5m" yaml:"interval"`
+							Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
+						}{
+							Enabled:  true,
+							Interval: 5 * time.Minute,
+							Timeout:  10 * time.Second,
+						},
+					},
 					RejectOnFailure: true,
 				},
 				BlockFieldSuggestions: block_field_suggestions.Config{
@@ -161,13 +157,13 @@ obfuscate_upstream_errors: false
 persisted_operations:
   enabled: true
   reject_on_failure: false
-  store: "store"
-  reload:
-    enabled: true
-    interval: 1s
-    timeout: 1s
-  remote:
-    gcp_bucket: "gcp_bucket"
+  loader:
+    type: gcp
+    location: some-bucket
+    reload:
+      enabled: true
+      interval: 1s
+      timeout: 1s
 
 max_aliases:
   enabled: false
@@ -251,23 +247,19 @@ log:
 				},
 				PersistedOperations: persistedoperations.Config{
 					Enabled: true,
-					Store:   "store",
-					Reload: struct {
-						Enabled  bool          `conf:"default:true" yaml:"enabled"`
-						Interval time.Duration `conf:"default:5m" yaml:"interval"`
-						Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
-					}(struct {
-						Enabled  bool
-						Interval time.Duration
-						Timeout  time.Duration
-					}{
-						Enabled:  true,
-						Interval: 1 * time.Second,
-						Timeout:  1 * time.Second,
-					}),
-					Remote: struct {
-						GcpBucket string `yaml:"gcp_bucket"`
-					}(struct{ GcpBucket string }{GcpBucket: "gcp_bucket"}),
+					Loader: persistedoperations.LoaderConfig{
+						Type:     "gcp",
+						Location: "some-bucket",
+						Reload: struct {
+							Enabled  bool          `conf:"default:true" yaml:"enabled"`
+							Interval time.Duration `conf:"default:5m" yaml:"interval"`
+							Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
+						}{
+							Enabled:  true,
+							Interval: 1 * time.Second,
+							Timeout:  1 * time.Second,
+						},
+					},
 					RejectOnFailure: false,
 				},
 				BlockFieldSuggestions: block_field_suggestions.Config{

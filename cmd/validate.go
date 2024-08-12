@@ -17,15 +17,15 @@ import (
 var ErrValidationErrorsFound = errors.New("errors found during validation")
 
 func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
-	// We need a store defined to have files to validate
-	if cfg.PersistedOperations.Store == "" {
+	loader, err := persistedoperations.NewLoaderFromConfig(cfg.PersistedOperations, log)
+	if err != nil {
 		err := fmt.Errorf("store must be defined to have files to validate")
 		log.Error("Error running validations", "err", err)
 		return err
 	}
 
 	// Load the persisted operations from the local dir into memory
-	persistedOperations, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, persistedoperations.NewLocalDirLoader(cfg.PersistedOperations, log), nil)
+	persistedOperations, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, loader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
 		return nil

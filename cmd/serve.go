@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/app/otel"
@@ -41,13 +40,13 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 		return nil
 	}
 
-	remoteLoader, err := persistedoperations.RemoteLoaderFromConfig(cfg.PersistedOperations, log)
-	if err != nil && !errors.Is(err, persistedoperations.ErrNoRemoteLoaderSpecified) {
-		log.Error("Error initializing remote loader", "err", err)
+	loader, err := persistedoperations.NewLoaderFromConfig(cfg.PersistedOperations, log)
+	if err != nil {
+		log.Error("Error initializing persisted operations loader", "err", err)
 		return err
 	}
 
-	po, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, persistedoperations.NewLocalDirLoader(cfg.PersistedOperations, log), remoteLoader)
+	po, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, loader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
 		return nil

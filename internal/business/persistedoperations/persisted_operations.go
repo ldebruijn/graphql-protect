@@ -23,33 +23,26 @@ var (
 	persistedOpsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "graphql_protect",
 		Subsystem: "persisted_operations",
-		Name:      "counter",
+		Name:      "result_count",
 		Help:      "The results of the persisted operations rule",
 	},
 		[]string{"state", "result"},
 	)
-	reloadCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace:   "graphql_protect",
-		Subsystem:   "persisted_operations",
-		Name:        "reload",
-		Help:        "Counter tracking reloading behavior and results",
-		ConstLabels: nil,
+	loadingResultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "persisted_operations",
+		Name:      "load_result_count",
+		Help:      "Counter tracking loading behavior and results",
 	},
-		[]string{"system", "result"})
-	gcsFileDownloadDurationGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace:   "graphql_protect",
-		Subsystem:   "persisted_operations",
-		Name:        "gcs_download_duration",
-		Help:        "metrics on duration of downloading from gcs bucket",
-		ConstLabels: nil,
-	}, []string{})
+		[]string{"type", "result"},
+	)
 	uniqueHashesInMemGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace:   "graphql_protect",
-		Subsystem:   "persisted_operations",
-		Name:        "unique_hashes_in_memory",
-		Help:        "number of unique hashes in memory",
-		ConstLabels: nil,
-	}, []string{})
+		Namespace: "graphql_protect",
+		Subsystem: "persisted_operations",
+		Name:      "unique_hashes_in_memory_count",
+		Help:      "number of unique hashes in memory",
+	}, []string{},
+	)
 )
 
 type ErrorPayload struct {
@@ -61,86 +54,81 @@ type ErrorMessage struct {
 }
 
 type Config struct {
-	Enabled bool `conf:"default:false" yaml:"enabled"`
-	// The location on which persisted operations are stored
-	Store string `conf:"default:./store" yaml:"store"`
+	Enabled         bool         `conf:"default:false" yaml:"enabled"`
+	RejectOnFailure bool         `conf:"default:true" yaml:"reject_on_failure"`
+	Loader          LoaderConfig `yaml:"loader"`
+}
+
+type LoaderConfig struct {
+	Type     string `conf:"default:local" yaml:"type"`
+	Location string `conf:"default:./store" yaml:"location"`
 	// Configuration for auto-reloading persisted operations
 	Reload struct {
 		Enabled  bool          `conf:"default:true" yaml:"enabled"`
 		Interval time.Duration `conf:"default:5m" yaml:"interval"`
 		Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
 	}
-	// Remote strategies for fetching persisted operations
-	Remote struct {
-		GcpBucket string `yaml:"gcp_bucket"`
-	}
-	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
 }
 
 var ErrNoLoaderSupplied = errors.New("no remoteLoader supplied")
 var ErrNoHashFound = errors.New("no hash found")
 var ErrPersistedQueryNotFound = errors.New("PersistedQueryNotFound")
 var ErrPersistedOperationNotFound = errors.New("PersistedOperationNotFound")
-var ErrReloadIntervalTooShort = errors.New("reload interval cannot be less than 10 seconds")
+var ErrReloadIntervalTooShort = errors.New("load interval cannot be less than 10 seconds")
 
 type Handler struct {
 	log *slog.Logger
 	cfg Config
 	// this has the opportunity to grow indefinitely, might wat to replace with a fixed-cap cache
 	// or something like an LRU with a TTL
-	cache map[string]PersistedOperation
-	// Strategy for loading persisted operations from a remote location
-	remoteLoader  RemoteLoader
+	cache         map[string]PersistedOperation
 	refreshTicker *time.Ticker
 	refreshLock   sync.Mutex
 
-	dirLoader LocalLoader
-	done      chan bool
-	lock      sync.RWMutex
+	loader Loader
+	done   chan bool
+	lock   sync.RWMutex
 }
 
 func init() {
-	prometheus.MustRegister(persistedOpsCounter, reloadCounter, gcsFileDownloadDurationGauge, uniqueHashesInMemGauge)
+	prometheus.MustRegister(persistedOpsCounter, loadingResultCounter, uniqueHashesInMemGauge)
 }
 
-func NewPersistedOperations(log *slog.Logger, cfg Config, loader LocalLoader, remoteLoader RemoteLoader) (*Handler, error) {
+func NewPersistedOperations(log *slog.Logger, cfg Config, loader Loader) (*Handler, error) {
 	if loader == nil {
 		return nil, ErrNoLoaderSupplied
 	}
 
-	if cfg.Reload.Enabled && cfg.Reload.Interval < 10*time.Second {
+	if cfg.Loader.Reload.Enabled && cfg.Loader.Reload.Interval < 10*time.Second {
 		return nil, ErrReloadIntervalTooShort
 	}
 
 	refreshTicker := func() *time.Ticker {
-		if !cfg.Reload.Enabled {
+		if !cfg.Loader.Reload.Enabled {
 			return nil
 		}
-		return time.NewTicker(cfg.Reload.Interval)
+		return time.NewTicker(cfg.Loader.Reload.Interval)
 	}()
-	// buffered in case we dont have reloading enabled
+	// buffered in case we don't have reloading enabled
 	done := make(chan bool, 1)
 
 	poh := &Handler{
 		log:           log,
 		cfg:           cfg,
 		cache:         map[string]PersistedOperation{},
-		remoteLoader:  remoteLoader,
-		dirLoader:     loader,
+		loader:        loader,
 		refreshTicker: refreshTicker,
 		done:          done,
 		lock:          sync.RWMutex{},
 		refreshLock:   sync.Mutex{},
 	}
 
-	if cfg.Enabled {
-		err := poh.reload()
-		if err != nil {
-			return nil, err
-		}
-
-		poh.reloadProcessor()
+	err := poh.load()
+	if err != nil {
+		return nil, err
 	}
+
+	poh.reloadProcessor()
 
 	return poh, nil
 }
@@ -245,25 +233,27 @@ func (p *Handler) Validate(validate func(operation string) gqlerror.List) gqlerr
 	return errs
 }
 
-func (p *Handler) reloadFromLocalDir() error {
-	cache, err := p.dirLoader.Load(context.Background())
+func (p *Handler) load() error {
+	newState, err := p.loader.Load(context.Background())
 	if err != nil {
-		reloadCounter.WithLabelValues("local", "failure").Inc()
+		loadingResultCounter.WithLabelValues(p.loader.Type(), "failure").Inc()
 		return err
 	}
+
 	p.lock.Lock()
-	p.cache = cache
+	p.cache = newState
 	p.lock.Unlock()
 
-	p.log.Info(fmt.Sprintf("Total number of unique operation hashes: %d", len(cache)))
-	uniqueHashesInMemGauge.WithLabelValues().Set(float64(len(cache)))
-	reloadCounter.WithLabelValues("local", "success").Inc()
+	p.log.Info(fmt.Sprintf("Total number of unique operation hashes: %d", len(newState)))
+	uniqueHashesInMemGauge.WithLabelValues().Set(float64(len(newState)))
+
+	loadingResultCounter.WithLabelValues(p.loader.Type(), "success").Inc()
 
 	return nil
 }
 
 func (p *Handler) reloadProcessor() {
-	if !p.cfg.Reload.Enabled {
+	if !p.cfg.Loader.Reload.Enabled {
 		return
 	}
 
@@ -277,7 +267,7 @@ func (p *Handler) reloadProcessor() {
 					p.log.Warn("Refresh ticker still running while next tick")
 					continue
 				}
-				err := p.reload()
+				err := p.load()
 				if err != nil {
 					continue
 				}
@@ -285,49 +275,6 @@ func (p *Handler) reloadProcessor() {
 			}
 		}
 	}()
-}
-
-func (p *Handler) reload() error {
-	_ = p.reloadFromRemote()
-
-	// sleep to ensure file commit happened, found > 1 second provided best results
-	// This is still a workaround but we haven't found a root cause yet
-	time.Sleep(1 * time.Second)
-
-	err := p.reloadFromLocalDir()
-	if err != nil {
-		p.log.Warn("Error loading from local dir", "err", err)
-		reloadCounter.WithLabelValues("ticker", "failure").Inc()
-		return err
-	}
-	reloadCounter.WithLabelValues("ticker", "success").Inc()
-	return nil
-}
-
-func (p *Handler) reloadFromRemote() error {
-	if p.remoteLoader == nil {
-		return nil
-	}
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, p.cfg.Reload.Timeout)
-	defer cancel()
-
-	startTime := time.Now()
-
-	err := p.remoteLoader.Load(ctx)
-	if err != nil {
-		p.log.Error("Error(s) loading files from remote", "err", err)
-		reloadCounter.WithLabelValues("remote", "failure").Inc()
-		return err
-	}
-
-	endTime := time.Since(startTime).Seconds()
-
-	p.log.Info("Loaded files from bucket took", "duration-seconds", endTime)
-	gcsFileDownloadDurationGauge.WithLabelValues().Set(endTime)
-
-	reloadCounter.WithLabelValues("remote", "success").Inc()
-	return nil
 }
 
 func (p *Handler) Shutdown() {
