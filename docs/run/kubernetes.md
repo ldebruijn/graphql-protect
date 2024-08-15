@@ -1,6 +1,6 @@
 # Kubernetes
 
-GraphQL Protect is intended to run as sidecar to your main application. This allows it to scale with your application, and enjoys the benefit of loopback networking.
+GraphQL Protect is intended to run as proxy to your main application. This allows it to scale with your application, and enjoys the benefit of loopback networking.
 
 ## Deployment resource
 

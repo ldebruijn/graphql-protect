@@ -11,6 +11,7 @@ LDFLAGS += -s -w
 .PHONY: dev.setup
 dev.setup:
 	go mod tidy
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.1
 
 .PHONY: build
 build:
