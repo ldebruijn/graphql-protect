@@ -45,7 +45,7 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperat
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
 	accessLogging := accesslogging.NewAccessLogging(cfg.AccessLogging, log)
 	if err != nil {
-		log.Warn("Error initializing maximum batch protection", err)
+		log.Warn("Error initializing maximum batch protection", "err", err)
 	}
 
 	enforcePostMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)

@@ -5,7 +5,7 @@ ARG VERSION
 ARG REVISION
 
 LABEL org.opencontainers.image.title=graphql-protect \
-	org.opencontainers.image.description="A dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway." \
+	org.opencontainers.image.description="A dead-simple yet highly customizable security proxy compatible with any HTTP GraphQL Server or Gateway." \
 	org.opencontainers.image.created=$BUILD_DATE \
 	org.opencontainers.image.authors=ldebruijn \
 	org.opencontainers.image.url=https://github.com/ldebruijn/graphql-protect \

@@ -1,7 +1,6 @@
 package max_depth // nolint:revive
 
 import (
-	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
@@ -34,9 +33,8 @@ func NewMaxDepthRule(cfg Config) {
 
 				if maxDepth > cfg.Max {
 					if cfg.RejectOnFailure {
-						err := fmt.Sprintf("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, maxDepth)
 						addError(
-							validator.Message(err),
+							validator.Message("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, maxDepth),
 							validator.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("rejected").Inc()

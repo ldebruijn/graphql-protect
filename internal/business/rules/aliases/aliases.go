@@ -1,7 +1,6 @@
 package aliases
 
 import (
-	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
@@ -50,9 +49,8 @@ func NewMaxAliasesRule(cfg Config) {
 
 				if aliases > cfg.Max {
 					if cfg.RejectOnFailure {
-						err := fmt.Sprintf("syntax error: Aliases limit of %d exceeded, found %d", cfg.Max, aliases)
 						addError(
-							validator.Message(err),
+							validator.Message("syntax error: Aliases limit of %d exceeded, found %d", cfg.Max, aliases),
 							validator.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("rejected").Inc()

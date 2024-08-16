@@ -1,6 +1,6 @@
 # GraphQL Protect 🛡️
 
-GraphQL Protect is dead-simple yet highly customizable security sidecar compatible with any HTTP GraphQL Server or Gateway.
+GraphQL Protect is dead-simple yet highly customizable security proxy compatible with any HTTP GraphQL Server or Gateway.
 
 ![GraphQL Protect Banner](docs/assets/banner.jpeg?raw=true)
 
