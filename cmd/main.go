@@ -57,17 +57,7 @@ func main() {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
-	// serve as default to prevent breaking change
-	action := "serve"
-	if len(os.Args) > 1 {
-		action = os.Args[1]
-		if action == "-f" {
-			// backwards compatible change
-			action = "serve"
-		}
-	}
-
-	switch action {
+	switch os.Args[1] {
 	case "serve":
 		if err := httpServer(logger, cfg, shutdown); err != nil {
 			logger.Error("startup", "msg", err)
