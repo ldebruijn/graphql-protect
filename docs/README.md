@@ -14,8 +14,6 @@ Protect supports various running modes for different needs and purposes.
 * `validate` runs as a CLI tool, validating your Persisted Operations against your schema and configured protections (see [this page](configuration.md#graphql-protect---validate-run-mode) for more info how to set this up)
 * `version` outputs versioning info of protect
 
-If no runmode is explicitly specified, `serve` is assumed as default
-
 ## Protections
 
 This section contains all the documentation about each protection feature.
