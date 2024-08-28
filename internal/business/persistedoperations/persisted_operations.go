@@ -2,6 +2,7 @@ package persistedoperations // nolint:revive
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,10 +14,6 @@ import (
 	"net/http"
 	"sync"
 	"time"
-)
-
-import (
-	"context"
 )
 
 var (
