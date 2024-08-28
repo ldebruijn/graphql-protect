@@ -27,12 +27,12 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
 
 ## Nice to know
-Currently handling response encoding from the upstream is not supported, we're open for contributions : )
+Currently, handling response encoding from the upstream is not supported, we're open for contributions : )
 
 
 ## Installation
 
-## As Container
+### As Container
 ```shell
 docker pull ghcr.io/ldebruijn/graphql-protect:latest
 docker run -p 8080:8080 -v $(pwd)/protect.yml:/app/protect.yml -v $(pwd)/schema.graphql:/app/schema.graphql ghcr.io/ldebruijn/graphql-protect:latest
@@ -41,7 +41,7 @@ Make sure to portforward the right ports for your supplied configuration
 
 Check out our [run documentation](docs/README.md#run) for more concrete examples.
 
-## Source code
+### Source code
 
 ```shell
 git clone git@github.com:ldebruijn/graphql-protect.git
