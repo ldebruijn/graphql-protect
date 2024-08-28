@@ -5,6 +5,9 @@ GraphQL Protect is dead-simple yet highly customizable security proxy compatible
 ![GraphQL Protect Banner](docs/assets/banner.jpeg?raw=true)
 
 [![Go](https://github.com/ldebruijn/graphql-protect/actions/workflows/go.yml/badge.svg)](https://github.com/ldebruijn/graphql-protect/actions/workflows/go.yml)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ldebruijn/graphql-protect?tab=MIT-1-ov-file)
+
+
 
 _This is repository inspired by the great work of the Javascript [GraphQL Armor](https://github.com/Escape-Technologies/graphql-armor) middleware._
 
