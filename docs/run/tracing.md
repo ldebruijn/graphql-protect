@@ -1,6 +1,6 @@
 # Tracing 
 
-Graphql Protect now supports OpenTelemetry-based tracing, enhancing observability and monitoring capabilities. 
+Graphql Protect supports OpenTelemetry-based tracing, enhancing observability and monitoring capabilities. 
 Although the instrumentation is currently limited, it enables the creation of new spans that can be exported to 
 any OTLP-compatible exporter.
 
@@ -33,19 +33,18 @@ target:
 
 Below is an example configuration for Kubernetes, replace v0.11.0 with the version of Graphql Protect you are using.
 
-
 ```yaml
-...
+# ...
 spec:
   template:
     spec:
       containers:
       - name: graphql-protect
-        image: ghcr.io/ldebruijn/graphql-protect:v0.12.3:latest # Replace with the appropriate version
+        image: ghcr.io/ldebruijn/graphql-protect:latest # Replace with the appropriate version
         env:
           - name: OTEL_EXPORTER_OTLP_PROTOCOL
             value: grpc
           - name: OTEL_PROPAGATORS
             value: b3multi,tracecontext,baggage
-...
+# ...
 ```
