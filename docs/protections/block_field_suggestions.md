@@ -24,9 +24,6 @@ We scan each `errors[].message` field in the responses and replace the message w
 
 ## Metrics
 
-
-## Metrics
-
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
