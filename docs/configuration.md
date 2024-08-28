@@ -1,6 +1,6 @@
 # Configuration
 
-graphql-protect can be configured in various ways, though we recommend configuring it via a `protect.yml`. file
+`graphql-protect` can be configured in various ways, though we recommend configuring it via a `protect.yml`. file
 
 <!-- TOC -->
 
@@ -157,34 +157,38 @@ schema:
 path: "./schema.graphql"
 
 persisted_operations:
-enabled: true
-# Store is the location on local disk where graphql-protect can find the persisted operations, it loads any `*.json` files on disk
-store: "./store"
+    enabled: true
+    # Store is the location on local disk where graphql-protect can find the persisted operations, it loads any `*.json` files on disk
+    loader:
+      # Type of loader to use
+      type: local
+      # Location to load persisted operations from
+      location: ./store
 
 max_aliases:
-# Enable the feature
-enabled: true
-# The maximum number of allowed aliases within a single request.
-max: 15
+    # Enable the feature
+    enabled: true
+    # The maximum number of allowed aliases within a single request.
+    max: 15
 
 block_field_suggestions:
-enabled: true
-mask: "[redacted]"
+    enabled: true
+    mask: "[redacted]"
 
 max_depth:
-enabled: true
-# The maximum allowed depth within a single request.
-max: 15
+    enabled: true
+    # The maximum allowed depth within a single request.
+    max: 15
 
 max_tokens:
-# Enable the feature
-enabled: true
-# The maximum number of allowed tokens within a single request.
-max: 10000
+    # Enable the feature
+    enabled: true
+    # The maximum number of allowed tokens within a single request.
+    max: 10000
 
 max_batch:
-# Enable the feature
-enabled: true
-# The maximum number of operations within a single batched request.
-max: 5
+    # Enable the feature
+    enabled: true
+    # The maximum number of operations within a single batched request.
+    max: 5
 ```
