@@ -10,9 +10,9 @@ You can configure `graphql-protect` to exclude upstream errors from your API.
 ```yaml
 # Configures if upstream errors need to be obfuscated, this can help you hide internals of your upstream landscape
 
-obfuscate_upstream_errors: true #default
+obfuscate_upstream_errors: true # default
 ```
 
 ## How does it work?
 
-If enabled the `errors[]` field in the responses is replaced with a "Error(s) redacted" message
+If enabled the `errors[].message` field in the response is replaced with an `"Error(s) redacted" message`
