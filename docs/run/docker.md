@@ -1,6 +1,7 @@
 # Docker
 
-GraphQL Protect is intended to run as proxy to your main application. This allows it to scale with your application, and enjoys the benefit of loopback networking.
+`GraphQL Protect` provides a container image for your convenience. You can use this container image as is. 
+You may supply configuration files, port mappings and other mounts for the functionalities provided.
 
 ## Setting up
 
