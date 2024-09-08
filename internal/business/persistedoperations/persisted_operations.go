@@ -57,6 +57,30 @@ type Config struct {
 	Loader          LoaderConfig `yaml:"loader"`
 }
 
+func DefaultConfig() Config {
+	return Config{
+		Enabled:         false,
+		RejectOnFailure: true,
+		Loader: LoaderConfig{
+			Type:     "local",
+			Location: "./store",
+			Reload: struct {
+				Enabled  bool          `conf:"default:true" yaml:"enabled"`
+				Interval time.Duration `conf:"default:5m" yaml:"interval"`
+				Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
+			}(struct {
+				Enabled  bool
+				Interval time.Duration
+				Timeout  time.Duration
+			}{
+				Enabled:  true,
+				Interval: 5 * time.Minute,
+				Timeout:  10 * time.Second,
+			}),
+		},
+	}
+}
+
 type LoaderConfig struct {
 	Type     string `conf:"default:local" yaml:"type"`
 	Location string `conf:"default:./store" yaml:"location"`
