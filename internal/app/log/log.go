@@ -9,6 +9,12 @@ type Config struct {
 	Format string `conf:"default:json" yaml:"format"`
 }
 
+func DefaultConfig() Config {
+	return Config{
+		Format: "json",
+	}
+}
+
 var (
 	JSONFormat = "json"
 	TextFormat = "text"
