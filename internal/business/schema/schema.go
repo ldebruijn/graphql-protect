@@ -27,6 +27,22 @@ type Config struct {
 	} `yaml:"auto_reload"`
 }
 
+func DefaultConfig() Config {
+	return Config{
+		Path: "./schema.graphql",
+		AutoReload: struct {
+			Enabled  bool          `conf:"default:true" yaml:"enabled"`
+			Interval time.Duration `conf:"default:30s" yaml:"interval"`
+		}(struct {
+			Enabled  bool
+			Interval time.Duration
+		}{
+			Enabled:  true,
+			Interval: 30 * time.Second,
+		}),
+	}
+}
+
 type Provider struct {
 	cfg           Config
 	schema        *ast.Schema
