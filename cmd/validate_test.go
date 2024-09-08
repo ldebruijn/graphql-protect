@@ -11,7 +11,7 @@ import (
 
 func Test_formatErrors(t *testing.T) {
 	type args struct {
-		errs []validation.ValidationError
+		errs []validation.Error
 		w    *bytes.Buffer
 	}
 	tests := []struct {
@@ -22,7 +22,7 @@ func Test_formatErrors(t *testing.T) {
 		{
 			name: "no errors no content",
 			args: args{
-				errs: make([]validation.ValidationError, 0),
+				errs: make([]validation.Error, 0),
 				w:    &bytes.Buffer{},
 			},
 			want: `+-------+------+------+-------+
@@ -36,7 +36,7 @@ func Test_formatErrors(t *testing.T) {
 		{
 			name: "error is present in table",
 			args: args{
-				errs: []validation.ValidationError{
+				errs: []validation.Error{
 					{
 						Hash:      "i am a hash",
 						Operation: "",
