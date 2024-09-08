@@ -47,18 +47,9 @@ func NewConfig(configPath string) (*Config, error) {
 		return &cfg, errors.Join(ErrConfigFileNotFound, err)
 	}
 
-	if configPath != "" {
-		// ignore yaml read failure
-		fromYaml, err := os.ReadFile(configPath)
-		if err != nil {
-			return nil, fmt.Errorf("could not read config file [%s], %w", configPath, err)
-		}
-
-		// process yaml after parse, set defaults first and override with yaml after
-		err = yaml.WithData(fromYaml).Process("", &cfg)
-		if err != nil {
-			return nil, err
-		}
+	err = y.Unmarshal(bts, &cfg)
+	if err != nil {
+		return nil, err
 	}
 
 	return &cfg, nil
