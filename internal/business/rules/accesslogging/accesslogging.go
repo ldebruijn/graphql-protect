@@ -14,6 +14,16 @@ type Config struct {
 	IncludePayload       bool     `conf:"default:false" yaml:"include_payload"`
 }
 
+func DefaultConfig() Config {
+	return Config{
+		Enabled:              true,
+		IncludedHeaders:      nil,
+		IncludeOperationName: true,
+		IncludeVariables:     true,
+		IncludePayload:       false,
+	}
+}
+
 type AccessLogging struct {
 	log                  *slog.Logger
 	enabled              bool
