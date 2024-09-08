@@ -38,8 +38,7 @@ func Test_formatErrors(t *testing.T) {
 			args: args{
 				errs: []validation.Error{
 					{
-						Hash:      "i am a hash",
-						Operation: "",
+						Hash: "i am a hash",
 						Err: gqlerror.Error{
 							Err:        errors.New("ohoh"),
 							Message:    "something went wrong",

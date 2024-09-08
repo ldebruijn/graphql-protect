@@ -226,7 +226,6 @@ func (p *Handler) Validate(validate func(operation string) gqlerror.List) []vali
 		if len(err) > 0 {
 			valErr := validation.Wrap(err)
 			valErr.Hash = hash
-			valErr.Operation = operation.Operation
 			errs = append(errs, valErr)
 		}
 	}
