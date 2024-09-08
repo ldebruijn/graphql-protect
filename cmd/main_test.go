@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
@@ -784,5 +785,58 @@ func blockUntilStarted(req *http.Request, timeout time.Duration) {
 		if resp.StatusCode == http.StatusOK {
 			return
 		}
+	}
+}
+
+func TestMainInitialization(t *testing.T) {
+	type args struct {
+		action     string
+		configPath string
+	}
+
+	type test struct {
+		name string
+		args args
+		want error
+	}
+	tests := []test{
+		{
+			name: "no action yields error",
+			args: args{
+				action:     "",
+				configPath: "",
+			},
+			want: errors.New("unexpeced subcommand, options are `serve`, `validate`, `version`. got: ``"),
+		},
+		{
+			name: "version",
+			args: args{
+				action:     "version",
+				configPath: "",
+			},
+			want: nil,
+		},
+		{
+			name: "serve",
+			args: args{
+				action:     "serve",
+				configPath: "",
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config, err := os.CreateTemp("", "config-*.yml")
+			if err != nil {
+				return
+			}
+			defer os.Remove(config.Name())
+
+			err = startup(tt.args.action, config.Name())
+			if tt.want != nil {
+				assert.Equal(t, err.Error(), tt.want.Error())
+			}
+		})
 	}
 }
