@@ -8,10 +8,10 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
-	"github.com/vektah/gqlparser/v2/gqlerror"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
+	"io"
 	"log/slog"
 	"os"
-	"strings"
 )
 
 var ErrValidationErrorsFound = errors.New("errors found during validation")
@@ -49,28 +49,19 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 	errs := persistedOperations.Validate(protectChain.ValidateQuery)
 	if len(errs) > 0 {
 		log.Warn("Errors found during validation of operations")
-		formatErrors(errs)
+		formatErrors(os.Stdout, errs)
 		return ErrValidationErrorsFound
 	}
 	return nil
 }
 
-func formatErrors(errs gqlerror.List) {
+func formatErrors(w io.Writer, errs []validation.ValidationError) {
 	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"#", "Hash", "Error"})
+	t.SetOutputMirror(w)
+	t.AppendHeader(table.Row{"#", "Hash", "Rule", "Error"})
 
 	for i, err := range errs {
-		// try and format this nicely
-		fIndex := strings.Index(err.Message, "[")
-		lIndex := strings.Index(err.Message, "], ")
-		if fIndex < 0 || lIndex < 0 || len(err.Message) < fIndex+1 || len(err.Message) < lIndex+3 {
-			// prevent breaking when the expected log format is not met
-			t.AppendRow(table.Row{i, "", err.Message})
-			continue
-		}
-		hash := err.Message[fIndex+1 : lIndex]
-		t.AppendRow(table.Row{i, hash, err.Message[lIndex+3:]})
+		t.AppendRow(table.Row{i, err.Hash, err.Err.Rule, err.Err.Message})
 	}
 
 	t.AppendFooter(table.Row{"Total", len(errs)})
