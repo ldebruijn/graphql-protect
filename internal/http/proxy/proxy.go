@@ -21,6 +21,17 @@ type Config struct {
 	Tracing   TracingConfig `yaml:"tracing"`
 }
 
+func DefaultConfig() Config {
+	return Config{
+		Timeout:   10 * time.Second,
+		KeepAlive: 3 * time.Minute,
+		Host:      "http://localhost:8081",
+		Tracing: TracingConfig{
+			RedactedHeaders: nil,
+		},
+	}
+}
+
 type TracingConfig struct {
 	RedactedHeaders []string `yaml:"redacted_headers"`
 }
