@@ -15,9 +15,9 @@ import (
 )
 
 type Config struct {
-	Timeout   time.Duration `conf:"default:10s" yaml:"timeout"`
-	KeepAlive time.Duration `conf:"default:180s" yaml:"keep_alive"`
-	Host      string        `conf:"default:http://localhost:8081" yaml:"host"`
+	Timeout   time.Duration `yaml:"timeout"`
+	KeepAlive time.Duration `yaml:"keep_alive"`
+	Host      string        `/localhost:8081" yaml:"host"`
 	Tracing   TracingConfig `yaml:"tracing"`
 }
 

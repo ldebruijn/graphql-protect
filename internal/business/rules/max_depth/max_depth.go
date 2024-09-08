@@ -16,9 +16,9 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 )
 
 type Config struct {
-	Enabled         bool `conf:"default:true" yaml:"enabled"`
-	Max             int  `conf:"default:15" yaml:"max"`
-	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
+	Enabled         bool `yaml:"enabled"`
+	Max             int  `yaml:"max"`
+	RejectOnFailure bool `yaml:"reject_on_failure"`
 }
 
 func DefaultConfig() Config {

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/ldebruijn/graphql-protect/internal/app/http"
 	"github.com/ldebruijn/graphql-protect/internal/app/log"
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
@@ -31,101 +32,10 @@ func TestNewConfig(t *testing.T) {
 			applyConfig: func(_ *os.File) {
 
 			},
-			want: &Config{
-				Web: struct {
-					ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
-					WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
-					IdleTimeout     time.Duration `conf:"default:120s" yaml:"idle_timeout"`
-					ShutdownTimeout time.Duration `conf:"default:20s" yaml:"shutdown_timeout"`
-					Host            string        `conf:"default:0.0.0.0:8080" yaml:"host"`
-					Path            string        `conf:"default:/graphql" yaml:"path"`
-				}(struct {
-					ReadTimeout     time.Duration
-					WriteTimeout    time.Duration
-					IdleTimeout     time.Duration
-					ShutdownTimeout time.Duration
-					Host            string
-					Path            string
-				}{
-					ReadTimeout:     5 * time.Second,
-					WriteTimeout:    10 * time.Second,
-					IdleTimeout:     2 * time.Minute,
-					ShutdownTimeout: 20 * time.Second,
-					Host:            "0.0.0.0:8080",
-					Path:            "/graphql",
-				}),
-				ObfuscateValidationErrors: false,
-				Schema: schema.Config{
-					Path: "./schema.graphql",
-					AutoReload: struct {
-						Enabled  bool          `conf:"default:true" yaml:"enabled"`
-						Interval time.Duration `conf:"default:30s" yaml:"interval"`
-					}(struct {
-						Enabled  bool
-						Interval time.Duration
-					}{Enabled: true, Interval: 30 * time.Second}),
-				},
-				Target: proxy.Config{
-					Timeout:   10 * time.Second,
-					KeepAlive: 3 * time.Minute,
-					Host:      "http://localhost:8081",
-				},
-				PersistedOperations: persistedoperations.Config{
-					Enabled: false,
-					Loader: persistedoperations.LoaderConfig{
-						Type:     "local",
-						Location: "./store",
-						Reload: struct {
-							Enabled  bool          `conf:"default:true" yaml:"enabled"`
-							Interval time.Duration `conf:"default:5m" yaml:"interval"`
-							Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
-						}{
-							Enabled:  true,
-							Interval: 5 * time.Minute,
-							Timeout:  10 * time.Second,
-						},
-					},
-					RejectOnFailure: true,
-				},
-				BlockFieldSuggestions: block_field_suggestions.Config{
-					Enabled: true,
-					Mask:    "[redacted]",
-				},
-				ObfuscateUpstreamErrors: true,
-				MaxTokens: tokens.Config{
-					Enabled:         true,
-					Max:             1000,
-					RejectOnFailure: true,
-				},
-				MaxAliases: aliases.Config{
-					Enabled:         true,
-					Max:             15,
-					RejectOnFailure: true,
-				},
-				EnforcePost: enforce_post.Config{
-					Enabled: true,
-				},
-				MaxDepth: max_depth.Config{
-					Enabled:         true,
-					Max:             15,
-					RejectOnFailure: true,
-				},
-				MaxBatch: batch.Config{
-					Enabled:         true,
-					Max:             5,
-					RejectOnFailure: true,
-				},
-				AccessLogging: accesslogging.Config{
-					Enabled:              true,
-					IncludedHeaders:      nil,
-					IncludeOperationName: true,
-					IncludeVariables:     true,
-					IncludePayload:       false,
-				},
-				Log: log.Config{
-					Format: log.JSONFormat,
-				},
-			},
+			want: func() *Config {
+				cfg := defaults()
+				return &cfg
+			}(),
 			wantErr: false,
 		},
 		{
@@ -206,35 +116,21 @@ log:
 `))
 			},
 			want: &Config{
-				Web: struct {
-					ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
-					WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
-					IdleTimeout     time.Duration `conf:"default:120s" yaml:"idle_timeout"`
-					ShutdownTimeout time.Duration `conf:"default:20s" yaml:"shutdown_timeout"`
-					Host            string        `conf:"default:0.0.0.0:8080" yaml:"host"`
-					Path            string        `conf:"default:/graphql" yaml:"path"`
-				}(struct {
-					ReadTimeout     time.Duration
-					WriteTimeout    time.Duration
-					IdleTimeout     time.Duration
-					ShutdownTimeout time.Duration
-					Host            string
-					Path            string
-				}{
+				Web: http.Config{
 					ReadTimeout:     1 * time.Second,
 					WriteTimeout:    1 * time.Second,
 					IdleTimeout:     1 * time.Second,
 					ShutdownTimeout: 1 * time.Second,
 					Host:            "host",
 					Path:            "path",
-				}),
+				},
 				ObfuscateValidationErrors: true,
 				ObfuscateUpstreamErrors:   false,
 				Schema: schema.Config{
 					Path: "path",
 					AutoReload: struct {
-						Enabled  bool          `conf:"default:true" yaml:"enabled"`
-						Interval time.Duration `conf:"default:30s" yaml:"interval"`
+						Enabled  bool          `yaml:"enabled"`
+						Interval time.Duration `yaml:"interval"`
 					}(struct {
 						Enabled  bool
 						Interval time.Duration
@@ -251,9 +147,9 @@ log:
 						Type:     "gcp",
 						Location: "some-bucket",
 						Reload: struct {
-							Enabled  bool          `conf:"default:true" yaml:"enabled"`
-							Interval time.Duration `conf:"default:5m" yaml:"interval"`
-							Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
+							Enabled  bool          `yaml:"enabled"`
+							Interval time.Duration `yaml:"interval"`
+							Timeout  time.Duration `yaml:"timeout"`
 						}{
 							Enabled:  true,
 							Interval: 1 * time.Second,
@@ -325,11 +221,7 @@ log:
 func TestWriteDefaultConfigToYaml(t *testing.T) {
 	t.Skip("not actually a test, abusing the test for easy generation of default configuration file")
 
-	cfg, err := NewConfig("")
-	if err != nil {
-		assert.NoError(t, err)
-		return
-	}
+	cfg := defaults()
 
 	file, err := os.OpenFile("default-config.yml", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {

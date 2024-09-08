@@ -52,8 +52,8 @@ type ErrorMessage struct {
 }
 
 type Config struct {
-	Enabled         bool         `conf:"default:false" yaml:"enabled"`
-	RejectOnFailure bool         `conf:"default:true" yaml:"reject_on_failure"`
+	Enabled         bool         `yaml:"enabled"`
+	RejectOnFailure bool         `yaml:"reject_on_failure"`
 	Loader          LoaderConfig `yaml:"loader"`
 }
 
@@ -65,9 +65,9 @@ func DefaultConfig() Config {
 			Type:     "local",
 			Location: "./store",
 			Reload: struct {
-				Enabled  bool          `conf:"default:true" yaml:"enabled"`
-				Interval time.Duration `conf:"default:5m" yaml:"interval"`
-				Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
+				Enabled  bool          `yaml:"enabled"`
+				Interval time.Duration `yaml:"interval"`
+				Timeout  time.Duration `yaml:"timeout"`
 			}(struct {
 				Enabled  bool
 				Interval time.Duration
@@ -82,13 +82,13 @@ func DefaultConfig() Config {
 }
 
 type LoaderConfig struct {
-	Type     string `conf:"default:local" yaml:"type"`
-	Location string `conf:"default:./store" yaml:"location"`
+	Type     string `yaml:"type"`
+	Location string `yaml:"location"`
 	// Configuration for auto-reloading persisted operations
 	Reload struct {
-		Enabled  bool          `conf:"default:true" yaml:"enabled"`
-		Interval time.Duration `conf:"default:5m" yaml:"interval"`
-		Timeout  time.Duration `conf:"default:10s" yaml:"timeout"`
+		Enabled  bool          `yaml:"enabled"`
+		Interval time.Duration `yaml:"interval"`
+		Timeout  time.Duration `yaml:"timeout"`
 	}
 }
 
