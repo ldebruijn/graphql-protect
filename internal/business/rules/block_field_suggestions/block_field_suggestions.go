@@ -19,6 +19,13 @@ type Config struct {
 	Mask    string `conf:"default:[redacted]" yaml:"mask"`
 }
 
+func DefaultConfig() Config {
+	return Config{
+		Enabled: true,
+		Mask:    "[redacted]",
+	}
+}
+
 type BlockFieldSuggestionsHandler struct {
 	cfg Config
 }
