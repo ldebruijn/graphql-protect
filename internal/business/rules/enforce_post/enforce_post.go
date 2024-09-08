@@ -22,6 +22,12 @@ type Config struct {
 	Enabled bool `conf:"default:true" yaml:"enabled"`
 }
 
+func DefaultConfig() Config {
+	return Config{
+		Enabled: true,
+	}
+}
+
 func EnforcePostMethod(cfg Config) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
