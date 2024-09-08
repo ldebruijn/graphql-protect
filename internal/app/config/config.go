@@ -2,9 +2,7 @@ package config
 
 import (
 	"errors"
-	"fmt"
-	"github.com/ardanlabs/conf/v3"
-	"github.com/ardanlabs/conf/v3/yaml"
+	"github.com/ldebruijn/graphql-protect/internal/app/http"
 	"github.com/ldebruijn/graphql-protect/internal/app/log"
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
@@ -39,7 +37,7 @@ type Config struct {
 }
 
 func NewConfig(configPath string) (*Config, error) {
-	cfg := Config{}
+	cfg := defaults()
 
 	help, err := conf.Parse("graphql-protect", &cfg)
 	if err != nil {
@@ -65,4 +63,24 @@ func NewConfig(configPath string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func defaults() Config {
+	return Config{
+		Web:                       http.DefaultConfig(),
+		Schema:                    schema.DefaultConfig(),
+		Target:                    proxy.DefaultConfig(),
+		PersistedOperations:       persistedoperations.DefaultConfig(),
+		ObfuscateValidationErrors: false,
+		ObfuscateUpstreamErrors:   true,
+		BlockFieldSuggestions:     block_field_suggestions.DefaultConfig(),
+		MaxTokens:                 tokens.DefaultConfig(),
+		MaxAliases:                aliases.DefaultConfig(),
+		EnforcePost:               enforce_post.DefaultConfig(),
+		MaxDepth:                  max_depth.DefaultConfig(),
+		MaxBatch:                  batch.DefaultConfig(),
+		AccessLogging:             accesslogging.DefaultConfig(),
+		Log:                       log.DefaultConfig(),
+		LogGraphqlErrors:          false,
+	}
 }
