@@ -3,14 +3,14 @@ package http
 import "time"
 
 type Config struct {
-	ReadTimeout     time.Duration `conf:"default:5s" yaml:"read_timeout"`
-	WriteTimeout    time.Duration `conf:"default:10s" yaml:"write_timeout"`
-	IdleTimeout     time.Duration `conf:"default:120s" yaml:"idle_timeout"`
-	ShutdownTimeout time.Duration `conf:"default:20s" yaml:"shutdown_timeout"`
-	Host            string        `conf:"default:0.0.0.0:8080" yaml:"host"`
+	ReadTimeout     time.Duration `yaml:"read_timeout"`
+	WriteTimeout    time.Duration `yaml:"write_timeout"`
+	IdleTimeout     time.Duration `yaml:"idle_timeout"`
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
+	Host            string        `yaml:"host"`
 	// or maybe we just want to listen on everything and forward
-	Path string `conf:"default:/graphql" yaml:"path"`
-	// DebugHost       string        `conf:"default:0.0.0.0:4000"`
+	Path string `yaml:"path"`
+	// DebugHost       string        `yaml:"debug_host"`
 }
 
 func DefaultConfig() Config {

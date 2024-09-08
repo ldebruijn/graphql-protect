@@ -7,11 +7,11 @@ import (
 )
 
 type Config struct {
-	Enabled              bool     `conf:"default:true" yaml:"enabled"`
+	Enabled              bool     `yaml:"enabled"`
 	IncludedHeaders      []string `yaml:"include_headers"`
-	IncludeOperationName bool     `conf:"default:true" yaml:"include_operation_name"`
-	IncludeVariables     bool     `conf:"default:true" yaml:"include_variables"`
-	IncludePayload       bool     `conf:"default:false" yaml:"include_payload"`
+	IncludeOperationName bool     `yaml:"include_operation_name"`
+	IncludeVariables     bool     `yaml:"include_variables"`
+	IncludePayload       bool     `yaml:"include_payload"`
 }
 
 func DefaultConfig() Config {

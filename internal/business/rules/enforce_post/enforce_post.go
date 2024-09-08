@@ -19,7 +19,7 @@ func init() {
 }
 
 type Config struct {
-	Enabled bool `conf:"default:true" yaml:"enabled"`
+	Enabled bool `yaml:"enabled"`
 }
 
 func DefaultConfig() Config {

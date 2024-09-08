@@ -15,8 +15,8 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 )
 
 type Config struct {
-	Enabled bool   `conf:"default:true" yaml:"enabled"`
-	Mask    string `conf:"default:[redacted]" yaml:"mask"`
+	Enabled bool   `yaml:"enabled"`
+	Mask    string `yaml:"mask"`
 }
 
 func DefaultConfig() Config {

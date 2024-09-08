@@ -20,10 +20,10 @@ var reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	[]string{"state"})
 
 type Config struct {
-	Path       string `conf:"default:./schema.graphql" yaml:"path"`
+	Path       string `yaml:"path"`
 	AutoReload struct {
-		Enabled  bool          `conf:"default:true" yaml:"enabled"`
-		Interval time.Duration `conf:"default:30s" yaml:"interval"`
+		Enabled  bool          `yaml:"enabled"`
+		Interval time.Duration `yaml:"interval"`
 	} `yaml:"auto_reload"`
 }
 
@@ -31,8 +31,8 @@ func DefaultConfig() Config {
 	return Config{
 		Path: "./schema.graphql",
 		AutoReload: struct {
-			Enabled  bool          `conf:"default:true" yaml:"enabled"`
-			Interval time.Duration `conf:"default:30s" yaml:"interval"`
+			Enabled  bool          `yaml:"enabled"`
+			Interval time.Duration `yaml:"interval"`
 		}(struct {
 			Enabled  bool
 			Interval time.Duration

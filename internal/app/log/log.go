@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct {
-	Format string `conf:"default:json" yaml:"format"`
+	Format string `yaml:"format"`
 }
 
 func DefaultConfig() Config {
