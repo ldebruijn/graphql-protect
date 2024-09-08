@@ -12,7 +12,7 @@ type Error struct {
 
 func (v Error) Error() string {
 	if v.Hash != "" {
-		return "Error validating hash [" + v.Hash + "]: " + v.Err.Message
+		return "Error validating hash [" + v.Hash + "]: " + v.Err.Error()
 	}
 	return v.Err.Message
 }
