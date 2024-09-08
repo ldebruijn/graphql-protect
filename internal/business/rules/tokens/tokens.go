@@ -22,6 +22,14 @@ type Config struct {
 	RejectOnFailure bool `conf:"default:true" yaml:"reject_on_failure"`
 }
 
+func DefaultConfig() Config {
+	return Config{
+		Enabled:         true,
+		Max:             1_000,
+		RejectOnFailure: true,
+	}
+}
+
 func init() {
 	prometheus.MustRegister(resultCounter)
 }
