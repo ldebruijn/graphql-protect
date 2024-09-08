@@ -5,9 +5,8 @@ import (
 )
 
 type Error struct {
-	Hash      string         `json:"-"`
-	Operation string         `json:"-"`
-	Err       gqlerror.Error `json:"-"`
+	Hash string         `json:"-"`
+	Err  gqlerror.Error `json:"-"`
 }
 
 func (v Error) Error() string {
