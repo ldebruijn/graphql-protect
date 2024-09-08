@@ -18,5 +18,5 @@ func NewLogger(cfg Config) *slog.Logger {
 	if cfg.Format == TextFormat {
 		return slog.Default()
 	}
-	return slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
 }
