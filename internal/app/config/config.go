@@ -14,9 +14,12 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
+	y "gopkg.in/yaml.v3"
 	"os"
 	"time"
 )
+
+var ErrConfigFileNotFound = errors.New("config file could not be found, defaults applied")
 
 type Config struct {
 	Web                       http.Config                    `yaml:"web"`
@@ -39,13 +42,9 @@ type Config struct {
 func NewConfig(configPath string) (*Config, error) {
 	cfg := defaults()
 
-	help, err := conf.Parse("graphql-protect", &cfg)
+	bts, err := os.ReadFile(configPath)
 	if err != nil {
-		if errors.Is(err, conf.ErrHelpWanted) {
-			fmt.Println(help)
-			return nil, conf.ErrHelpWanted
-		}
-		return nil, fmt.Errorf("parsing config: %w", err)
+		return &cfg, errors.Join(ErrConfigFileNotFound, err)
 	}
 
 	if configPath != "" {
