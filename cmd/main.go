@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/ardanlabs/conf/v3"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/app/log"
 	"github.com/prometheus/client_golang/prometheus"
@@ -61,8 +60,8 @@ func startup(action string, path string) error {
 			return err
 		}
 	}
-	cfgAsString, _ := conf.String(cfg)
-	log2.Println(cfgAsString)
+	log2.Println("Configuration:")
+	log2.Println(cfg)
 
 	logger := log.NewLogger(cfg.Log)
 	logger.Info("Starting Protect", "version", build)
