@@ -55,7 +55,7 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 	return nil
 }
 
-func formatErrors(w io.Writer, errs []validation.ValidationError) {
+func formatErrors(w io.Writer, errs []validation.Error) {
 	t := table.NewWriter()
 	t.SetOutputMirror(w)
 	t.AppendHeader(table.Row{"#", "Hash", "Rule", "Error"})

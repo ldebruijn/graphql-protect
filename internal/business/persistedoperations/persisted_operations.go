@@ -218,8 +218,8 @@ func (p *Handler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:f
 	return http.HandlerFunc(fn)
 }
 
-func (p *Handler) Validate(validate func(operation string) gqlerror.List) []validation.ValidationError {
-	var errs []validation.ValidationError
+func (p *Handler) Validate(validate func(operation string) gqlerror.List) []validation.Error {
+	var errs []validation.Error
 	for hash, operation := range p.cache {
 		err := validate(operation.Operation)
 
