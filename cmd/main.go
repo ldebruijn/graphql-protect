@@ -57,7 +57,7 @@ func startup(action string, path string) error {
 	cfg, err := config.NewConfig(path)
 	if err != nil {
 		log2.Println("Error loading application configuration", "err", err)
-		os.Exit(1)
+		return err
 	}
 	cfgAsString, _ := conf.String(cfg)
 	log2.Println(cfgAsString)
