@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"io"
@@ -217,13 +218,16 @@ func (p *Handler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:f
 	return http.HandlerFunc(fn)
 }
 
-func (p *Handler) Validate(validate func(operation string) gqlerror.List) gqlerror.List {
-	var errs gqlerror.List
+func (p *Handler) Validate(validate func(operation string) gqlerror.List) []validation.ValidationError {
+	var errs []validation.ValidationError
 	for hash, operation := range p.cache {
 		err := validate(operation.Operation)
+
 		if len(err) > 0 {
-			formattedErr := gqlerror.Wrap(fmt.Errorf("error validating hash [%s], %w", hash, err))
-			errs = append(errs, formattedErr)
+			valErr := validation.Wrap(err)
+			valErr.Hash = hash
+			valErr.Operation = operation.Operation
+			errs = append(errs, valErr)
 		}
 	}
 
