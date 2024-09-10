@@ -17,7 +17,7 @@ import (
 type Config struct {
 	Timeout   time.Duration `yaml:"timeout"`
 	KeepAlive time.Duration `yaml:"keep_alive"`
-	Host      string        `/localhost:8081" yaml:"host"`
+	Host      string        `yaml:"host"`
 	Tracing   TracingConfig `yaml:"tracing"`
 }
 
