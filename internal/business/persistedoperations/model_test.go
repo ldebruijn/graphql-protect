@@ -1,6 +1,7 @@
 package persistedoperations
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -13,6 +14,7 @@ func TestNewPersistedOperation(t *testing.T) {
 		name string
 		args args
 		want PersistedOperation
+		err  error
 	}{
 		{
 			name: "extracts operation from query",
@@ -83,10 +85,36 @@ func TestNewPersistedOperation(t *testing.T) {
 				Name:      "Foobar",
 			},
 		},
+		{
+			name: "error is thrown on non parseable queries",
+			args: args{
+				operation: "invalidQueryString",
+			},
+			want: PersistedOperation{
+				Operation: "invalidQueryString",
+				Name:      "",
+			},
+			err: errors.New("no operation name match found for query/mutation invalidQueryString"),
+		},
+		{
+			name: "Can deal with fragments inside a query",
+			args: args{
+				operation: "fragment BaseItem on MenuItem { action { menuItemActionType url } id imageUrl level measurement { clickedMenuItem } title } query MenuItems($country: String!, $id: String, $language: String!, $levels: String) { menuItems(country: $country, language: $language, id: $id, levels: $levels) { children { children { ...BaseItem } ...BaseItem } imageHeaderUrl level ...BaseItem } }",
+			},
+			want: PersistedOperation{
+				Operation: "fragment BaseItem on MenuItem { action { menuItemActionType url } id imageUrl level measurement { clickedMenuItem } title } query MenuItems($country: String!, $id: String, $language: String!, $levels: String) { menuItems(country: $country, language: $language, id: $id, levels: $levels) { children { children { ...BaseItem } ...BaseItem } imageHeaderUrl level ...BaseItem } }",
+				Name:      "MenuItems",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, NewPersistedOperation(tt.args.operation), "NewPersistedOperation(%v)", tt.args.operation)
+			operation, err := NewPersistedOperation(tt.args.operation)
+			assert.Equalf(t, tt.want, operation, "NewPersistedOperation(%v)", tt.args.operation)
+
+			if tt.err != nil {
+				assert.Equalf(t, tt.err, err, "NewPersistedOperation(%v)", tt.args.operation)
+			}
 		})
 	}
 }
