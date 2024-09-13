@@ -41,12 +41,13 @@ type GraphQLProtect struct {
 
 func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperations.Handler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
-	max_depth.NewMaxDepthRule(cfg.MaxDepth)
+	max_depth.NewMaxDepthRule(log, cfg.MaxDepth)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
-	accessLogging := accesslogging.NewAccessLogging(cfg.AccessLogging, log)
 	if err != nil {
 		log.Warn("Error initializing maximum batch protection", "err", err)
 	}
+
+	accessLogging := accesslogging.NewAccessLogging(cfg.AccessLogging, log)
 
 	enforcePostMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)
 

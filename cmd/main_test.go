@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/stretchr/testify/assert"
@@ -344,7 +343,6 @@ input ImageInput {
 				actual, err := io.ReadAll(response.Body)
 				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
-				fmt.Println(string(actual))
 				assert.True(t, errorsContainsMessage(protect.ErrRedacted.Error(), actual))
 			},
 		},
@@ -466,7 +464,6 @@ type Product {
 				assert.Equal(t, http.StatusOK, response.StatusCode)
 				actual, err := io.ReadAll(response.Body)
 				assert.NoError(t, err)
-				_ = actual
 				assert.NotContains(t, string(actual), "\"errors\":")
 			},
 		},
