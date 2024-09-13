@@ -2,17 +2,19 @@ package persistedoperations
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"regexp"
 )
 
+// find the first word after the 'query' or 'mutation' keyword
+var operationNameRegexPattern = regexp.MustCompile(`\b(query|mutation)\s(\w+)`)
+
 type PersistedOperation struct {
 	Operation string
-	Name      string
+	Name      string `json:"name,omitempty"`
 }
 
-func UnmarshallPersistedOperations(payload []byte) (map[string]PersistedOperation, error) {
+func unmarshallPersistedOperations(payload []byte) (map[string]PersistedOperation, error) {
 	var manifestHashes map[string]string
 
 	err := json.Unmarshal(payload, &manifestHashes)
@@ -21,45 +23,25 @@ func UnmarshallPersistedOperations(payload []byte) (map[string]PersistedOperatio
 	}
 
 	data := make(map[string]PersistedOperation)
-	var errs []error
 
 	for hash, operation := range manifestHashes {
-		data[hash], err = NewPersistedOperation(operation)
-		errs = append(errs, err)
+		data[hash] = PersistedOperation{
+			Operation: operation,
+			Name:      extractOperationNameFromOperation(operation), //TODO test
+		}
 	}
-	return data, errors.Join(errs...)
+	return data, nil
 }
 
-func NewPersistedOperation(operation string) (PersistedOperation, error) {
-	name, err := extractOperationNameFromPersistedOperation(operation)
-
-	if err == nil {
-		return PersistedOperation{
-			Operation: operation,
-			Name:      name,
-		}, nil
-	} else { //Don't fill in the operationName if we cant parse it
-
-		return PersistedOperation{
-			Operation: operation,
-		}, err
-	}
-}
-
-func extractOperationNameFromPersistedOperation(payload string) (string, error) {
-	// find the first word after the 'query' or 'mutation' keyword
-	pattern := `\b(query|mutation)\s(\w+)`
-
-	re := regexp.MustCompile(pattern)
-
-	match := re.FindStringSubmatch(payload)
+func extractOperationNameFromOperation(payload string) string {
+	match := operationNameRegexPattern.FindStringSubmatch(payload)
 
 	// match[0] is the entire match
 	// match[1] is either mutation/query
 	// match[2] is the name of the operation
 	if len(match) == 3 {
-		return match[2], nil
+		return match[2]
 	} else {
-		return "", fmt.Errorf("no operation name match found for query/mutation %s", payload)
+		return ""
 	}
 }

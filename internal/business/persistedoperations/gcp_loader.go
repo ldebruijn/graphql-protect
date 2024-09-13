@@ -112,5 +112,13 @@ func (g *GcpLoader) processFile(ctx context.Context, attrs *storage.ObjectAttrs)
 		return nil, fmt.Errorf("io.Copy: %w", err)
 	}
 
-	return UnmarshallPersistedOperations(data)
+	operations, err := unmarshallPersistedOperations(data)
+
+	for _, operation := range operations {
+		if operation.Name == "" {
+			g.log.Warn("Operation without operation name found!", "operation", operation)
+		}
+	}
+
+	return operations, err
 }

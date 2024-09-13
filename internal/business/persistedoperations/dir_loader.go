@@ -72,7 +72,7 @@ func (d *LocalLoader) Load(_ context.Context) (map[string]PersistedOperation, er
 
 			filesProcessed++
 
-			data, err := UnmarshallPersistedOperations(contents)
+			data, err := unmarshallPersistedOperations(contents)
 			if err != nil {
 				d.log.Warn("error unmarshalling operation file", "bytes", len(contents), "contents", string(contents), "filepath", filePath, "err", err)
 				continue

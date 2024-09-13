@@ -131,7 +131,7 @@ func TestNewPersistedOperations(t *testing.T) {
 					return bts
 				}(),
 				cache: map[string]PersistedOperation{
-					"foobar": ErrorSafeNewPersistedOperation("query { foobar }"),
+					"foobar": newPersistedOperation("query { foobar }"),
 				},
 			},
 			want: func(t *testing.T) http.Handler {
@@ -183,8 +183,8 @@ func TestNewPersistedOperations(t *testing.T) {
 					return bts
 				}(),
 				cache: map[string]PersistedOperation{
-					"foobar": ErrorSafeNewPersistedOperation("query { foobar }"),
-					"baz":    ErrorSafeNewPersistedOperation("query { baz }"),
+					"foobar": newPersistedOperation("query { foobar }"),
+					"baz":    newPersistedOperation("query { baz }"),
 				},
 			},
 			want: func(t *testing.T) http.Handler {
@@ -229,8 +229,7 @@ func TestNewPersistedOperations(t *testing.T) {
 					return bts
 				}(),
 				cache: map[string]PersistedOperation{
-					"foobar": ErrorSafeNewPersistedOperation("query { foobar }"),
-				},
+					"foobar": newPersistedOperation("query { foobar }")},
 			},
 			want: func(t *testing.T) http.Handler {
 				fn := func(_ http.ResponseWriter, _ *http.Request) {
@@ -383,9 +382,8 @@ func (e *errorLoader) Type() string {
 	return "error"
 }
 
-func ErrorSafeNewPersistedOperation(hash string) PersistedOperation {
-	operationName, _ := NewPersistedOperation(hash)
-	return operationName
+func newPersistedOperation(query string) PersistedOperation {
+	return PersistedOperation{query, extractOperationNameFromOperation(query)}
 }
 
 func (e *errorLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
