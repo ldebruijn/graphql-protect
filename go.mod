@@ -4,7 +4,6 @@ go 1.23.0
 
 require (
 	cloud.google.com/go/storage v1.43.0
-	github.com/ardanlabs/conf/v3 v3.1.8
 	github.com/jedib0t/go-pretty/v6 v6.5.9
 	github.com/prometheus/client_golang v1.20.3
 	github.com/stretchr/testify v1.9.0

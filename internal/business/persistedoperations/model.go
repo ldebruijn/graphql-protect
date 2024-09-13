@@ -3,16 +3,20 @@ package persistedoperations
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
+	"regexp"
 )
+
+// find the first word after the 'query' or 'mutation' keyword
+var operationNameRegexPattern = regexp.MustCompile(`\b(query|mutation)\s(\w+)`)
 
 type PersistedOperation struct {
 	Operation string
-	Name      string
+	Name      string `json:"name,omitempty"`
 }
 
-func UnmarshallPersistedOperations(payload []byte) (map[string]PersistedOperation, error) {
+func unmarshallPersistedOperations(payload []byte) (map[string]PersistedOperation, error) {
 	var manifestHashes map[string]string
+
 	err := json.Unmarshal(payload, &manifestHashes)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling operation file, bytes: %d, contents: %s, error: %w", len(payload), string(payload), err)
@@ -21,32 +25,22 @@ func UnmarshallPersistedOperations(payload []byte) (map[string]PersistedOperatio
 	data := make(map[string]PersistedOperation)
 
 	for hash, operation := range manifestHashes {
-		data[hash] = NewPersistedOperation(operation)
+		data[hash] = PersistedOperation{
+			Operation: operation,
+			Name:      extractOperationNameFromOperation(operation),
+		}
 	}
 	return data, nil
 }
 
-func NewPersistedOperation(operation string) PersistedOperation {
-	name := extractOperationNameFromPersistedOperation(operation)
-	return PersistedOperation{
-		Operation: operation,
-		Name:      name,
+func extractOperationNameFromOperation(payload string) string {
+	match := operationNameRegexPattern.FindStringSubmatch(payload)
+
+	// match[0] is the entire match
+	// match[1] is either mutation/query
+	// match[2] is the name of the operation
+	if len(match) == 3 {
+		return match[2]
 	}
-}
-
-func extractOperationNameFromPersistedOperation(payload string) string {
-	firstSpace := strings.Index(payload, " ")
-	firstBracket := strings.Index(payload, "{")
-	firstParenthesis := strings.Index(payload, "(")
-
-	until := firstBracket
-	if firstParenthesis < firstBracket {
-		until = firstParenthesis
-	}
-
-	if firstSpace > until || until == -1 {
-		return ""
-	}
-
-	return strings.TrimSpace(payload[firstSpace+1 : until])
+	return ""
 }
