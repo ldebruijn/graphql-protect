@@ -111,10 +111,6 @@ func TestNewPersistedOperation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			operation := extractOperationNameFromOperation(tt.args.operation)
 			assert.Equalf(t, tt.want, operation, "newPersistedOperation(%v)", tt.args.operation)
-
-			//if tt.err != nil {
-			//	assert.Equalf(t, tt.err, err, "newPersistedOperation(%v)", tt.args.operation)
-			//}
 		})
 	}
 }

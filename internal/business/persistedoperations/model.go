@@ -27,7 +27,7 @@ func unmarshallPersistedOperations(payload []byte) (map[string]PersistedOperatio
 	for hash, operation := range manifestHashes {
 		data[hash] = PersistedOperation{
 			Operation: operation,
-			Name:      extractOperationNameFromOperation(operation), //TODO test
+			Name:      extractOperationNameFromOperation(operation),
 		}
 	}
 	return data, nil
@@ -41,7 +41,6 @@ func extractOperationNameFromOperation(payload string) string {
 	// match[2] is the name of the operation
 	if len(match) == 3 {
 		return match[2]
-	} else {
-		return ""
 	}
+	return ""
 }
