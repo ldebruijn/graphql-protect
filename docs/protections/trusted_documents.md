@@ -1,10 +1,18 @@
-# Persisted Operations
+# Trusted Documents (Persisted Operations)
 
 Persisted Operations are essentially an operation allowlist. Persisted Operations provide an additional layer of security to your GraphQL API by disallowing arbitrary queries to be performed against your APIs.
 
 Check [Production Considerations](https://www.graphile.org/postgraphile/production/#simple-query-allowlist-persisted-queries--persisted-operations) for a more in-depth reasoning.
 
 We recommend that all GraphQL APIs that only intend a specific/known set of clients to use the API should use Persisted Operations.
+
+## What is the difference between Trusted Documents and Persisted Operations?
+
+They are the same thing. The intention is to compose a set of operations you expect to happen, typically during the build time of your clients, and load these onto your server. You allow only these operations to be executed through the exchange of the ID (or hash) of these operations.
+
+Trusted Documents conveys these operations are trusted.
+
+We use Trusted Documents and Persisted Operations interchangeably in this documentation.
 
 <!-- TOC -->
 
@@ -14,7 +22,7 @@ You can configure `graphql-protect` to enable Persisted Operations.
 
 ```yaml
 # ...
-
+# Trusted documents uses the same configuration as persisted operations, as they are the same thing.
 persisted_operations:
   # Enable or disable the feature, disabled by default
   enabled: false
