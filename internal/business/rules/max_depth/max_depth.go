@@ -52,7 +52,7 @@ func init() {
 	prometheus.MustRegister(resultCounter)
 }
 
-func NewMaxDepthRule(log *slog.Logger, cfg Config) {
+func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // to be cleaned up after deprecated configuration fields are removed
 	if cfg.Max != cfg.Field.Max {
 		log.Warn("Using old `max_depth` configuration. Please update to new configuration options, see https://github.com/ldebruijn/graphql-protect/blob/main/docs/protections/max_depth.md")
 	}
@@ -116,7 +116,7 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) {
 	})
 }
 
-func countDepth(selectionSet ast.SelectionSet) (int, int) {
+func countDepth(selectionSet ast.SelectionSet) (int, int) { // nolint:cyclop // inherently cyclomatic
 	if selectionSet == nil {
 		return 0, 0
 	}
