@@ -109,6 +109,47 @@ type User {
 			},
 			want: fmt.Errorf("syntax error: List depth limit of %d exceeded, found %d", 2, 4),
 		},
+		{
+			name: "Calculates list depth per nested list. Does not sum counts of each list",
+			args: args{
+				cfg: Config{
+					Enabled: false,
+					Field: MaxRule{
+						Enabled: false,
+					},
+					List: MaxRule{
+						Enabled:         true,
+						Max:             2,
+						RejectOnFailure: true,
+					},
+				},
+				query: `
+				query A {
+					a1: me {
+						id
+						name
+						friends {
+							name
+							friends {
+								name
+							}
+						}
+				 	}
+					a2: me {
+						id
+						name
+						friends {
+							name
+							friends {
+								name
+							}
+						}
+				 	}
+				}`,
+				schema: schema,
+			},
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
