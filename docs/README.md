@@ -18,7 +18,7 @@ Protect supports various running modes for different needs and purposes.
 
 This section contains all the documentation about each protection feature.
 
-* [Persisted Operations](protections/persisted_operations.md)
+* [Persisted Operations](protections/trusted_documents)
 * [Block Field Suggestions](protections/block_field_suggestions.md)
 * [Max Aliases](protections/max_aliases.md)
 * [Max Tokens](protections/max_tokens.md)

@@ -15,7 +15,7 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 
 ## Features
 
-* [Persisted Operations](docs/protections/persisted_operations.md)
+* [Trusted Documents (Persisted Operations)](docs/protections/trusted_documents)
 * [Block Field Suggestions](docs/protections/block_field_suggestions.md)
 * [Obfuscate upstream errors](docs/protections/obfuscate_upstream_errors.md)
 * [Max Aliases](docs/protections/max_aliases.md)
