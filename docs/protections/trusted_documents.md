@@ -2,9 +2,12 @@
 
 Persisted Operations are essentially an operation allowlist. Persisted Operations provide an additional layer of security to your GraphQL API by disallowing arbitrary queries to be performed against your APIs.
 
-Check [Production Considerations](https://www.graphile.org/postgraphile/production/#simple-query-allowlist-persisted-queries--persisted-operations) for a more in-depth reasoning.
-
 We recommend that all GraphQL APIs that only intend a specific/known set of clients to use the API should use Persisted Operations.
+
+## Why do I most likely need this?
+
+To best explain why you most likely should be using Trusted Documents, please check out the following resources:
+* https://benjie.dev/graphql/trusted-documents
 
 ## What is the difference between Trusted Documents and Persisted Operations?
 
