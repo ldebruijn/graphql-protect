@@ -20,7 +20,7 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 * [Obfuscate upstream errors](docs/protections/obfuscate_upstream_errors.md)
 * [Max Aliases](docs/protections/max_aliases.md)
 * [Max Tokens](docs/protections/max_tokens.md)
-* [Max Depth](docs/protections/max_depth.md)
+* [Max (Field & List) Depth](docs/protections/max_depth.md)
 * [Max Batch](docs/protections/max_batch.md)
 * [Enforce POST](docs/protections/enforce_post.md)
 * _Max Directives (coming soon)_
