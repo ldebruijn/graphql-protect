@@ -2,6 +2,8 @@ module github.com/ldebruijn/graphql-protect
 
 go 1.23.0
 
+replace github.com/vektah/gqlparser/v2 v2.5.16 => github.com/ldebruijn/gqlparser/v2 v2.0.0-20240913154106-70bd43e5a479
+
 require (
 	cloud.google.com/go/storage v1.43.0
 	github.com/jedib0t/go-pretty/v6 v6.5.9

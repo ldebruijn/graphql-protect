@@ -128,6 +128,8 @@ type User {
 			} else {
 				assert.Equal(t, tt.want.Error(), errs[0].Message)
 			}
+
+			validator.RemoveRule("MaxDepth")
 		})
 	}
 }
@@ -278,7 +280,7 @@ type Price {
 				}`,
 				schema: schema,
 			},
-			want: fmt.Errorf("syntax error: Depth limit of %d exceeded, found %d", 2, 3),
+			want: fmt.Errorf("syntax error: Field depth limit of %d exceeded, found %d", 2, 3),
 		},
 	}
 	for _, tt := range tests {
@@ -299,6 +301,8 @@ type Price {
 			} else {
 				assert.Equal(t, tt.want.Error(), errs[0].Message)
 			}
+
+			validator.RemoveRule("MaxDepth")
 		})
 	}
 }

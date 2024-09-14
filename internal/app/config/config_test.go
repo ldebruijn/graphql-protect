@@ -88,6 +88,14 @@ max_depth:
   enabled: false
   max: 1
   reject_on_failure: false
+  field:
+    enabled: false
+    max: 1
+    reject_on_failure: false
+  list:
+    enabled: false
+    max: 1
+    reject_on_failure: false
 
 max_tokens:
   enabled: false
@@ -179,6 +187,16 @@ log:
 					Enabled:         false,
 					Max:             1,
 					RejectOnFailure: false,
+					Field: max_depth.MaxRule{
+						Enabled:         false,
+						Max:             1,
+						RejectOnFailure: false,
+					},
+					List: max_depth.MaxRule{
+						Enabled:         false,
+						Max:             1,
+						RejectOnFailure: false,
+					},
 				},
 				MaxBatch: batch.Config{
 					Enabled:         false,
