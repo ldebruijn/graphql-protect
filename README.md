@@ -23,6 +23,7 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 * [Max (Field & List) Depth](docs/protections/max_depth.md)
 * [Max Batch](docs/protections/max_batch.md)
 * [Enforce POST](docs/protections/enforce_post.md)
+* [Access Logging](docs/protections/access_logging.md)
 * _Max Directives (coming soon)_
 * _Cost Limit (coming soon)_
 
