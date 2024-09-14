@@ -81,11 +81,20 @@ max_aliases:
   reject_on_failure: true
 
 max_depth:
-  enabled: true
-  # The maximum allowed depth within a single request.
-  max: 15
-  # Reject the request when the rule fails. Disable this to allow the request
-  reject_on_failure: true
+  # protects against operations being too deep
+  field:
+    enabled: true
+    # The maximum allowed depth within a single request.
+    max: 15
+    # Reject the request when the rule fails. Disable this to allow the request
+    reject_on_failure: true
+  # protects against lists being nested too many times
+  list:
+    enabled: true
+    # The maximum allowed depth within a single request.
+    max: 15
+    # Reject the request when the rule fails. Disable this to allow the request
+    reject_on_failure: true
 
 max_tokens:
   # Enable the feature
