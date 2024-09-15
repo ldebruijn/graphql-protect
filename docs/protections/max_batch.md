@@ -24,9 +24,12 @@ max_batch:
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-graphql_protect_max_batch_results{result}
+graphql_protect_max_batch_results{result, size}
 ```
-
+| `size`      | Description                                                                                                                               |
+|-------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| `{integer}` | The actual integer value of the observed size, only if the operations was allowed by the rule                                             |
+| `exceeded`  | Whenever the operation was rejected or failed, `exceeded` is tracked. This is to prevent excessive metric generation upon malicious input |
 
 | `result`  | Description                                                                                                  |
 |---------|--------------------------------------------------------------------------------------------------------------|

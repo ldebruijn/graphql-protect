@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/prometheus/client_golang/prometheus"
+	"strconv"
 )
 
 var (
@@ -12,9 +13,9 @@ var (
 		Namespace: "graphql_protect",
 		Subsystem: "max_batch",
 		Name:      "results",
-		Help:      "The results of the max batch rule",
+		Help:      "The results of the max batch rule, including the size of the batch. The actual size is only tracked for allowed operations, to prevent excessive metric generation on malicious iput",
 	},
-		[]string{"result"},
+		[]string{"result", "size"},
 	)
 	ErrMaxBatchSizeTooSmall = errors.New("maximum allowed batch size cannot be smaller than 1. Protection auto-disabled")
 )
@@ -62,11 +63,15 @@ func (t *MaxBatchRule) Validate(payload []gql.RequestData) error {
 
 	if len(payload) > t.cfg.Max {
 		if t.cfg.RejectOnFailure {
-			resultCounter.WithLabelValues("rejected").Inc()
+			resultCounter.WithLabelValues("rejected", "exceeded").Inc()
 			return fmt.Errorf("operation has exceeded maximum batch size. found [%d], max [%d]", len(payload), t.cfg.Max)
 		}
-		resultCounter.WithLabelValues("failed").Inc()
+		resultCounter.WithLabelValues("failed", "exceeded").Inc()
+		return nil
 	}
-	resultCounter.WithLabelValues("allowed").Inc()
+
+	size := strconv.Itoa(len(payload))
+
+	resultCounter.WithLabelValues("allowed", size).Inc()
 	return nil
 }
