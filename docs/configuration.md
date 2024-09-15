@@ -26,7 +26,6 @@ target:
   target:
     redacted_headers: []
       
-      
 schema:
   # Path to a local file in which the schema can be found
   path: "./schema.graphql"
@@ -39,14 +38,12 @@ schema:
     # The interval in which the schema file should be reloaded
     interval: 5m
     
-    
 # Configures whether we obfuscate graphql-protect validation errors such as max_aliases/max_tokens
 # Recommended to set it to 'true' for public environments
 obfuscate_validation_errors: false
 
 # Configures if upstream errors need to be obfuscated, this can help you hide internals of your upstream landscape
 obfuscate_upstream_errors: true
-
     
 persisted_operations:
   # Enable or disable the feature, disabled by default
@@ -70,7 +67,6 @@ persisted_operations:
 block_field_suggestions:
   enabled: true
   mask: "[redacted]"
-
 
 max_aliases:
   # Enable the feature
@@ -112,49 +108,19 @@ max_batch:
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
   reject_on_failure: true
 
-
 enforce_post:
-  # Enable the feature
+  # Enable enforcing POST http method
   enabled: true
 
-log_graphql_errors: false #enable/disables logging of graphql errors
-
+# Enable or disable logging of graphql errors
+log_graphql_errors: false
 
 log:
-  format: text #text or json
+  # text, or json for structured logging
+  format: text
 ```
 
 For a more in-depth view of each option visit the accompanying documentation page of each individual protection.
-
-## Environment Variables
-
-If so desired `graphql-protect` _can_ be configured using environment variables. write out the full configuration path for each value.
-
-For example:
-
-```bash
-PERSISTED_OPERATIONS_ENABLED: true
-WEB_PATH: /graphql
-PERSISTED_OPERATIONS_STORE_GCP_BUCKET: gs://my-bucket
-```
-
-## Command line arguments
-
-Usage: `graphql-protect [options] [arguments]`
-
-Examples:
-
-```bash
-graphql-protect [runmode] \
-    --persisted-operations-enabled=true \
-    --web-path=/graphql \
-    --persisted-operations-store-gcp-bucket=gs://my-bucket
-```
-
-## Which configuration is applied?
-
-During startup `graphql-protect` will output its applied configuration. It will do this in command line argument format, though it will apply and output configuration from any of these sources.
-
 
 ## Graphql protect - validate run mode
 While the validate run mode works with the same config as the normal mode, for simplicity's sake you can leave out quite some unused options.
