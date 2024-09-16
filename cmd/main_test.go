@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/stretchr/testify/assert"
@@ -834,6 +835,70 @@ func TestMainInitialization(t *testing.T) {
 			if tt.want != nil {
 				assert.Equal(t, err.Error(), tt.want.Error())
 			}
+		})
+	}
+}
+
+func Test_parseFlags(t *testing.T) {
+	type args struct {
+		flags []string
+	}
+	tests := []struct {
+		name           string
+		args           args
+		wantCommand    string
+		wantConfigPath string
+		wantErr        error
+	}{
+		{
+			name: "requires a subcommand",
+			args: args{
+				flags: nil,
+			},
+			wantCommand:    "",
+			wantConfigPath: "",
+			wantErr:        ErrNoSubCommand,
+		},
+		{
+			name: "correctly picks up subcommand and uses default configpath value",
+			args: args{
+				flags: []string{"serve"},
+			},
+			wantCommand:    "serve",
+			wantConfigPath: "./protect.yml",
+			wantErr:        nil,
+		},
+		{
+			name: "correctly picks up subcommand and uses explicitly specified configpath value",
+			args: args{
+				flags: []string{"serve", "-f", "foo-bar.yml"},
+			},
+			wantCommand:    "serve",
+			wantConfigPath: "foo-bar.yml",
+			wantErr:        nil,
+		},
+		{
+			name: "correctly picks up subcommand and uses explicitly specified configpath value",
+			args: args{
+				flags: []string{"serve", "-f"},
+			},
+			wantCommand:    "",
+			wantConfigPath: "",
+			wantErr:        fmt.Errorf("flag needs an argument: -f"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			oldArgs := os.Args
+			defer func() { os.Args = oldArgs }()
+
+			os.Args = append([]string{"binary"}, tt.args.flags...)
+
+			command, configPath, err := parseFlags()
+
+			assert.Equal(t, tt.wantErr, err)
+			assert.Equalf(t, tt.wantCommand, command, "parseFlags()")
+			assert.Equalf(t, tt.wantConfigPath, configPath, "parseFlags()")
 		})
 	}
 }

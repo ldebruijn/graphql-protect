@@ -27,6 +27,8 @@ var (
 	},
 		[]string{"version", "go_version", "short_hash"},
 	)
+
+	ErrNoSubCommand = errors.New("Subcommand expected. Options are `serve`, `validate`, `version` or `help`")
 )
 
 func init() {
@@ -34,30 +36,39 @@ func init() {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		log2.Println("Subcommand expected. Options are `serve`, `validate`, `version` or `help`")
-		os.Exit(1)
-	}
-	log2.Println("Initialized with arguments: ", os.Args)
-
-	action := strings.ToLower(os.Args[1])
-
-	flagSet := flag.NewFlagSet("", flag.ExitOnError)
-	configPath := flagSet.String("f", "./protect.yml", "Defines the path at which the configuration file can be found")
-	err := flagSet.Parse(os.Args[2:])
+	action, configPath, err := parseFlags()
 	if err != nil {
-		fmt.Printf("Error parsing flags %v\n", err)
+		log2.Println(err)
+		os.Exit(1)
 		return
 	}
 
-	log2.Println("Reading configuration from", *configPath)
+	log2.Println("Reading configuration from", configPath)
 
-	err = startup(action, *configPath)
+	err = startup(action, configPath)
 	if err != nil {
 		log2.Println("Subcommand expected. Options are `serve`, `validate`, `version` or `help`")
 		os.Exit(1)
 	}
 	os.Exit(0)
+}
+
+func parseFlags() (string, string, error) {
+	args := os.Args
+	if len(os.Args) < 2 {
+		return "", "", ErrNoSubCommand
+	}
+	log2.Println("Initialized with arguments: ", args)
+
+	action := strings.ToLower(os.Args[1])
+
+	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
+	configPath := flagSet.String("f", "./protect.yml", "Defines the path at which the configuration file can be found")
+	err := flagSet.Parse(os.Args[2:])
+	if err != nil {
+		return "", "", err
+	}
+	return action, *configPath, nil
 }
 
 func startup(action string, path string) error {
