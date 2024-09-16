@@ -23,9 +23,9 @@ spec:
       - name: graphql-protect
         # Pin with specific version
         image: ghcr.io/ldebruijn/graphql-protect:latest
-        command:
+        args:
           # Override main command, specify mounted configuration file
-          - "./graphql-protect"
+          - "serve"
           - "-f"
           - "./config/graphql-protect-config.yml"
         ports:
