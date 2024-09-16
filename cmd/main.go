@@ -11,13 +11,13 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 )
 
 var (
-	shortHash  = "develop"
-	build      = "develop"
-	configPath = ""
+	shortHash = "develop"
+	build     = "develop"
 
 	appInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "graphql_protect",
@@ -34,16 +34,25 @@ func init() {
 }
 
 func main() {
-	flag.StringVar(&configPath, "f", "./protect.yml", "Defines the path at which the configuration file can be found")
-	flag.Parse()
-
 	if len(os.Args) < 2 {
 		log2.Println("Subcommand expected. Options are `serve`, `validate`, `version` or `help`")
 		os.Exit(1)
 	}
-	action := os.Args[1]
+	log2.Println("Initialized with arguments: ", os.Args)
 
-	err := startup(action, configPath)
+	action := strings.ToLower(os.Args[1])
+
+	flagSet := flag.NewFlagSet("", flag.ExitOnError)
+	configPath := flagSet.String("f", "./protect.yml", "Defines the path at which the configuration file can be found")
+	err := flagSet.Parse(os.Args[2:])
+	if err != nil {
+		fmt.Printf("Error parsing flags %v\n", err)
+		return
+	}
+
+	log2.Println("Reading configuration from", *configPath)
+
+	err = startup(action, *configPath)
 	if err != nil {
 		log2.Println("Subcommand expected. Options are `serve`, `validate`, `version` or `help`")
 		os.Exit(1)
