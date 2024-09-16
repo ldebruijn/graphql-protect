@@ -889,12 +889,9 @@ func Test_parseFlags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			oldArgs := os.Args
-			defer func() { os.Args = oldArgs }()
+			args := append([]string{"binary"}, tt.args.flags...)
 
-			os.Args = append([]string{"binary"}, tt.args.flags...)
-
-			command, configPath, err := parseFlags()
+			command, configPath, err := parseFlags(args)
 
 			assert.Equal(t, tt.wantErr, err)
 			assert.Equalf(t, tt.wantCommand, command, "parseFlags()")
