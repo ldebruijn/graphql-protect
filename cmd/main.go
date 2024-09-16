@@ -36,7 +36,7 @@ func init() {
 }
 
 func main() {
-	action, configPath, err := parseFlags()
+	action, configPath, err := parseFlags(os.Args)
 	if err != nil {
 		log2.Println(err)
 		os.Exit(1)
@@ -53,18 +53,17 @@ func main() {
 	os.Exit(0)
 }
 
-func parseFlags() (string, string, error) {
-	args := os.Args
-	if len(os.Args) < 2 {
+func parseFlags(args []string) (string, string, error) {
+	if len(args) < 2 {
 		return "", "", ErrNoSubCommand
 	}
 	log2.Println("Initialized with arguments: ", args)
 
-	action := strings.ToLower(os.Args[1])
+	action := strings.ToLower(args[1])
 
 	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	configPath := flagSet.String("f", "./protect.yml", "Defines the path at which the configuration file can be found")
-	err := flagSet.Parse(os.Args[2:])
+	err := flagSet.Parse(args[2:])
 	if err != nil {
 		return "", "", err
 	}
