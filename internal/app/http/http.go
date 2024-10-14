@@ -22,6 +22,6 @@ func DefaultConfig() Config {
 		ShutdownTimeout:     20 * time.Second,
 		Host:                "0.0.0.0:8080",
 		Path:                "/graphql",
-		RequestBodyMaxBytes: 10_240, // 10kb
+		RequestBodyMaxBytes: 10_2400, // 100kb
 	}
 }
