@@ -18,6 +18,9 @@ web:
   shutdown_timeout: 20s
   host: 0.0.0.0:8080
   path: /graphql
+  # limit the maximum size of a request body that is allowed
+  # this helps prevent OOM attacks through excessively large request payloads
+  request_body_max_bytes: 10240
 
 target:
   host: http://localhost:8081

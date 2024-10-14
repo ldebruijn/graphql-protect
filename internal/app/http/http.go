@@ -11,6 +11,7 @@ type Config struct {
 	// or maybe we just want to listen on everything and forward
 	Path string `yaml:"path"`
 	// DebugHost       string        `yaml:"debug_host"`
+	RequestBodyMaxBytes int `yaml:"request_body_max_bytes"`
 }
 
 func DefaultConfig() Config {

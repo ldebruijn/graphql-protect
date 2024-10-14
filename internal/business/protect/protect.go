@@ -72,6 +72,8 @@ func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, int64(p.cfg.Web.RequestBodyMaxBytes))
+
 	payloads, validationErrors := p.validateRequest(r)
 
 	p.accessLogging.Log(payloads, r.Header)
