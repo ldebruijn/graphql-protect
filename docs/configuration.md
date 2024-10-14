@@ -19,7 +19,8 @@ web:
   host: 0.0.0.0:8080
   path: /graphql
   # limit the maximum size of a request body that is allowed
-  # this helps prevent OOM attacks through excessively large request payloads
+  # this helps prevent OOM attacks through excessively large request payloads.
+  # A limit of `0` disables this protection.
   request_body_max_bytes: 10240
 
 target:

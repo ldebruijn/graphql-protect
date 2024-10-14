@@ -65,6 +65,35 @@ func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 `,
 		},
 		{
+			name: "limit of 0 means no limit",
+			fields: fields{
+				log: log,
+				cfg: &config.Config{
+					Web: _http.Config{
+						ReadTimeout:         10 * time.Second,
+						WriteTimeout:        10 * time.Second,
+						IdleTimeout:         10 * time.Second,
+						ShutdownTimeout:     10 * time.Second,
+						Host:                "localhost",
+						Path:                "/graphql",
+						RequestBodyMaxBytes: 0,
+					},
+				},
+				schema:        nil,
+				tokens:        nil,
+				maxBatch:      nil,
+				accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+				next:          &noop{},
+				preFilterChain: func(next http.Handler) http.Handler {
+					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						next.ServeHTTP(w, r)
+					})
+				},
+			},
+			want: `{"data":null,"errors":[{"message":"invalid character 'i' looking for beginning of value"}]}
+`,
+		},
+		{
 			name: "request body limit is respected",
 			fields: fields{
 				log: log,
@@ -126,6 +155,4 @@ func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 type noop struct {
 }
 
-func (n *noop) ServeHTTP(_ http.ResponseWriter, _ *http.Request) {
-
-}
+func (n *noop) ServeHTTP(_ http.ResponseWriter, _ *http.Request) {}
