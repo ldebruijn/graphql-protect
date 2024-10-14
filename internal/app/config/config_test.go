@@ -49,6 +49,7 @@ web:
   shutdown_timeout: 1s
   host: host
   path: path
+  request_body_max_bytes: 2048
 
 target:
   host: host
@@ -125,12 +126,13 @@ log:
 			},
 			want: &Config{
 				Web: http.Config{
-					ReadTimeout:     1 * time.Second,
-					WriteTimeout:    1 * time.Second,
-					IdleTimeout:     1 * time.Second,
-					ShutdownTimeout: 1 * time.Second,
-					Host:            "host",
-					Path:            "path",
+					ReadTimeout:         1 * time.Second,
+					WriteTimeout:        1 * time.Second,
+					IdleTimeout:         1 * time.Second,
+					ShutdownTimeout:     1 * time.Second,
+					Host:                "host",
+					Path:                "path",
+					RequestBodyMaxBytes: 2048,
 				},
 				ObfuscateValidationErrors: true,
 				ObfuscateUpstreamErrors:   false,

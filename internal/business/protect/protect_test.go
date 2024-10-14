@@ -126,6 +126,6 @@ func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 type noop struct {
 }
 
-func (n *noop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (n *noop) ServeHTTP(_ http.ResponseWriter, _ *http.Request) {
 
 }

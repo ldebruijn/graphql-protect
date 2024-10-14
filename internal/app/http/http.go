@@ -16,11 +16,12 @@ type Config struct {
 
 func DefaultConfig() Config {
 	return Config{
-		ReadTimeout:     5 * time.Second,
-		WriteTimeout:    10 * time.Second,
-		IdleTimeout:     2 * time.Minute,
-		ShutdownTimeout: 20 * time.Second,
-		Host:            "0.0.0.0:8080",
-		Path:            "/graphql",
+		ReadTimeout:         5 * time.Second,
+		WriteTimeout:        10 * time.Second,
+		IdleTimeout:         2 * time.Minute,
+		ShutdownTimeout:     20 * time.Second,
+		Host:                "0.0.0.0:8080",
+		Path:                "/graphql",
+		RequestBodyMaxBytes: 10_240, // 10kb
 	}
 }
