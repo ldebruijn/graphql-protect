@@ -90,11 +90,13 @@ func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 					})
 				},
 			},
+			// this assertion doesn't test the actual intended result, but shows that the request body limitation does not affect this request
+			// ideally this should be improved at a later stage.
 			want: `{"data":null,"errors":[{"message":"invalid character 'i' looking for beginning of value"}]}
 `,
 		},
 		{
-			name: "request body limit is respected",
+			name: "request body limit does not interfere with request bodies with fewer bytes than the limit",
 			fields: fields{
 				log: log,
 				cfg: &config.Config{
@@ -119,6 +121,8 @@ func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 					})
 				},
 			},
+			// this assertion doesn't test the actual intended result, but shows that the request body limitation does not affect this request
+			// ideally this should be improved at a later stage.
 			want: `{"data":null,"errors":[{"message":"invalid character 'i' looking for beginning of value"}]}
 `,
 		},
