@@ -190,10 +190,6 @@ web:
 
 A metric is exposed to track if and when a request is rejected that exceeds this limit.
 
-## Metrics
-
-This rule produces metrics to help you gain insights into the behavior of the rule.
-
 ```
 graphql_protect_http_request_max_body_bytes_exceeded_count{}
 ```
