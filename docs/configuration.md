@@ -171,3 +171,31 @@ max_batch:
     # The maximum number of operations within a single batched request.
     max: 5
 ```
+
+## HTTP Request Body Max Byte size
+
+To prevent OOM attacks through excessively large request bodies, a default limit is posed on request body size of `100kb`. This limit is generally speaking ample space for GraphQL request bodies, while also providing solid protections.
+
+You can modify this limit by changing the following configuration option
+
+```yaml
+web:
+  # limit the maximum size of a request body that is allowed
+  # this helps prevent OOM attacks through excessively large request payloads.
+  # A limit of `0` disables this protection.
+  request_body_max_bytes: 102400
+```
+
+### Metrics
+
+A metric is exposed to track if and when a request is rejected that exceeds this limit.
+
+## Metrics
+
+This rule produces metrics to help you gain insights into the behavior of the rule.
+
+```
+graphql_protect_http_request_max_body_bytes_exceeded_count{}
+```
+
+No metrics are produced for requests that do not exceed this limit.
