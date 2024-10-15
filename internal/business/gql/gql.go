@@ -3,9 +3,26 @@ package gql
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"net/http"
 )
+
+var (
+	requestMaxBodyBytesExceededCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "http",
+		Name:      "request_max_body_bytes_exceeded_count",
+		Help:      "Tracks the occurrence of requests that exceed the max body bytes limitation",
+	},
+		[]string{},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(requestMaxBodyBytesExceededCounter)
+}
 
 type RequestData struct {
 	OperationName string                 `json:"operationName,omitempty"`
@@ -29,6 +46,10 @@ func ParseRequestPayload(r *http.Request) ([]RequestData, error) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		var maxBytesError *http.MaxBytesError
+		if errors.As(err, &maxBytesError) {
+			requestMaxBodyBytesExceededCounter.WithLabelValues().Inc()
+		}
 		return []RequestData{}, err
 	}
 	// Replace the body with a new reader after reading from the original

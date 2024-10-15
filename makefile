@@ -38,4 +38,4 @@ x_build_container: x-build
 
 .PHONY: run_container
 run_container: build_container
-	go run -d -p 8080:8080 graphql-protect
+	docker run -itd --rm -p 8080:8080 graphql-protect
