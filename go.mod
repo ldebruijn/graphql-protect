@@ -7,7 +7,7 @@ replace github.com/vektah/gqlparser/v2 v2.5.17 => github.com/vektah/gqlparser/v2
 require (
 	cloud.google.com/go/storage v1.44.0
 	github.com/jedib0t/go-pretty/v6 v6.6.0
-	github.com/prometheus/client_golang v1.20.4
+	github.com/prometheus/client_golang v1.20.5
 	github.com/stretchr/testify v1.9.0
 	github.com/vektah/gqlparser/v2 v2.5.17
 	go.opentelemetry.io/contrib/exporters/autoexport v0.56.0
@@ -16,7 +16,7 @@ require (
 	go.opentelemetry.io/contrib/propagators/autoprop v0.56.0
 	go.opentelemetry.io/otel v1.31.0
 	go.opentelemetry.io/otel/sdk v1.31.0
-	google.golang.org/api v0.200.0
+	google.golang.org/api v0.201.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
