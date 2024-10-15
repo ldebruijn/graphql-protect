@@ -2,6 +2,8 @@ package http
 
 import "time"
 
+const kilobyte100 = 102_400 // 100kb
+
 type Config struct {
 	ReadTimeout     time.Duration `yaml:"read_timeout"`
 	WriteTimeout    time.Duration `yaml:"write_timeout"`
@@ -22,6 +24,6 @@ func DefaultConfig() Config {
 		ShutdownTimeout:     20 * time.Second,
 		Host:                "0.0.0.0:8080",
 		Path:                "/graphql",
-		RequestBodyMaxBytes: 102_400, // 100kb
+		RequestBodyMaxBytes: kilobyte100,
 	}
 }
