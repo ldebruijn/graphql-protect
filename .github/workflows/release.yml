@@ -10,11 +10,10 @@ env:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
 
-  build-and-push-image:
+  build-and-push-release:
 
     runs-on: ubuntu-latest
 
@@ -60,12 +59,8 @@ jobs:
           build-args: |
             VERSION={{ github.event.release.tag_name }}
 
-      - uses: wangyoucao577/go-release-action@v1
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: linux
-          goarch: amd64
-          goversion: '1.23'
-          build_command: 'make build'
-          release_tag: ${{ github.event.release.tag_name }}
-          release_name: ${{ github.event.release.name }}
+          files: graphql-protect
