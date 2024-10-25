@@ -2,14 +2,12 @@ module github.com/ldebruijn/graphql-protect
 
 go 1.23.2
 
-replace github.com/vektah/gqlparser/v2 v2.5.17 => github.com/vektah/gqlparser/v2 v2.5.18-0.20241014104546-c888731918cc
-
 require (
 	cloud.google.com/go/storage v1.45.0
 	github.com/jedib0t/go-pretty/v6 v6.6.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/stretchr/testify v1.9.0
-	github.com/vektah/gqlparser/v2 v2.5.17
+	github.com/vektah/gqlparser/v2 v2.5.18
 	go.opentelemetry.io/contrib/exporters/autoexport v0.56.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.56.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.56.0

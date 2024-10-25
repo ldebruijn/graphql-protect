@@ -64,5 +64,4 @@ jobs:
           goarch: amd64
           goversion: '1.23'
           build_command: 'make build'
-          binary_name: 'main'
           release_tag: ${{ github.event.release.tag_name }}

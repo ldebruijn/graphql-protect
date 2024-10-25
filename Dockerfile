@@ -26,7 +26,7 @@ USER go
 
 WORKDIR /app
 
-COPY main /app/graphql-protect
+COPY graphql-protect /app/graphql-protect
 
 EXPOSE 8080
 
