@@ -1,4 +1,4 @@
-name: Container Image CI
+name: Release
 
 on:
   release:
@@ -8,6 +8,9 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+permissions:
+  contents: write
+  packages: write
 
 jobs:
 
