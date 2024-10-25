@@ -68,3 +68,4 @@ jobs:
           goversion: '1.23'
           build_command: 'make build'
           release_tag: ${{ github.event.release.tag_name }}
+          release_name: ${{ github.event.release.name }}
