@@ -15,7 +15,6 @@ permissions:
 jobs:
 
   build-and-push-release:
-
     runs-on: ubuntu-latest
 
     permissions:
