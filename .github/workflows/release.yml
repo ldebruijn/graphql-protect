@@ -56,3 +56,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION={{ github.event.release.tag_name }}
+
+      - uses: wangyoucao577/go-release-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: linux
+          goarch: amd64
+          goversion: '1.23'
+          build_command: 'make build'
+          binary_name: 'main'
+          release_tag: ${{ github.event.release.tag_name }}
