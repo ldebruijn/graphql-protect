@@ -15,7 +15,7 @@ dev.setup:
 
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o main ./cmd/.
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o graphql-protect ./cmd/.
 
 x-build:
 	GOOS=linux GOARCH=amd64 make build

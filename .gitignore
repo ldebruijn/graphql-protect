@@ -11,6 +11,7 @@ TODO.md
 
 # ignore binary
 main
+graphql-protect*
 
 store/
 schema.graphql
