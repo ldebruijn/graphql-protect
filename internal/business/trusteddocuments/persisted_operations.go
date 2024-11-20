@@ -1,4 +1,4 @@
-package persistedoperations // nolint:revive
+package trusteddocuments // nolint:revive
 
 import (
 	"bytes"
@@ -42,6 +42,11 @@ var (
 	}, []string{},
 	)
 )
+
+type ReloadFailureStrategy string
+
+var ReloadFailureStrategyIgnore ReloadFailureStrategy = "ignore-failure"
+var ReloadFailureStrategyReject ReloadFailureStrategy = "reject-on-failure"
 
 type ErrorPayload struct {
 	Errors gqlerror.List `json:"errors"`
@@ -145,7 +150,7 @@ func NewPersistedOperations(log *slog.Logger, cfg Config, loader Loader) (*Handl
 		refreshLock:   sync.Mutex{},
 	}
 
-	err := poh.load()
+	err := poh.load(ReloadFailureStrategyIgnore)
 	if err != nil {
 		return nil, err
 	}
@@ -257,11 +262,14 @@ func (p *Handler) Validate(validate func(operation string) gqlerror.List) []vali
 	return errs
 }
 
-func (p *Handler) load() error {
+func (p *Handler) load(failureStrategy ReloadFailureStrategy) error {
 	newState, err := p.loader.Load(context.Background())
 	if err != nil {
 		loadingResultCounter.WithLabelValues(p.loader.Type(), "failure").Inc()
-		return err
+		if failureStrategy == ReloadFailureStrategyReject {
+			return err
+		}
+		// implicit fall through for other failure types
 	}
 
 	p.lock.Lock()
@@ -291,7 +299,7 @@ func (p *Handler) reloadProcessor() {
 					p.log.Warn("Refresh ticker still running while next tick")
 					continue
 				}
-				err := p.load()
+				err := p.load(ReloadFailureStrategyReject)
 				if err != nil {
 					continue
 				}

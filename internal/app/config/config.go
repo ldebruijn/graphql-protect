@@ -24,7 +24,7 @@ type Config struct {
 	Web                       http.Config                    `yaml:"web"`
 	Schema                    schema.Config                  `yaml:"schema"`
 	Target                    proxy.Config                   `yaml:"target"`
-	PersistedOperations       persistedoperations.Config     `yaml:"persisted_operations"`
+	PersistedOperations       trusteddocuments.Config        `yaml:"persisted_operations"`
 	ObfuscateValidationErrors bool                           `yaml:"obfuscate_validation_errors"`
 	ObfuscateUpstreamErrors   bool                           `yaml:"obfuscate_upstream_errors"`
 	BlockFieldSuggestions     block_field_suggestions.Config `yaml:"block_field_suggestions"`
@@ -72,7 +72,7 @@ func defaults() Config {
 		Web:                       http.DefaultConfig(),
 		Schema:                    schema.DefaultConfig(),
 		Target:                    proxy.DefaultConfig(),
-		PersistedOperations:       persistedoperations.DefaultConfig(),
+		PersistedOperations:       trusteddocuments.DefaultConfig(),
 		ObfuscateValidationErrors: false,
 		ObfuscateUpstreamErrors:   true,
 		BlockFieldSuggestions:     block_field_suggestions.DefaultConfig(),

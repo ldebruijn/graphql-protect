@@ -39,7 +39,7 @@ type GraphQLProtect struct {
 	preFilterChain func(handler http.Handler) http.Handler
 }
 
-func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperations.Handler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
+func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocuments.Handler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	max_depth.NewMaxDepthRule(log, cfg.MaxDepth)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)

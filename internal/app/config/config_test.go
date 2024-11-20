@@ -151,9 +151,9 @@ log:
 					KeepAlive: 1 * time.Second,
 					Host:      "host",
 				},
-				PersistedOperations: persistedoperations.Config{
+				PersistedOperations: trusteddocuments.Config{
 					Enabled: true,
-					Loader: persistedoperations.LoaderConfig{
+					Loader: trusteddocuments.LoaderConfig{
 						Type:     "gcp",
 						Location: "some-bucket",
 						Reload: struct {

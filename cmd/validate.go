@@ -8,6 +8,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
+	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
 	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"io"
 	"log/slog"
@@ -17,7 +18,7 @@ import (
 var ErrValidationErrorsFound = errors.New("errors found during validation")
 
 func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
-	loader, err := persistedoperations.NewLoaderFromConfig(cfg.PersistedOperations, log)
+	loader, err := trusteddocuments.NewLoaderFromConfig(cfg.PersistedOperations, log)
 	if err != nil {
 		err := fmt.Errorf("store must be defined to have files to validate")
 		log.Error("Error running validations", "err", err)
@@ -25,7 +26,7 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 	}
 
 	// Load the persisted operations from the local dir into memory
-	persistedOperations, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, loader)
+	persistedOperations, err := trusteddocuments.NewPersistedOperations(log, cfg.PersistedOperations, loader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
 		return nil

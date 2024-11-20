@@ -1,4 +1,4 @@
-package persistedoperations
+package trusteddocuments
 
 import (
 	"encoding/json"

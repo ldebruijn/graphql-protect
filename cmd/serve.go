@@ -40,13 +40,13 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 		return nil
 	}
 
-	loader, err := persistedoperations.NewLoaderFromConfig(cfg.PersistedOperations, log)
+	loader, err := trusteddocuments.NewLoaderFromConfig(cfg.PersistedOperations, log)
 	if err != nil {
 		log.Error("Error initializing persisted operations loader", "err", err)
 		return err
 	}
 
-	po, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, loader)
+	po, err := trusteddocuments.NewPersistedOperations(log, cfg.PersistedOperations, loader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
 		return nil
