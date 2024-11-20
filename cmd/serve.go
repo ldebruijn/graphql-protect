@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/app/otel"
-	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/obfuscate_upstream_errors"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
+	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
 	"github.com/ldebruijn/graphql-protect/internal/http/middleware"
 	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
 	"github.com/ldebruijn/graphql-protect/internal/http/readiness"
@@ -40,13 +40,13 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 		return nil
 	}
 
-	loader, err := persistedoperations.NewLoaderFromConfig(cfg.PersistedOperations, log)
+	loader, err := trusteddocuments.NewLoaderFromConfig(cfg.PersistedOperations, log)
 	if err != nil {
 		log.Error("Error initializing persisted operations loader", "err", err)
 		return err
 	}
 
-	po, err := persistedoperations.NewPersistedOperations(log, cfg.PersistedOperations, loader)
+	po, err := trusteddocuments.NewPersistedOperations(log, cfg.PersistedOperations, loader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
 		return nil

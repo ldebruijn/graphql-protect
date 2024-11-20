@@ -1,4 +1,4 @@
-package persistedoperations // nolint:revive
+package trusteddocuments // nolint:revive
 
 import (
 	"context"
