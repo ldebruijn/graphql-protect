@@ -67,6 +67,7 @@ obfuscate_upstream_errors: false
     
 persisted_operations:
   enabled: true
+  enable_debug_endpoint: true
   reject_on_failure: false
   loader:
     type: gcp
@@ -152,7 +153,8 @@ log:
 					Host:      "host",
 				},
 				PersistedOperations: persistedoperations.Config{
-					Enabled: true,
+					Enabled:             true,
+					EnableDebugEndpoint: true,
 					Loader: persistedoperations.LoaderConfig{
 						Type:     "gcp",
 						Location: "some-bucket",
