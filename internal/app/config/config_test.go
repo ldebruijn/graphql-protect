@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/ldebruijn/graphql-protect/internal/app/http"
 	"github.com/ldebruijn/graphql-protect/internal/app/log"
-	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
@@ -12,6 +11,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/max_depth"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
+	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
 	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
