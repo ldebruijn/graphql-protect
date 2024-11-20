@@ -7,7 +7,7 @@ import (
 )
 
 func NewTrustedDocumentsDebugger(po *persistedoperations.Handler, enableDebugEndpoint bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		if enableDebugEndpoint {
 
 			trustedDocuments := po.GetTrustedDocuments()
