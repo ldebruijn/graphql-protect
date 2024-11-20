@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
-	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
