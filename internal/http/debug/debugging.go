@@ -18,11 +18,9 @@ func NewTrustedDocumentsDebugger(po *persistedoperations.Handler, enableDebugEnd
 				return
 			}
 
-			// Set the content type to application/json
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 
-			// Write the JSON response
 			_, _ = w.Write(jsonData)
 		}
 	}
