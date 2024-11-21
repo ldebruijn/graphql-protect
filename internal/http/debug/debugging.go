@@ -8,8 +8,9 @@ import (
 
 func NewTrustedDocumentsDebugger(po *persistedoperations.Handler, enableDebugEndpoint bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		if enableDebugEndpoint {
-
+		if !enableDebugEndpoint {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
 			trustedDocuments := po.GetTrustedDocuments()
 
 			jsonData, err := json.MarshalIndent(trustedDocuments, "", "  ")
@@ -23,8 +24,6 @@ func NewTrustedDocumentsDebugger(po *persistedoperations.Handler, enableDebugEnd
 
 			// Write the JSON response
 			_, _ = w.Write(jsonData)
-		} else {
-			w.WriteHeader(http.StatusNotFound)
 		}
 	}
 }
