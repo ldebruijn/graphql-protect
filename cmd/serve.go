@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	_ "github.com/ldebruijn/graphql-protect/internal/app/metrics"
 	"github.com/ldebruijn/graphql-protect/internal/app/otel"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
