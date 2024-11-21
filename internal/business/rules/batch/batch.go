@@ -29,7 +29,7 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		Enabled:         true,
-		Max:             5,
+		Max:             1,
 		RejectOnFailure: true,
 	}
 }

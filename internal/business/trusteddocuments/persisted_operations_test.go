@@ -1,4 +1,4 @@
-package persistedoperations // nolint:revive
+package trusteddocuments // nolint:revive
 
 import (
 	"bytes"
@@ -265,8 +265,9 @@ func TestNewPersistedOperations(t *testing.T) {
 
 func TestLoader(t *testing.T) {
 	type args struct {
-		state  map[string]PersistedOperation
-		loader Loader
+		state           map[string]PersistedOperation
+		loader          Loader
+		failureStrategy ReloadFailureStrategy
 	}
 	tests := []struct {
 		name    string
@@ -288,7 +289,8 @@ func TestLoader(t *testing.T) {
 
 					return loader
 				}(),
-				state: map[string]PersistedOperation{},
+				state:           map[string]PersistedOperation{},
+				failureStrategy: ReloadFailureStrategyReject,
 			},
 			want: map[string]PersistedOperation{
 				"123": {
@@ -318,6 +320,7 @@ func TestLoader(t *testing.T) {
 						Name:      "i am a name that doest get deleted",
 					},
 				},
+				failureStrategy: ReloadFailureStrategyReject,
 			},
 			want: map[string]PersistedOperation{
 				"123": {
@@ -328,10 +331,10 @@ func TestLoader(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "loader error does not update cache",
+			name: "loader error does not update cache with failure mode reject",
 			args: args{
 				loader: func() Loader {
-					loader := &errorLoader{
+					loader := &testLoader{
 						err:             errors.New("this is unexpected"),
 						willReturnError: false,
 					}
@@ -344,11 +347,45 @@ func TestLoader(t *testing.T) {
 						Name:      "i am a name that doest not get deleted",
 					},
 				},
+				failureStrategy: ReloadFailureStrategyReject,
 			},
 			want: map[string]PersistedOperation{
 				"456": {
 					Operation: "i am an operation that does not get deleted",
 					Name:      "i am a name that doest not get deleted",
+				},
+			},
+			wantErr: errors.New("this is unexpected"),
+		},
+		{
+			name: "loader error does update cache with failure mode ignore",
+			args: args{
+				loader: func() Loader {
+					loader := &testLoader{
+						err: errors.New("this is unexpected"),
+						data: map[string]PersistedOperation{
+							"123": {
+								Operation: "i am an operation",
+								Name:      "i am a name",
+							},
+						},
+						willReturnError: false,
+					}
+
+					return loader
+				}(),
+				state: map[string]PersistedOperation{
+					"456": {
+						Operation: "i am an operation that does not get deleted",
+						Name:      "i am a name that doest not get deleted",
+					},
+				},
+				failureStrategy: ReloadFailureStrategyIgnore,
+			},
+			want: map[string]PersistedOperation{
+				"123": {
+					Operation: "i am an operation",
+					Name:      "i am a name",
 				},
 			},
 			wantErr: errors.New("this is unexpected"),
@@ -360,7 +397,7 @@ func TestLoader(t *testing.T) {
 			po, _ := NewPersistedOperations(log, Config{}, tt.args.loader)
 			po.cache = tt.args.state
 
-			err := po.load()
+			err := po.load(tt.args.failureStrategy)
 			if tt.wantErr != nil {
 				assert.Error(t, tt.wantErr, err)
 			}
@@ -370,15 +407,16 @@ func TestLoader(t *testing.T) {
 	}
 }
 
-var _ Loader = &errorLoader{}
+var _ Loader = &testLoader{}
 
 // ErrorLoader is a loader for testing purposes
-type errorLoader struct {
+type testLoader struct {
+	data            map[string]PersistedOperation
 	err             error
 	willReturnError bool
 }
 
-func (e *errorLoader) Type() string {
+func (e *testLoader) Type() string {
 	return "error"
 }
 
@@ -386,12 +424,12 @@ func newPersistedOperation(query string) PersistedOperation {
 	return PersistedOperation{query, extractOperationNameFromOperation(query)}
 }
 
-func (e *errorLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
+func (e *testLoader) Load(_ context.Context) (map[string]PersistedOperation, error) {
 	if e.willReturnError {
-		return nil, e.err
+		return e.data, e.err
 	}
 	// return error after the first call
 	e.willReturnError = true
 
-	return map[string]PersistedOperation{}, nil
+	return e.data, nil
 }

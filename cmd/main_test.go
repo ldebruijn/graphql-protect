@@ -537,6 +537,7 @@ type Product {
 }
 `,
 				cfgOverrides: func(cfg *config.Config) *config.Config {
+					cfg.MaxBatch.Max = 3
 					return cfg
 				},
 				mockResponse: []map[string]interface{}{

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
-	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/aliases"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
@@ -13,6 +12,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/max_depth"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
+	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
@@ -39,7 +39,7 @@ type GraphQLProtect struct {
 	preFilterChain func(handler http.Handler) http.Handler
 }
 
-func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *persistedoperations.Handler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
+func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocuments.Handler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
 	aliases.NewMaxAliasesRule(cfg.MaxAliases)
 	max_depth.NewMaxDepthRule(log, cfg.MaxDepth)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
