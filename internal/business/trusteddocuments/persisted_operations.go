@@ -57,9 +57,10 @@ type ErrorMessage struct {
 }
 
 type Config struct {
-	Enabled         bool         `yaml:"enabled"`
-	RejectOnFailure bool         `yaml:"reject_on_failure"`
-	Loader          LoaderConfig `yaml:"loader"`
+	Enabled             bool         `yaml:"enabled"`
+	EnableDebugEndpoint bool         `yaml:"enable_debug_endpoint"`
+	RejectOnFailure     bool         `yaml:"reject_on_failure"`
+	Loader              LoaderConfig `yaml:"loader"`
 }
 
 func DefaultConfig() Config {
@@ -245,6 +246,10 @@ func (p *Handler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:f
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
+}
+
+func (p *Handler) GetTrustedDocuments() map[string]PersistedOperation {
+	return p.cache
 }
 
 func (p *Handler) Validate(validate func(operation string) gqlerror.List) []validation.Error {

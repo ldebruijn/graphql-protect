@@ -29,6 +29,9 @@ You can configure `graphql-protect` to enable Persisted Operations.
 persisted_operations:
   # Enable or disable the feature, disabled by default
   enabled: false
+  # configures a '/internal/debug_trusted_documents' endpoint to print the persisted operations as json
+  # Make sure you dont expose this ednpoint publicly if you enable this feature!  
+  enable_debug_endpoint: false
   # Fail unknown operations, disable this feature to allow unknown operations to reach your GraphQL API
   reject_on_failure: true
   # Loader decides how persisted operations are loaded, see loader chapter for more details

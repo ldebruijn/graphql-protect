@@ -11,6 +11,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/obfuscate_upstream_errors"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
+	"github.com/ldebruijn/graphql-protect/internal/http/debug"
 	"github.com/ldebruijn/graphql-protect/internal/http/middleware"
 	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
 	"github.com/ldebruijn/graphql-protect/internal/http/readiness"
@@ -71,6 +72,7 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/internal/healthz/readiness", readiness.NewReadinessHandler())
+	mux.Handle("/internal/debug_trusted_documents", debug.NewTrustedDocumentsDebugger(po, cfg.PersistedOperations.EnableDebugEndpoint))
 	mux.Handle(cfg.Web.Path, mid(protectHandler))
 
 	api := http.Server{
