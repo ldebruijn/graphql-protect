@@ -2,11 +2,11 @@ package debug
 
 import (
 	"encoding/json"
-	"github.com/ldebruijn/graphql-protect/internal/business/persistedoperations"
+	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
 	"net/http"
 )
 
-func NewTrustedDocumentsDebugger(po *persistedoperations.Handler, enableDebugEndpoint bool) http.HandlerFunc {
+func NewTrustedDocumentsDebugger(po *trusteddocuments.Handler, enableDebugEndpoint bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		if !enableDebugEndpoint {
 			w.WriteHeader(http.StatusNotFound)
