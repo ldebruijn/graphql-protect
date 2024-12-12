@@ -35,7 +35,7 @@ jobs:
           go-version: '1.23'
 
       - name: Build
-        run: make VERSION=${{ github.event.release.tag_name }} build
+        run: make VERSION=${{ github.ref_name }} build
 
       - name: Test
         run: make test
@@ -54,7 +54,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VERSION={{ github.event.release.tag_name }}
+            VERSION={{ github.ref_name }}
 
       - name: Release
         uses: softprops/action-gh-release@v2
