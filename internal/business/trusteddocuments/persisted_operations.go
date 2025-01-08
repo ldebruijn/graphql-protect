@@ -270,7 +270,7 @@ func (p *Handler) Validate(validate func(operation string) gqlerror.List) []vali
 func (p *Handler) load(failureStrategy ReloadFailureStrategy) error {
 	newState, err := p.loader.Load(context.Background())
 	if err != nil {
-		p.log.Error("error loading persisted operations", err)
+		p.log.Error("error loading persisted operations", "err", err)
 		loadingResultCounter.WithLabelValues(p.loader.Type(), "failure").Inc()
 		if failureStrategy == ReloadFailureStrategyReject {
 			return err
