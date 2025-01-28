@@ -9,7 +9,7 @@ GraphQL Protect is dead-simple yet highly customizable security proxy compatible
 ![GitHub Release](https://img.shields.io/github/v/release/ldebruijn/graphql-protect)
 
 
-_This is repository inspired by the great work of the Javascript [GraphQL Armor](https://github.com/Escape-Technologies/graphql-armor) middleware._
+_This repository is inspired by the great work of the Javascript [GraphQL Armor](https://github.com/Escape-Technologies/graphql-armor) middleware._
 
 <!-- TOC -->
 
@@ -30,7 +30,12 @@ _This is repository inspired by the great work of the Javascript [GraphQL Armor]
 
 Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
 
-## Nice to know
+## Known limitations
+
+### Graphql Spec Support
+GraphQL Protect makes use of [gqlparser](https://github.com/vektah/gqlparser) to parse and validate your schema & GraphQL requests. Therefor, GraphQL Protect only supports schemas/GraphQL requests conforming to the GraphQL spec support level of the gqlparser.
+
+### Response encoding
 Currently, handling response encoding from the upstream is not supported, we're open for contributions : )
 
 
