@@ -33,7 +33,9 @@ Curious why you need these features? Check out this [Excellent talk on GraphQL s
 ## Known limitations
 
 ### Graphql Spec Support
-GraphQL Protect makes use of [gqlparser](https://github.com/vektah/gqlparser) to parse and validate your schema & GraphQL requests. Therefor, GraphQL Protect only supports schemas/GraphQL requests conforming to the GraphQL spec support level of the gqlparser.
+GraphQL Protect makes use of [gqlparser](https://github.com/vektah/gqlparser) to parse and validate GraphQL schemas & GraphQL requests. Gqlparser's spec support is [October 2021](https://spec.graphql.org/October2021/) and [select portions of the Draft](https://spec.graphql.org/draft/). gqlparser uses [graphql-js](https://github.com/graphql/graphql-js) as a reference implementation, resulting a similar level of graphql spec support.
+
+If experience any issues related to spec support, or you want to verify the (draft spec) feature you want to use is supported, it's best to inspect the gqlparser library directly for your use case.
 
 ### Response encoding
 Currently, handling response encoding from the upstream is not supported, we're open for contributions : )
