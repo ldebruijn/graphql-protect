@@ -1,6 +1,6 @@
 module github.com/ldebruijn/graphql-protect
 
-go 1.23.2
+go 1.24.0
 
 require (
 	cloud.google.com/go/storage v1.50.0
