@@ -30,11 +30,6 @@ _This repository is inspired by the great work of the Javascript [GraphQL Armor]
 
 Curious why you need these features? Check out this [Excellent talk on GraphQL security](https://www.youtube.com/watch?v=hyB2UKsEkqA&list=PLP1igyLx8foE9SlDLI1Vtlshcon5r1jMJ) on YouTube.
 
-At time of writing, GraphQL Protect targets the [October 2021](https://spec.graphql.org/October2021/) version of the GraphQL specification and [select portions of the Draft](https://spec.graphql.org/draft/).
-
-Check out [known limitations](docs/README.md#known-limitations) for more details
-
-
 ## Installation
 
 ### As Container
@@ -54,13 +49,13 @@ git clone git@github.com:ldebruijn/graphql-protect.git
 
 Build & Test
 ```shell
-    make build
-    make test
+make build
+make test
 ```
 
 Run Container
 ```shell
-    make run_container
+make run_container
 ```
 
 ## Documentation
@@ -75,7 +70,9 @@ We recommend configuring the binary using a yaml file, place a file called `prot
 
 For all the configuration options check out the [Configuration Documentation](docs/configuration.md)
 
-Alternatively graphql-protect can be configured using environment variables or command line arguments.
+## Spec Target
+
+At time of writing, GraphQL Protect targets the [October 2021](https://spec.graphql.org/October2021/) version of the GraphQL specification and [select portions of the Draft](https://spec.graphql.org/draft/).
 
 ## Contributing
 
@@ -88,3 +85,7 @@ git clone git@github.com:ldebruijn/graphql-protect.git
 cd graphql-protect
 make dev.setup
 ```
+
+## Known Limitations
+
+Check out [known limitations](docs/README.md#known-limitations) for more details.

@@ -49,4 +49,4 @@ GraphQL Protect makes use of [gqlparser](https://github.com/vektah/gqlparser) to
 If experience any issues related to spec support, or you want to verify the (draft spec) feature you want to use is supported, it's best to inspect the gqlparser library directly for your use case.
 
 ### Response encoding
-Currently, handling response encoding from the upstream is not supported, we're open for contributions : )
+Currently, handling encoded responses from the upstream is not supported, we're open for contributions : )

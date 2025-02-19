@@ -1,12 +1,12 @@
 # Configuration
 
-`graphql-protect` can be configured in various ways, though we recommend configuring it via a `protect.yml`. file
+`graphql-protect` can be configured via a `protect.yml`. file
 
 <!-- TOC -->
 
 # protect.yml
 
-The best way to configure `graphql-protect` is by specifying a `protect.yml` in the same directory as you're running the binary.
+The default location to configure `graphql-protect` is by specifying a `protect.yml` in the same directory as you're running the binary.
 
 The following outlines the structure of the yaml, as well as outlines the **defaults** for each configuration option.
 
