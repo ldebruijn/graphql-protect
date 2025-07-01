@@ -17,6 +17,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
+	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
 	"go.opentelemetry.io/otel"
 	"log/slog"
 	"net/http"
@@ -143,5 +144,5 @@ func (p *GraphQLProtect) ValidateQuery(operation string) gqlerror.List {
 		return gqlerror.List{gqlerror.Wrap(err)}
 	}
 
-	return validator.Validate(p.schema.Get(), query)
+	return validator.ValidateWithRules(p.schema.Get(), query, validatorrules.NewDefaultRules())
 }

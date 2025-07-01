@@ -7,6 +7,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
+	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
 	"log/slog"
 	"testing"
 )
@@ -162,7 +163,7 @@ type User {
 				BuiltIn: false,
 			})
 
-			errs := validator.Validate(schema, query)
+			errs := validator.ValidateWithRules(schema, query, validatorrules.NewDefaultRules())
 
 			if tt.want == nil {
 				assert.Empty(t, errs)
@@ -335,7 +336,7 @@ type Price {
 				BuiltIn: false,
 			})
 
-			errs := validator.Validate(schema, query)
+			errs := validator.ValidateWithRules(schema, query, validatorrules.NewDefaultRules())
 
 			if tt.want == nil {
 				assert.Empty(t, errs)
