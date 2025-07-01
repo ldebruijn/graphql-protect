@@ -4,6 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
+	"github.com/vektah/gqlparser/v2/validator/core"
 	"log/slog"
 )
 
@@ -69,8 +70,8 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // 
 				if fieldDepth > cfg.Field.Max {
 					if cfg.Field.RejectOnFailure {
 						addError(
-							validator.Message("syntax error: Field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
-							validator.At(operation.Position),
+							core.Message("syntax error: Field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
+							core.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("field", "rejected").Inc()
 					} else {
@@ -85,8 +86,8 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // 
 				if listDepth > cfg.List.Max {
 					if cfg.List.RejectOnFailure {
 						addError(
-							validator.Message("syntax error: List depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
-							validator.At(operation.Position),
+							core.Message("syntax error: List depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
+							core.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("list", "rejected").Inc()
 					} else {
@@ -101,8 +102,8 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // 
 				if fieldDepth > cfg.Max {
 					if cfg.RejectOnFailure {
 						addError(
-							validator.Message("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, fieldDepth),
-							validator.At(operation.Position),
+							core.Message("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, fieldDepth),
+							core.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("field", "rejected").Inc()
 					} else {
