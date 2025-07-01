@@ -38,11 +38,14 @@ type GraphQLProtect struct {
 	accessLogging  *accesslogging.AccessLogging
 	next           http.Handler
 	preFilterChain func(handler http.Handler) http.Handler
+	rules          *validatorrules.Rules
 }
 
 func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocuments.Handler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
-	aliases.NewMaxAliasesRule(cfg.MaxAliases)
-	max_depth.NewMaxDepthRule(log, cfg.MaxDepth)
+	rules := validatorrules.NewDefaultRules()
+
+	aliases.NewMaxAliasesRule(cfg.MaxAliases, rules)
+	max_depth.NewMaxDepthRule(log, cfg.MaxDepth, rules)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
 	if err != nil {
 		log.Warn("Error initializing maximum batch protection", "err", err)
@@ -62,7 +65,8 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocument
 		preFilterChain: func(next http.Handler) http.Handler {
 			return enforcePostMethod(po.SwapHashForQuery(next))
 		},
-		next: upstreamHandler,
+		next:  upstreamHandler,
+		rules: rules,
 	}, nil
 }
 
@@ -144,5 +148,5 @@ func (p *GraphQLProtect) ValidateQuery(operation string) gqlerror.List {
 		return gqlerror.List{gqlerror.Wrap(err)}
 	}
 
-	return validator.ValidateWithRules(p.schema.Get(), query, validatorrules.NewDefaultRules())
+	return validator.ValidateWithRules(p.schema.Get(), query, p.rules)
 }

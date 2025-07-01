@@ -5,6 +5,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
 	"github.com/vektah/gqlparser/v2/validator/core"
+	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
 	"log/slog"
 )
 
@@ -53,7 +54,7 @@ func init() {
 	prometheus.MustRegister(resultCounter)
 }
 
-func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // to be cleaned up after deprecated configuration fields are removed
+func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) { // nolint:funlen,cyclop // to be cleaned up after deprecated configuration fields are removed
 	if cfg.Max != cfg.Field.Max {
 		log.Warn("Using old `max_depth` configuration. Please update to new configuration options, see https://github.com/ldebruijn/graphql-protect/blob/main/docs/protections/max_depth.md")
 	}
@@ -62,7 +63,7 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // 
 		cfg.Enabled = false
 	}
 
-	validator.AddRule("MaxDepth", func(observers *validator.Events, addError validator.AddErrFunc) {
+	rules.AddRule("MaxDepth", func(observers *validator.Events, addError validator.AddErrFunc) {
 		observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
 			fieldDepth, listDepth := countDepth(operation.SelectionSet)
 

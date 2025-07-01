@@ -5,6 +5,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
 	"github.com/vektah/gqlparser/v2/validator/core"
+	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
 )
 
 var (
@@ -36,9 +37,9 @@ func init() {
 	prometheus.MustRegister(resultCounter)
 }
 
-func NewMaxAliasesRule(cfg Config) {
+func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 	if cfg.Enabled {
-		validator.AddRule("MaxAliases", func(observers *validator.Events, addError validator.AddErrFunc) {
+		rules.AddRule("MaxAliases", func(observers *validator.Events, addError validator.AddErrFunc) {
 			aliases := 0
 			// keep track of # of aliases per fragment definition
 			visitedFragments := make(map[string]int)
