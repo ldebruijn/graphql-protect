@@ -7,6 +7,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
+	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
 	"log/slog"
 	"testing"
 )
@@ -153,7 +154,9 @@ type User {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			NewMaxDepthRule(slog.Default(), tt.args.cfg)
+			rules := validatorrules.NewDefaultRules()
+
+			NewMaxDepthRule(slog.Default(), tt.args.cfg, rules)
 
 			query, _ := parser.ParseQuery(&ast.Source{Name: "ff", Input: tt.args.query})
 			schema := gqlparser.MustLoadSchema(&ast.Source{
@@ -162,7 +165,7 @@ type User {
 				BuiltIn: false,
 			})
 
-			errs := validator.Validate(schema, query)
+			errs := validator.ValidateWithRules(schema, query, rules)
 
 			if tt.want == nil {
 				assert.Empty(t, errs)
@@ -326,7 +329,9 @@ type Price {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			NewMaxDepthRule(slog.Default(), tt.args.cfg)
+			rules := validatorrules.NewDefaultRules()
+
+			NewMaxDepthRule(slog.Default(), tt.args.cfg, rules)
 
 			query, _ := parser.ParseQuery(&ast.Source{Name: "ff", Input: tt.args.query})
 			schema := gqlparser.MustLoadSchema(&ast.Source{
@@ -335,7 +340,7 @@ type Price {
 				BuiltIn: false,
 			})
 
-			errs := validator.Validate(schema, query)
+			errs := validator.ValidateWithRules(schema, query, rules)
 
 			if tt.want == nil {
 				assert.Empty(t, errs)

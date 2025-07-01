@@ -4,6 +4,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
+	"github.com/vektah/gqlparser/v2/validator/core"
+	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
 	"log/slog"
 )
 
@@ -52,7 +54,7 @@ func init() {
 	prometheus.MustRegister(resultCounter)
 }
 
-func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // to be cleaned up after deprecated configuration fields are removed
+func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) { // nolint:funlen,cyclop // to be cleaned up after deprecated configuration fields are removed
 	if cfg.Max != cfg.Field.Max {
 		log.Warn("Using old `max_depth` configuration. Please update to new configuration options, see https://github.com/ldebruijn/graphql-protect/blob/main/docs/protections/max_depth.md")
 	}
@@ -61,7 +63,7 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // 
 		cfg.Enabled = false
 	}
 
-	validator.AddRule("MaxDepth", func(observers *validator.Events, addError validator.AddErrFunc) {
+	rules.AddRule("MaxDepth", func(observers *validator.Events, addError validator.AddErrFunc) {
 		observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
 			fieldDepth, listDepth := countDepth(operation.SelectionSet)
 
@@ -69,8 +71,8 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // 
 				if fieldDepth > cfg.Field.Max {
 					if cfg.Field.RejectOnFailure {
 						addError(
-							validator.Message("syntax error: Field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
-							validator.At(operation.Position),
+							core.Message("syntax error: Field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
+							core.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("field", "rejected").Inc()
 					} else {
@@ -85,8 +87,8 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // 
 				if listDepth > cfg.List.Max {
 					if cfg.List.RejectOnFailure {
 						addError(
-							validator.Message("syntax error: List depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
-							validator.At(operation.Position),
+							core.Message("syntax error: List depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
+							core.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("list", "rejected").Inc()
 					} else {
@@ -101,8 +103,8 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config) { // nolint:funlen,cyclop // 
 				if fieldDepth > cfg.Max {
 					if cfg.RejectOnFailure {
 						addError(
-							validator.Message("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, fieldDepth),
-							validator.At(operation.Position),
+							core.Message("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, fieldDepth),
+							core.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("field", "rejected").Inc()
 					} else {

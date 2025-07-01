@@ -4,6 +4,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
+	"github.com/vektah/gqlparser/v2/validator/core"
+	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
 )
 
 var (
@@ -35,9 +37,9 @@ func init() {
 	prometheus.MustRegister(resultCounter)
 }
 
-func NewMaxAliasesRule(cfg Config) {
+func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 	if cfg.Enabled {
-		validator.AddRule("MaxAliases", func(observers *validator.Events, addError validator.AddErrFunc) {
+		rules.AddRule("MaxAliases", func(observers *validator.Events, addError validator.AddErrFunc) {
 			aliases := 0
 			// keep track of # of aliases per fragment definition
 			visitedFragments := make(map[string]int)
@@ -58,8 +60,8 @@ func NewMaxAliasesRule(cfg Config) {
 				if aliases > cfg.Max {
 					if cfg.RejectOnFailure {
 						addError(
-							validator.Message("syntax error: Aliases limit of %d exceeded, found %d", cfg.Max, aliases),
-							validator.At(operation.Position),
+							core.Message("syntax error: Aliases limit of %d exceeded, found %d", cfg.Max, aliases),
+							core.At(operation.Position),
 						)
 						resultCounter.WithLabelValues("rejected").Inc()
 					} else {
