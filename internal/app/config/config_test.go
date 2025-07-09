@@ -178,6 +178,7 @@ log:
 					Enabled:         false,
 					Max:             1,
 					RejectOnFailure: false,
+					Overrides:       map[string]int{},
 				},
 				MaxAliases: aliases.Config{
 					Enabled:         false,
