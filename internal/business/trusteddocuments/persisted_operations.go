@@ -252,10 +252,14 @@ func (p *Handler) GetTrustedDocuments() map[string]PersistedOperation {
 	return p.cache
 }
 
-func (p *Handler) Validate(validate func(operation string) gqlerror.List) []validation.Error {
+func (p *Handler) Validate(validate func(data gql.RequestData) gqlerror.List) []validation.Error {
 	var errs []validation.Error
 	for hash, operation := range p.cache {
-		err := validate(operation.Operation)
+		data := gql.RequestData{
+			Query:         operation.Operation,
+			OperationName: operation.Name,
+		}
+		err := validate(data)
 
 		if len(err) > 0 {
 			valErr := validation.Wrap(err)

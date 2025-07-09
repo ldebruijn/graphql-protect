@@ -17,9 +17,10 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 )
 
 type Config struct {
-	Enabled         bool `yaml:"enabled"`
-	Max             int  `yaml:"max"`
-	RejectOnFailure bool `yaml:"reject_on_failure"`
+	Enabled         bool           `yaml:"enabled"`
+	Max             int            `yaml:"max"`
+	RejectOnFailure bool           `yaml:"reject_on_failure"`
+	Overrides       map[string]int `yaml:"overrides"`
 }
 
 func DefaultConfig() Config {
@@ -27,6 +28,7 @@ func DefaultConfig() Config {
 		Enabled:         true,
 		Max:             1_000,
 		RejectOnFailure: true,
+		Overrides:       make(map[string]int),
 	}
 }
 
@@ -44,9 +46,15 @@ func MaxTokens(cfg Config) *MaxTokensRule {
 	}
 }
 
-func (t *MaxTokensRule) Validate(source *ast.Source) error {
+func (t *MaxTokensRule) Validate(source *ast.Source, operationName string) error {
 	if !t.cfg.Enabled {
 		return nil
+	}
+
+	max := t.cfg.Max
+
+	if value, ok := t.cfg.Overrides[operationName]; ok {
+		max = value
 	}
 
 	lex := lexer.New(source)
@@ -66,10 +74,10 @@ func (t *MaxTokensRule) Validate(source *ast.Source) error {
 		count++
 	}
 
-	if count > t.cfg.Max {
+	if count > max {
 		if t.cfg.RejectOnFailure {
 			resultCounter.WithLabelValues("rejected").Inc()
-			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, t.cfg.Max)
+			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, max)
 		}
 		resultCounter.WithLabelValues("failed").Inc()
 	}

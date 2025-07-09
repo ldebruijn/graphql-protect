@@ -8,8 +8,9 @@ import (
 
 func TestMaxTokens(t *testing.T) {
 	type args struct {
-		cfg       Config
-		operation string
+		cfg           Config
+		operation     string
+		operationName string
 	}
 	tests := []struct {
 		name    string
@@ -64,6 +65,38 @@ func TestMaxTokens(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "override is respected",
+			args: args{
+				cfg: Config{
+					Enabled:         true,
+					Max:             1,
+					RejectOnFailure: true,
+					Overrides: map[string]int{
+						"MyOperation": 100,
+					},
+				},
+				operation:     "query MyOperation { foo }",
+				operationName: "MyOperation",
+			},
+			wantErr: false,
+		},
+		{
+			name: "override is respected and fails if limit is exceeded",
+			args: args{
+				cfg: Config{
+					Enabled:         true,
+					Max:             100,
+					RejectOnFailure: true,
+					Overrides: map[string]int{
+						"MyOperation": 1,
+					},
+				},
+				operation:     "query MyOperation { foo }",
+				operationName: "MyOperation",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -73,7 +106,7 @@ func TestMaxTokens(t *testing.T) {
 				Input: tt.args.operation,
 			}
 
-			err := rule.Validate(source)
+			err := rule.Validate(source, tt.args.operationName)
 
 			if tt.wantErr {
 				assert.Error(t, err)

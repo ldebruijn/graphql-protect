@@ -17,7 +17,29 @@ max_tokens:
   max: 1000
   # Reject the request when the rule fails. Disable this to allow the request regardless of token count.
   reject_on_failure: true
+  # Specific overrides for operations with the specified OperationName, and override max token value.
+  overrides:
+    MyOperation: 2000
+    AnotherOperation: 5000
 ```
+
+### Overrides
+
+It's possible to override the max token limit for specific operations.
+This is useful when you have a few operations that are known to be larger than the default limit.
+
+```yaml
+max_tokens:
+  enable: true
+  max: 1000
+  reject_on_failure: true
+  
+```
+
+In this example, the operation `MyOperation` will have a max token limit of 2000, and `AnotherOperation` will have a limit of 5000.
+All other operations will have the default limit of 1000.
+
+The limit specified by the override can be both larger and smaller than the general `max` limit.
 
 ## Metrics
 
