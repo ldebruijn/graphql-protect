@@ -51,10 +51,10 @@ func (t *MaxTokensRule) Validate(source *ast.Source, operationName string) error
 		return nil
 	}
 
-	max := t.cfg.Max
+	maxTokens := t.cfg.Max
 
 	if value, ok := t.cfg.Overrides[operationName]; ok {
-		max = value
+		maxTokens = value
 	}
 
 	lex := lexer.New(source)
@@ -74,10 +74,10 @@ func (t *MaxTokensRule) Validate(source *ast.Source, operationName string) error
 		count++
 	}
 
-	if count > max {
+	if count > maxTokens {
 		if t.cfg.RejectOnFailure {
 			resultCounter.WithLabelValues("rejected").Inc()
-			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, max)
+			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, maxTokens)
 		}
 		resultCounter.WithLabelValues("failed").Inc()
 	}
