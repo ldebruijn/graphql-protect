@@ -46,14 +46,18 @@ The limit specified by the override can be both larger and smaller than the gene
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-graphql_protect_max_tokens_results{result}
+graphql_protect_max_tokens_results{result, operation_name}
 ```
 
 
-| `result`            | Description                                                                                                  |
-|---------------------|--------------------------------------------------------------------------------------------------------------|
-| `allowed`           | The rule condition succeeded                                                                                 |
-| `violated-rejected` | The rule condition failed and the request was rejected                                                       |
-| `violated-allowed`  | The rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false` |
+| `result`             | Description                                                                                                  |
+|----------------------|--------------------------------------------------------------------------------------------------------------|
+| `allowed`            | The rule condition succeeded                                                                                 |
+| `violation-rejected` | The rule condition failed and the request was rejected                                                       |
+| `violation-allowed`  | The rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false` |
+
+
+| `operation_name` | the raw operation name of the query (only filled in for violations) |
+|------------------|---------------------------------------------------------------------|
 
 No metrics are produced when the rule is disabled.

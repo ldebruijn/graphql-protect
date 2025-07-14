@@ -96,7 +96,7 @@ Assuming each person has 100 friends, the above operation would yield `100 * 100
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-graphql_protect_max_depth_results{type, result}
+graphql_protect_max_depth_results{type, result, operation_name}
 ```
 
 | `type`   | Description                                                                                                  |
@@ -104,10 +104,14 @@ graphql_protect_max_depth_results{type, result}
 | `field`  | Field depth protection rule                                                                                  |
 | `list`   | List depth protection rule                                                                                   |
 
-| `result`            | Description                                                                                                  |
-|---------------------|--------------------------------------------------------------------------------------------------------------|
-| `allowed`           | The rule condition succeeded                                                                                 |
-| `violated-rejected` | The rule condition failed and the request was rejected                                                       |
-| `violated-allowed`  | The rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false` |
+| `result`             | Description                                                                                                  |
+|----------------------|--------------------------------------------------------------------------------------------------------------|
+| `allowed`            | The rule condition succeeded                                                                                 |
+| `violation-rejected` | The rule condition failed and the request was rejected                                                       |
+| `violation-allowed`  | The rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false` |
+
+
+| `operation_name` | the raw operation name of the query (only filled in for violations) |
+|------------------|---------------------------------------------------------------------|
 
 No metrics are produced when the rule is disabled.

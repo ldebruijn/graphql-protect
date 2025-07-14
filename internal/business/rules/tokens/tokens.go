@@ -13,7 +13,7 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name:      "results",
 	Help:      "The results of the max tokens rule",
 },
-	[]string{"result"},
+	[]string{"result", "operation_name"},
 )
 
 type Config struct {
@@ -76,7 +76,7 @@ func (t *MaxTokensRule) Validate(source *ast.Source, operationName string) error
 
 	if count > maxTokens {
 		if t.cfg.RejectOnFailure {
-			resultCounter.WithLabelValues("violation-rejected").Inc()
+			resultCounter.WithLabelValues("violation-rejected", operationName).Inc()
 			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, maxTokens)
 		}
 		resultCounter.WithLabelValues("violation-allowed").Inc()

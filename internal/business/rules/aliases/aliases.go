@@ -15,7 +15,7 @@ var (
 		Name:      "results",
 		Help:      "The results of the max aliases rule",
 	},
-		[]string{"result"},
+		[]string{"result", "operation_name"},
 	)
 )
 
@@ -63,9 +63,9 @@ func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 							core.Message("syntax error: Aliases limit of %d exceeded, found %d", cfg.Max, aliases),
 							core.At(operation.Position),
 						)
-						resultCounter.WithLabelValues("violation-rejected").Inc()
+						resultCounter.WithLabelValues("violation-rejected", operation.Name).Inc()
 					} else {
-						resultCounter.WithLabelValues("violation-allowed").Inc()
+						resultCounter.WithLabelValues("violation-allowed", operation.Name).Inc()
 					}
 				} else {
 					resultCounter.WithLabelValues("allowed").Inc()

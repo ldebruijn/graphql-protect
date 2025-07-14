@@ -15,7 +15,7 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name:      "results",
 	Help:      "The results of the max_depth rule",
 },
-	[]string{"type", "result"},
+	[]string{"type", "result", "operation_name"},
 )
 
 type Config struct {
@@ -74,9 +74,9 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 							core.Message("syntax error: Field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
 							core.At(operation.Position),
 						)
-						resultCounter.WithLabelValues("field", "violation-allowed").Inc()
+						resultCounter.WithLabelValues("field", "violation-allowed", operation.Name).Inc()
 					} else {
-						resultCounter.WithLabelValues("field", "violation-rejected").Inc()
+						resultCounter.WithLabelValues("field", "violation-rejected", operation.Name).Inc()
 					}
 				} else {
 					resultCounter.WithLabelValues("field", "allowed").Inc()
@@ -90,9 +90,9 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 							core.Message("syntax error: List depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
 							core.At(operation.Position),
 						)
-						resultCounter.WithLabelValues("list", "violation-allowed").Inc()
+						resultCounter.WithLabelValues("list", "violation-allowed", operation.Name).Inc()
 					} else {
-						resultCounter.WithLabelValues("list", "violation-rejected").Inc()
+						resultCounter.WithLabelValues("list", "violation-rejected", operation.Name).Inc()
 					}
 				} else {
 					resultCounter.WithLabelValues("list", "allowed").Inc()
@@ -106,9 +106,9 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 							core.Message("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, fieldDepth),
 							core.At(operation.Position),
 						)
-						resultCounter.WithLabelValues("field", "violation-allowed").Inc()
+						resultCounter.WithLabelValues("field", "violation-allowed", operation.Name).Inc()
 					} else {
-						resultCounter.WithLabelValues("field", "violation-rejected").Inc()
+						resultCounter.WithLabelValues("field", "violation-rejected", operation.Name).Inc()
 					}
 				} else {
 					resultCounter.WithLabelValues("field", "allowed").Inc()
