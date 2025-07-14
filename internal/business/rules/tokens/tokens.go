@@ -79,8 +79,8 @@ func (t *MaxTokensRule) Validate(source *ast.Source, operationName string) error
 			resultCounter.WithLabelValues("violation-rejected", operationName).Inc()
 			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, maxTokens)
 		}
-		resultCounter.WithLabelValues("violation-allowed").Inc()
+		resultCounter.WithLabelValues("violation-allowed", operationName).Inc()
 	}
-	resultCounter.WithLabelValues("allowed").Inc()
+	resultCounter.WithLabelValues("allowed", "").Inc()
 	return nil
 }

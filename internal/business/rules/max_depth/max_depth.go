@@ -79,7 +79,7 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 						resultCounter.WithLabelValues("field", "violation-rejected", operation.Name).Inc()
 					}
 				} else {
-					resultCounter.WithLabelValues("field", "allowed").Inc()
+					resultCounter.WithLabelValues("field", "allowed", "").Inc()
 				}
 			}
 
@@ -95,7 +95,7 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 						resultCounter.WithLabelValues("list", "violation-rejected", operation.Name).Inc()
 					}
 				} else {
-					resultCounter.WithLabelValues("list", "allowed").Inc()
+					resultCounter.WithLabelValues("list", "allowed", "").Inc()
 				}
 			}
 
@@ -111,7 +111,7 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 						resultCounter.WithLabelValues("field", "violation-rejected", operation.Name).Inc()
 					}
 				} else {
-					resultCounter.WithLabelValues("field", "allowed").Inc()
+					resultCounter.WithLabelValues("field", "allowed", "").Inc()
 				}
 			}
 		})

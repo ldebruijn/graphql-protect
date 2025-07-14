@@ -68,7 +68,7 @@ func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 						resultCounter.WithLabelValues("violation-allowed", operation.Name).Inc()
 					}
 				} else {
-					resultCounter.WithLabelValues("allowed").Inc()
+					resultCounter.WithLabelValues("allowed", "").Inc()
 				}
 			})
 		})
