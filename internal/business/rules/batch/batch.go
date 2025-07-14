@@ -65,9 +65,9 @@ func (t *MaxBatchRule) Validate(payload []gql.RequestData) error {
 		if t.cfg.RejectOnFailure {
 			resultCounter.WithLabelValues("violation-rejected", "exceeded").Inc()
 			return fmt.Errorf("operation has exceeded maximum batch size. found [%d], max [%d]", len(payload), t.cfg.Max)
-		} else {
-			resultCounter.WithLabelValues("violation-allowed", "exceeded").Inc()
 		}
+		resultCounter.WithLabelValues("violation-allowed", "exceeded").Inc()
+
 		return nil
 	}
 
