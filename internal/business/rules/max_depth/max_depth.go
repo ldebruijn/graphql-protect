@@ -74,9 +74,9 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 							core.Message("syntax error: Field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
 							core.At(operation.Position),
 						)
-						resultCounter.WithLabelValues("field", "rejected").Inc()
+						resultCounter.WithLabelValues("field", "violation-allowed").Inc()
 					} else {
-						resultCounter.WithLabelValues("field", "failed").Inc()
+						resultCounter.WithLabelValues("field", "violation-rejected").Inc()
 					}
 				} else {
 					resultCounter.WithLabelValues("field", "allowed").Inc()
@@ -90,9 +90,9 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 							core.Message("syntax error: List depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
 							core.At(operation.Position),
 						)
-						resultCounter.WithLabelValues("list", "rejected").Inc()
+						resultCounter.WithLabelValues("list", "violation-allowed").Inc()
 					} else {
-						resultCounter.WithLabelValues("list", "failed").Inc()
+						resultCounter.WithLabelValues("list", "violation-rejected").Inc()
 					}
 				} else {
 					resultCounter.WithLabelValues("list", "allowed").Inc()
@@ -106,9 +106,9 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 							core.Message("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, fieldDepth),
 							core.At(operation.Position),
 						)
-						resultCounter.WithLabelValues("field", "rejected").Inc()
+						resultCounter.WithLabelValues("field", "violation-allowed").Inc()
 					} else {
-						resultCounter.WithLabelValues("field", "failed").Inc()
+						resultCounter.WithLabelValues("field", "violation-rejected").Inc()
 					}
 				} else {
 					resultCounter.WithLabelValues("field", "allowed").Inc()

@@ -13,7 +13,7 @@ var (
 		Namespace: "graphql_protect",
 		Subsystem: "max_batch",
 		Name:      "results",
-		Help:      "The results of the max batch rule, including the size of the batch. The actual size is only tracked for allowed operations, to prevent excessive metric generation on malicious iput",
+		Help:      "The results of the max batch rule, including the size of the batch. The actual size is only tracked for allowed operations, to prevent excessive metric generation on malicious input",
 	},
 		[]string{"result", "size"},
 	)
@@ -63,10 +63,11 @@ func (t *MaxBatchRule) Validate(payload []gql.RequestData) error {
 
 	if len(payload) > t.cfg.Max {
 		if t.cfg.RejectOnFailure {
-			resultCounter.WithLabelValues("rejected", "exceeded").Inc()
+			resultCounter.WithLabelValues("violation-rejected", "exceeded").Inc()
 			return fmt.Errorf("operation has exceeded maximum batch size. found [%d], max [%d]", len(payload), t.cfg.Max)
+		} else {
+			resultCounter.WithLabelValues("violation-allowed", "exceeded").Inc()
 		}
-		resultCounter.WithLabelValues("failed", "exceeded").Inc()
 		return nil
 	}
 

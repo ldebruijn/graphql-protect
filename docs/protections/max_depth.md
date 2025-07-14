@@ -104,10 +104,10 @@ graphql_protect_max_depth_results{type, result}
 | `field`  | Field depth protection rule                                                                                  |
 | `list`   | List depth protection rule                                                                                   |
 
-| `result`  | Description                                                                                                  |
-|---------|--------------------------------------------------------------------------------------------------------------|
-| `allowed` | The rule condition succeeded                                                                                 |
-| `rejected` | The rule condition failed and the request was rejected                                                       |
-| `failed` | The rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false` |
+| `result`            | Description                                                                                                  |
+|---------------------|--------------------------------------------------------------------------------------------------------------|
+| `allowed`           | The rule condition succeeded                                                                                 |
+| `violated-rejected` | The rule condition failed and the request was rejected                                                       |
+| `violated-allowed`  | The rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false` |
 
 No metrics are produced when the rule is disabled.
