@@ -10,7 +10,6 @@ import (
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
 	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
-	"log/slog"
 	"testing"
 )
 
@@ -79,7 +78,6 @@ type User {
 			name: "Calculate list depth properly",
 			args: args{
 				cfg: Config{
-					Enabled: false,
 					Field: MaxRule{
 						Enabled: false,
 					},
@@ -116,7 +114,6 @@ type User {
 			name: "Calculates list depth per nested list. Does not sum counts of each list",
 			args: args{
 				cfg: Config{
-					Enabled: false,
 					Field: MaxRule{
 						Enabled: false,
 					},
@@ -158,7 +155,7 @@ type User {
 		t.Run(tt.name, func(t *testing.T) {
 			rules := validatorrules.NewDefaultRules()
 
-			NewMaxDepthRule(slog.Default(), tt.args.cfg, rules)
+			NewMaxDepthRule(tt.args.cfg, rules)
 
 			query, _ := parser.ParseQuery(&ast.Source{Name: "ff", Input: tt.args.query})
 			schema := gqlparser.MustLoadSchema(&ast.Source{
@@ -316,7 +313,7 @@ type Price {
 		t.Run(tt.name, func(t *testing.T) {
 			rules := validatorrules.NewDefaultRules()
 
-			NewMaxDepthRule(slog.Default(), tt.args.cfg, rules)
+			NewMaxDepthRule(tt.args.cfg, rules)
 
 			query, _ := parser.ParseQuery(&ast.Source{Name: "ff", Input: tt.args.query})
 			schema := gqlparser.MustLoadSchema(&ast.Source{

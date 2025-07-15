@@ -14,12 +14,6 @@ You can configure `graphql-protect` to limit the maximum depth on an operation.
 
 ```yaml
 max_depth:
-  # [deprecated, see field object] Enable the feature
-  enable: true
-  # [deprecated, see field object] The maximum depth allowed within a single request.
-  max: 15
-  # [deprecated, see field object] Reject the request when the rule fails. Disable this to allow the request
-  reject_on_failure: true
   # maximum field depth protections
   field:
     # Enable the protection

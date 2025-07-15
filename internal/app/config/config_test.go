@@ -189,9 +189,6 @@ log:
 					Enabled: false,
 				},
 				MaxDepth: max_depth.Config{
-					Enabled:         false,
-					Max:             1,
-					RejectOnFailure: false,
 					Field: max_depth.MaxRule{
 						Enabled:         false,
 						Max:             1,

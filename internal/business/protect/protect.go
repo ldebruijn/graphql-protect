@@ -46,7 +46,7 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocument
 	rules := validatorrules.NewDefaultRules()
 
 	aliases.NewMaxAliasesRule(cfg.MaxAliases, rules)
-	max_depth.NewMaxDepthRule(log, cfg.MaxDepth, rules)
+	max_depth.NewMaxDepthRule(cfg.MaxDepth, rules)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
 	if err != nil {
 		log.Warn("Error initializing maximum batch protection", "err", err)

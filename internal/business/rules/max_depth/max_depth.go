@@ -8,7 +8,6 @@ import (
 	"github.com/vektah/gqlparser/v2/validator"
 	"github.com/vektah/gqlparser/v2/validator/core"
 	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
-	"log/slog"
 )
 
 var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -21,11 +20,8 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 )
 
 type Config struct {
-	Enabled         bool    `yaml:"enabled"` // deprecated
-	Max             int     `yaml:"max"`     // deprecated
-	Field           MaxRule `yaml:"field"`
-	List            MaxRule `yaml:"list"`
-	RejectOnFailure bool    `yaml:"reject_on_failure"` // deprecated
+	Field MaxRule `yaml:"field"`
+	List  MaxRule `yaml:"list"`
 }
 
 type MaxRule struct {
@@ -46,7 +42,6 @@ func DefaultConfig() Config {
 			Max:             2,
 			RejectOnFailure: true,
 		},
-		RejectOnFailure: false,
 	}
 }
 
@@ -54,7 +49,7 @@ func init() {
 	prometheus.MustRegister(resultCounter)
 }
 
-func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) { // nolint:funlen,cyclop // to be cleaned up after deprecated configuration fields are removed
+func NewMaxDepthRule(cfg Config, rules *validatorrules.Rules) {
 	rules.AddRule("MaxDepth", func(observers *validator.Events, addError core.AddErrFunc) {
 		observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
 			fieldDepth, listDepth := countDepth(operation.SelectionSet)
