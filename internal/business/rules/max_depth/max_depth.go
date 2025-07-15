@@ -43,6 +43,7 @@ func DefaultConfig() Config {
 			Max:             2,
 			RejectOnFailure: true,
 		},
+		MetricsIncludeOperationName: false,
 	}
 }
 
