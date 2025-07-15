@@ -1,6 +1,7 @@
 package tokens
 
 import (
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/vektah/gqlparser/v2/ast"
 	"testing"
@@ -15,7 +16,7 @@ func TestMaxTokens(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantErr bool
+		wantErr error
 	}{
 		{
 			name: "rule disabled does nothing",
@@ -27,7 +28,7 @@ func TestMaxTokens(t *testing.T) {
 				},
 				operation: "query { foo }",
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "yields error when tokens exceed max",
@@ -39,7 +40,12 @@ func TestMaxTokens(t *testing.T) {
 				},
 				operation: "query { foo }",
 			},
-			wantErr: true,
+			wantErr: validation.RuleValidationResult{
+				Rule:          "max-tokens",
+				OperationName: "",
+				Result:        validation.REJECTED,
+				Message:       "",
+			},
 		},
 		{
 			name: "yields no error when tokens less than max",
@@ -51,7 +57,7 @@ func TestMaxTokens(t *testing.T) {
 				},
 				operation: "query { foo }",
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "yields no error when tokens exceed max but failure on rejections is false",
@@ -63,7 +69,12 @@ func TestMaxTokens(t *testing.T) {
 				},
 				operation: "query { foo }",
 			},
-			wantErr: false,
+			wantErr: validation.RuleValidationResult{
+				Rule:          "max-tokens",
+				OperationName: "",
+				Result:        validation.FAILED,
+				Message:       "",
+			},
 		},
 		{
 			name: "override is respected",
@@ -79,7 +90,7 @@ func TestMaxTokens(t *testing.T) {
 				operation:     "query MyOperation { foo }",
 				operationName: "MyOperation",
 			},
-			wantErr: false,
+			wantErr: nil,
 		},
 		{
 			name: "override is respected and fails if limit is exceeded",
@@ -95,7 +106,12 @@ func TestMaxTokens(t *testing.T) {
 				operation:     "query MyOperation { foo }",
 				operationName: "MyOperation",
 			},
-			wantErr: true,
+			wantErr: validation.RuleValidationResult{
+				Rule:          "max-tokens",
+				OperationName: "MyOperation",
+				Result:        validation.REJECTED,
+				Message:       "",
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -108,7 +124,7 @@ func TestMaxTokens(t *testing.T) {
 
 			err := rule.Validate(source, tt.args.operationName)
 
-			if tt.wantErr {
+			if tt.wantErr != nil {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)

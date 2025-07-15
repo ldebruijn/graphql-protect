@@ -1,6 +1,8 @@
 package max_depth // nolint:revive
 
 import (
+	"fmt"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
@@ -34,8 +36,6 @@ type MaxRule struct {
 
 func DefaultConfig() Config {
 	return Config{
-		Enabled: false,
-		Max:     15,
 		Field: MaxRule{
 			Enabled:         true,
 			Max:             15,
@@ -55,27 +55,27 @@ func init() {
 }
 
 func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) { // nolint:funlen,cyclop // to be cleaned up after deprecated configuration fields are removed
-	if cfg.Max != cfg.Field.Max {
-		log.Warn("Using old `max_depth` configuration. Please update to new configuration options, see https://github.com/ldebruijn/graphql-protect/blob/main/docs/protections/max_depth.md")
-	}
-	if cfg.Enabled && cfg.Field.Enabled {
-		// if both old and new config options are supplied, disable the old to prevent doing it twice
-		cfg.Enabled = false
-	}
-
-	rules.AddRule("MaxDepth", func(observers *validator.Events, addError validator.AddErrFunc) {
+	rules.AddRule("MaxDepth", func(observers *validator.Events, addError core.AddErrFunc) {
 		observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
 			fieldDepth, listDepth := countDepth(operation.SelectionSet)
 
 			if cfg.Field.Enabled {
 				if fieldDepth > cfg.Field.Max {
 					if cfg.Field.RejectOnFailure {
-						addError(
-							core.Message("syntax error: Field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
-							core.At(operation.Position),
-						)
+						addError(validation.RuleValidationResult{
+							Rule:          "max-depth",
+							OperationName: operation.Name,
+							Result:        validation.REJECTED,
+							Message:       fmt.Sprintf("field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
+						}.Wrap())
 						resultCounter.WithLabelValues("field", "rejected").Inc()
 					} else {
+						addError(validation.RuleValidationResult{
+							Rule:          "max-depth",
+							OperationName: operation.Name,
+							Result:        validation.FAILED,
+							Message:       fmt.Sprintf("field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
+						}.Wrap())
 						resultCounter.WithLabelValues("field", "failed").Inc()
 					}
 				} else {
@@ -86,32 +86,24 @@ func NewMaxDepthRule(log *slog.Logger, cfg Config, rules *validatorrules.Rules) 
 			if cfg.List.Enabled {
 				if listDepth > cfg.List.Max {
 					if cfg.List.RejectOnFailure {
-						addError(
-							core.Message("syntax error: List depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
-							core.At(operation.Position),
-						)
+						addError(validation.RuleValidationResult{
+							Rule:          "max-depth",
+							OperationName: operation.Name,
+							Result:        "REJECTED",
+							Message:       fmt.Sprintf("list depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
+						}.Wrap())
 						resultCounter.WithLabelValues("list", "rejected").Inc()
 					} else {
+						addError(validation.RuleValidationResult{
+							Rule:          "max-depth",
+							OperationName: operation.Name,
+							Result:        validation.FAILED,
+							Message:       fmt.Sprintf("list depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
+						}.Wrap())
 						resultCounter.WithLabelValues("list", "failed").Inc()
 					}
 				} else {
 					resultCounter.WithLabelValues("list", "allowed").Inc()
-				}
-			}
-
-			if cfg.Enabled {
-				if fieldDepth > cfg.Max {
-					if cfg.RejectOnFailure {
-						addError(
-							core.Message("syntax error: Depth limit of %d exceeded, found %d", cfg.Max, fieldDepth),
-							core.At(operation.Position),
-						)
-						resultCounter.WithLabelValues("field", "rejected").Inc()
-					} else {
-						resultCounter.WithLabelValues("field", "failed").Inc()
-					}
-				} else {
-					resultCounter.WithLabelValues("field", "allowed").Inc()
 				}
 			}
 		})

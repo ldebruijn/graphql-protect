@@ -2,6 +2,7 @@ package tokens
 
 import (
 	"fmt"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/lexer"
@@ -77,9 +78,20 @@ func (t *MaxTokensRule) Validate(source *ast.Source, operationName string) error
 	if count > maxTokens {
 		if t.cfg.RejectOnFailure {
 			resultCounter.WithLabelValues("rejected").Inc()
-			return fmt.Errorf("operation has exceeded maximum tokens. found [%d], max [%d]", count, maxTokens)
+			return validation.RuleValidationResult{
+				Rule:          "max-aliases",
+				OperationName: operationName,
+				Result:        validation.REJECTED,
+				Message:       fmt.Sprintf("operation has exceeded maximum tokens. found [%d], max [%d]", count, maxTokens),
+			}
 		}
 		resultCounter.WithLabelValues("failed").Inc()
+		return validation.RuleValidationResult{
+			Rule:          "max-aliases",
+			OperationName: operationName,
+			Result:        validation.FAILED,
+			Message:       fmt.Sprintf("operation has exceeded maximum tokens. found [%d], max [%d]", count, maxTokens),
+		}
 	}
 	resultCounter.WithLabelValues("allowed").Inc()
 	return nil

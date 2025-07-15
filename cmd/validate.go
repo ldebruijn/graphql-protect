@@ -58,9 +58,17 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 func formatErrors(w io.Writer, errs []validation.Error) {
 	t := table.NewWriter()
 	t.SetOutputMirror(w)
-	t.AppendHeader(table.Row{"#", "Hash", "Rule", "Error"})
+	t.AppendHeader(table.Row{"#", "Hash", "OperationName", "Rule", "Error"})
 
 	for i, err := range errs {
+		var ruleResult validation.RuleValidationResult
+		if errors.As(err, &ruleResult) {
+			t.AppendRow(table.Row{i, err.Hash, ruleResult.OperationName, ruleResult.Rule, ruleResult.Message})
+		}
+	}
+
+	for i, err := range errs {
+
 		t.AppendRow(table.Row{i, err.Hash, err.Err.Rule, err.Err.Message})
 	}
 

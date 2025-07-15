@@ -2,9 +2,11 @@ package max_depth // nolint:revive
 
 import (
 	"fmt"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
 	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
@@ -108,7 +110,7 @@ type User {
 				}`,
 				schema: schema,
 			},
-			want: fmt.Errorf("syntax error: List depth limit of %d exceeded, found %d", 2, 4),
+			want: fmt.Errorf("list depth limit of %d exceeded, found %d", 2, 4),
 		},
 		{
 			name: "Calculates list depth per nested list. Does not sum counts of each list",
@@ -207,7 +209,7 @@ type Price {
 	tests := []struct {
 		name string
 		args args
-		want error
+		want *gqlerror.Error
 	}{
 		{
 			name: "no query yields zero count",
@@ -222,33 +224,6 @@ type Price {
 				},
 			},
 			want: nil,
-		},
-		{
-			name: "works with old config",
-			args: args{
-				cfg: Config{
-					Enabled:         true,
-					Max:             2,
-					RejectOnFailure: true,
-					Field: MaxRule{
-						Enabled:         false,
-						Max:             0,
-						RejectOnFailure: false,
-					},
-				},
-				query: `
-					query {
-						getBook(title: "null") {
-						  title
-						  price {
-							price
-							id
-						  }
-						}
-					}`,
-				schema: schema,
-			},
-			want: fmt.Errorf("syntax error: Depth limit of %d exceeded, found %d", 2, 3),
 		},
 		{
 			name: "Calculate the depth properly with fragments",
@@ -298,7 +273,12 @@ type Price {
 					}`,
 				schema: schema,
 			},
-			want: fmt.Errorf("syntax error: Field depth limit of %d exceeded, found %d", 2, 3),
+			want: validation.RuleValidationResult{
+				Rule:          "max-aliases",
+				OperationName: "",
+				Result:        validation.REJECTED,
+				Message:       fmt.Sprintf("field depth limit of %d exceeded, found %d", 2, 3),
+			}.AsGqlError(),
 		},
 		{
 			name: "Works correctly with fragments",
@@ -324,7 +304,12 @@ type Price {
 				}`,
 				schema: schema,
 			},
-			want: fmt.Errorf("syntax error: Field depth limit of %d exceeded, found %d", 2, 3),
+			want: validation.RuleValidationResult{
+				Rule:          "max-aliases",
+				OperationName: "",
+				Result:        validation.REJECTED,
+				Message:       fmt.Sprintf("field depth limit of %d exceeded, found %d", 2, 3),
+			}.AsGqlError(),
 		},
 	}
 	for _, tt := range tests {
@@ -345,7 +330,7 @@ type Price {
 			if tt.want == nil {
 				assert.Empty(t, errs)
 			} else {
-				assert.Equal(t, tt.want.Error(), errs[0].Message)
+				assert.Equal(t, tt.want.Message, errs[0].Message)
 			}
 
 			validator.RemoveRule("MaxDepth")

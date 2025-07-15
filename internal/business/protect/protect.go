@@ -13,6 +13,7 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
@@ -130,14 +131,30 @@ func (p *GraphQLProtect) validateRequest(r *http.Request) ([]gql.RequestData, gq
 		}
 	}
 
-	return payload, errs
+	return payload, filterRejected(errs)
+}
+
+func filterRejected(errs gqlerror.List) gqlerror.List {
+	var filtered gqlerror.List
+	for _, err := range errs {
+		var ruleResult validation.RuleValidationResult
+		if errors.As(err, &ruleResult) {
+			if ruleResult.Result == ("REJECTED") {
+				filtered = append(filtered, err)
+			}
+			continue
+		}
+		// if error is not a validation error, it should be returned
+		filtered = append(filtered, err)
+	}
+
+	return filtered
 }
 
 func (p *GraphQLProtect) ValidateQuery(data gql.RequestData) gqlerror.List {
 	operationSource := &ast.Source{
 		Input: data.Query,
 	}
-
 	err := p.tokens.Validate(operationSource, data.OperationName)
 	if err != nil {
 		return gqlerror.List{gqlerror.Wrap(err)}
