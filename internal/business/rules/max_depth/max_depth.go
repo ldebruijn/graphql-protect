@@ -16,12 +16,13 @@ var resultCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name:      "results",
 	Help:      "The results of the max_depth rule",
 },
-	[]string{"type", "result"},
+	[]string{"type", "result", "operationName"},
 )
 
 type Config struct {
-	Field MaxRule `yaml:"field"`
-	List  MaxRule `yaml:"list"`
+	Field                       MaxRule `yaml:"field"`
+	List                        MaxRule `yaml:"list"`
+	MetricsIncludeOperationName bool    `yaml:"metrics_include_operation_name"`
 }
 
 type MaxRule struct {
@@ -54,6 +55,11 @@ func NewMaxDepthRule(cfg Config, rules *validatorrules.Rules) {
 		observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
 			fieldDepth, listDepth := countDepth(operation.SelectionSet)
 
+			operationName := ""
+			if cfg.MetricsIncludeOperationName {
+				operationName = operation.Name
+			}
+
 			if cfg.Field.Enabled {
 				if fieldDepth > cfg.Field.Max {
 					if cfg.Field.RejectOnFailure {
@@ -63,7 +69,7 @@ func NewMaxDepthRule(cfg Config, rules *validatorrules.Rules) {
 							Result:        validation.REJECTED,
 							Message:       fmt.Sprintf("field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
 						}.Wrap())
-						resultCounter.WithLabelValues("field", "rejected").Inc()
+						resultCounter.WithLabelValues("field", "rejected", operationName).Inc()
 					} else {
 						addError(validation.RuleValidationResult{
 							Rule:          "max-depth",
@@ -71,10 +77,10 @@ func NewMaxDepthRule(cfg Config, rules *validatorrules.Rules) {
 							Result:        validation.FAILED,
 							Message:       fmt.Sprintf("field depth limit of %d exceeded, found %d", cfg.Field.Max, fieldDepth),
 						}.Wrap())
-						resultCounter.WithLabelValues("field", "failed").Inc()
+						resultCounter.WithLabelValues("field", "failed", operationName).Inc()
 					}
 				} else {
-					resultCounter.WithLabelValues("field", "allowed").Inc()
+					resultCounter.WithLabelValues("field", "allowed", operationName).Inc()
 				}
 			}
 
@@ -87,7 +93,7 @@ func NewMaxDepthRule(cfg Config, rules *validatorrules.Rules) {
 							Result:        "REJECTED",
 							Message:       fmt.Sprintf("list depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
 						}.Wrap())
-						resultCounter.WithLabelValues("list", "rejected").Inc()
+						resultCounter.WithLabelValues("list", "rejected", operationName).Inc()
 					} else {
 						addError(validation.RuleValidationResult{
 							Rule:          "max-depth",
@@ -95,10 +101,10 @@ func NewMaxDepthRule(cfg Config, rules *validatorrules.Rules) {
 							Result:        validation.FAILED,
 							Message:       fmt.Sprintf("list depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
 						}.Wrap())
-						resultCounter.WithLabelValues("list", "failed").Inc()
+						resultCounter.WithLabelValues("list", "failed", operationName).Inc()
 					}
 				} else {
-					resultCounter.WithLabelValues("list", "allowed").Inc()
+					resultCounter.WithLabelValues("list", "allowed", operationName).Inc()
 				}
 			}
 		})
