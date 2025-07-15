@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -25,12 +24,12 @@ func Test_formatErrors(t *testing.T) {
 				errs: make([]validation.Error, 0),
 				w:    &bytes.Buffer{},
 			},
-			want: `+-------+------+---------------+------+-------+
-|     # | HASH | OPERATIONNAME | RULE | ERROR |
-+-------+------+---------------+------+-------+
-+-------+------+---------------+------+-------+
-| TOTAL |    0 |               |      |       |
-+-------+------+---------------+------+-------+
+			want: `+-------+------+---------------+------+-------+--------+
+|     # | HASH | OPERATIONNAME | RULE | ERROR | RESULT |
++-------+------+---------------+------+-------+--------+
++-------+------+---------------+------+-------+--------+
+| TOTAL |    0 |               |      |       |        |
++-------+------+---------------+------+-------+--------+
 `,
 		},
 		{
@@ -40,7 +39,12 @@ func Test_formatErrors(t *testing.T) {
 					{
 						Hash: "i am a hash",
 						Err: gqlerror.Error{
-							Err:        errors.New("ohoh"),
+							Err: validation.RuleValidationResult{
+								Rule:          "example-rule",
+								OperationName: "operation name",
+								Result:        validation.FAILED,
+								Message:       "something went wrong",
+							},
 							Message:    "something went wrong",
 							Path:       nil,
 							Locations:  nil,
@@ -51,13 +55,13 @@ func Test_formatErrors(t *testing.T) {
 				},
 				w: &bytes.Buffer{},
 			},
-			want: `+-------+-------------+---------------+----------------------+-------+
-|     # | HASH        | OPERATIONNAME | RULE                 | ERROR |
-+-------+-------------+---------------+----------------------+-------+
-|     0 | i am a hash | foobar        | something went wrong |       |
-+-------+-------------+---------------+----------------------+-------+
-| TOTAL | 1           |               |                      |       |
-+-------+-------------+---------------+----------------------+-------+
+			want: `+-------+-------------+----------------+--------------+----------------------+--------+
+|     # | HASH        | OPERATIONNAME  | RULE         | ERROR                | RESULT |
++-------+-------------+----------------+--------------+----------------------+--------+
+|     0 | i am a hash | operation name | example-rule | something went wrong | FAILED |
++-------+-------------+----------------+--------------+----------------------+--------+
+| TOTAL | 1           |                |              |                      |        |
++-------+-------------+----------------+--------------+----------------------+--------+
 `,
 		},
 	}

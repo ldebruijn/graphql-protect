@@ -24,6 +24,10 @@ func Wrap(err error) Error {
 	}
 }
 
+func (v Error) Unwrap() error {
+	return &v.Err
+}
+
 type Result string
 
 const (
