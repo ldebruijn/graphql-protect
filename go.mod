@@ -14,7 +14,7 @@ require (
 	go.opentelemetry.io/contrib/propagators/autoprop v0.62.0
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/sdk v1.37.0
-	google.golang.org/api v0.240.0
+	google.golang.org/api v0.241.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
