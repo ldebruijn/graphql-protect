@@ -53,7 +53,7 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 
 		shouldReturnError := false
 		for _, err := range errs {
-			if errors.Is(err, ErrValidationErrorsFound) {
+			if errors.Is(err, validation.RuleValidationResult{}) {
 				shouldReturnError = true
 				break
 			}
