@@ -2,9 +2,11 @@ package aliases
 
 import (
 	"fmt"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"
 	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
@@ -42,7 +44,7 @@ type Book {
 	tests := []struct {
 		name string
 		args args
-		want error
+		want *gqlerror.Error
 	}{
 		{
 			name: "no aliases yields zero count",
@@ -67,7 +69,12 @@ type Book {
 				query:  q,
 				schema: schema,
 			},
-			want: nil,
+			want: validation.RuleValidationResult{
+				Rule:          "max-aliases",
+				OperationName: "",
+				Result:        validation.REJECTED,
+				Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", 1, 2),
+			}.AsGqlError(),
 		},
 		{
 			name: "produces error when counted aliases are more than configured maximum and reject on failure is true",
@@ -80,7 +87,12 @@ type Book {
 				query:  q,
 				schema: schema,
 			},
-			want: fmt.Errorf("syntax error: Aliases limit of %d exceeded, found %d", 1, 2),
+			want: validation.RuleValidationResult{
+				Rule:          "max-aliases",
+				OperationName: "",
+				Result:        validation.REJECTED,
+				Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", 1, 2),
+			}.AsGqlError(),
 		},
 		{
 			name: "respects fragment aliases",
@@ -101,7 +113,12 @@ type Book {
 					RejectOnFailure: true,
 				},
 			},
-			want: fmt.Errorf("syntax error: Aliases limit of %d exceeded, found %d", 1, 2),
+			want: validation.RuleValidationResult{
+				Rule:          "max-aliases",
+				OperationName: "",
+				Result:        validation.REJECTED,
+				Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", 1, 2),
+			}.AsGqlError(),
 		},
 	}
 	for _, tt := range tests {
@@ -122,7 +139,7 @@ type Book {
 			if tt.want == nil {
 				assert.Empty(t, errs)
 			} else {
-				assert.Equal(t, tt.want.Error(), errs[0].Message)
+				assert.Equal(t, tt.want.Message, errs[0].Message)
 			}
 		})
 	}

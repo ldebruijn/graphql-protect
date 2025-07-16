@@ -14,12 +14,6 @@ You can configure `graphql-protect` to limit the maximum depth on an operation.
 
 ```yaml
 max_depth:
-  # [deprecated, see field object] Enable the feature
-  enable: true
-  # [deprecated, see field object] The maximum depth allowed within a single request.
-  max: 15
-  # [deprecated, see field object] Reject the request when the rule fails. Disable this to allow the request
-  reject_on_failure: true
   # maximum field depth protections
   field:
     # Enable the protection
@@ -36,6 +30,9 @@ max_depth:
     max: 1
     # Reject the document when the rule fails. Disable this to allow the document to be passed on to your API.
     reject_on_failure: false
+  # Whether or not to include the operation name in the metrics.
+  # Be careful with enabling this! There's a risk of unbounded metric cardinality as the client provides this information
+  metrics_include_operation_name: false
 ```
 
 ## Field protection
@@ -96,7 +93,7 @@ Assuming each person has 100 friends, the above operation would yield `100 * 100
 This rule produces metrics to help you gain insights into the behavior of the rule.
 
 ```
-graphql_protect_max_depth_results{type, result}
+graphql_protect_max_depth_results{type, result, operationName}
 ```
 
 | `type`   | Description                                                                                                  |
@@ -109,5 +106,11 @@ graphql_protect_max_depth_results{type, result}
 | `allowed` | The rule condition succeeded                                                                                 |
 | `rejected` | The rule condition failed and the request was rejected                                                       |
 | `failed` | The rule condition failed but the request was not rejected. This happens when `reject_on_failure` is `false` |
+
+
+| `operationName` | Description                                                                        |
+|-----------------|------------------------------------------------------------------------------------|
+| ``              | Emtpy string if the configuration option `metrics_include_operation_name` is `false |
+| `{value}`       | The operation name as provided by the client                                       |
 
 No metrics are produced when the rule is disabled.

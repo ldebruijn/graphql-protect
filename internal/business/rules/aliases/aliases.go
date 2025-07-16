@@ -1,10 +1,11 @@
 package aliases
 
 import (
+	"fmt"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/validator"
-	"github.com/vektah/gqlparser/v2/validator/core"
 	validatorrules "github.com/vektah/gqlparser/v2/validator/rules"
 )
 
@@ -59,12 +60,20 @@ func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 
 				if aliases > cfg.Max {
 					if cfg.RejectOnFailure {
-						addError(
-							core.Message("syntax error: Aliases limit of %d exceeded, found %d", cfg.Max, aliases),
-							core.At(operation.Position),
-						)
+						addError(validation.RuleValidationResult{
+							Rule:          "max-aliases",
+							OperationName: operation.Name,
+							Result:        validation.REJECTED,
+							Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", cfg.Max, aliases),
+						}.Wrap())
 						resultCounter.WithLabelValues("rejected").Inc()
 					} else {
+						addError(validation.RuleValidationResult{
+							Rule:          "max-aliases",
+							OperationName: operation.Name,
+							Result:        validation.FAILED,
+							Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", cfg.Max, aliases),
+						}.Wrap())
 						resultCounter.WithLabelValues("failed").Inc()
 					}
 				} else {

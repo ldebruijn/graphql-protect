@@ -277,7 +277,7 @@ input ImageInput {
 				expected := map[string]interface{}{
 					"errors": []map[string]interface{}{
 						{
-							"message": "syntax error: Aliases limit of 3 exceeded, found 10",
+							"message": "aliases limit of 3 exceeded, found 10",
 						},
 					},
 				}
@@ -285,7 +285,7 @@ input ImageInput {
 				actual, err := io.ReadAll(response.Body)
 				assert.NoError(t, err)
 				// perform string comparisons as map[string]interface seems incomparable
-				assert.True(t, errorsContainsMessage("syntax error: Aliases limit of 3 exceeded, found 10", actual))
+				assert.True(t, errorsContainsMessage("aliases limit of 3 exceeded, found 10", actual))
 			},
 		},
 		{
