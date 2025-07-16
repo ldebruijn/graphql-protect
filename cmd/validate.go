@@ -50,7 +50,18 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 	if len(errs) > 0 {
 		log.Warn("Errors found during validation of operations")
 		formatErrors(os.Stdout, errs)
-		return ErrValidationErrorsFound
+
+		shouldReturnError := false
+		for _, err := range errs {
+			if errors.Is(err, ErrValidationErrorsFound) {
+				shouldReturnError = true
+				break
+			}
+		}
+
+		if shouldReturnError {
+			return ErrValidationErrorsFound
+		}
 	}
 	return nil
 }
