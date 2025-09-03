@@ -1,6 +1,7 @@
 package protect
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
@@ -78,15 +79,20 @@ func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
+	ctx, span := tracer.Start(r.Context(), "Setup Request Body Limit")
 	if p.cfg.Web.RequestBodyMaxBytes != 0 {
 		r.Body = http.MaxBytesReader(w, r.Body, int64(p.cfg.Web.RequestBodyMaxBytes))
 	}
+	span.End()
 
 	payloads, validationErrors := p.validateRequest(r)
 
+	ctx, span = tracer.Start(ctx, "Access Logging")
 	p.accessLogging.Log(payloads, r.Header)
+	span.End()
 
 	if len(validationErrors) > 0 {
+		_, span := tracer.Start(ctx, "Handle Validation Errors")
 		if p.cfg.ObfuscateValidationErrors {
 			validationErrors = gqlerror.List{gqlerror.Wrap(ErrRedacted)}
 		}
@@ -101,21 +107,28 @@ func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			p.log.Error("could not encode error", "err", err)
 		}
+		span.End()
 		return
 	}
 
-	p.next.ServeHTTP(w, r)
+	ctx, span = tracer.Start(ctx, "Proxy to Upstream")
+	p.next.ServeHTTP(w, r.WithContext(ctx))
+	span.End()
 }
 
 func (p *GraphQLProtect) validateRequest(r *http.Request) ([]gql.RequestData, gqlerror.List) {
+	ctx, span := tracer.Start(r.Context(), "Parse Request Payload")
 	payload, err := gql.ParseRequestPayload(r)
+	span.End()
 	if err != nil {
 		return nil, gqlerror.List{gqlerror.Wrap(err)}
 	}
 
 	var errs gqlerror.List
 
+	ctx, span = tracer.Start(ctx, "Validate Batch Limits")
 	err = p.maxBatch.Validate(payload)
+	span.End()
 	if err != nil {
 		errs = append(errs, gqlerror.Wrap(err))
 	}
@@ -124,14 +137,22 @@ func (p *GraphQLProtect) validateRequest(r *http.Request) ([]gql.RequestData, gq
 		return nil, errs
 	}
 
+	ctx, span = tracer.Start(ctx, "Validate Individual Queries")
 	for _, data := range payload {
-		validationErrors := p.ValidateQuery(data)
+		_, querySpan := tracer.Start(ctx, "Validate Query")
+		validationErrors := p.ValidateQuery(ctx, data)
 		if len(validationErrors) > 0 {
 			errs = append(errs, validationErrors...)
 		}
+		querySpan.End()
 	}
+	span.End()
 
-	return payload, filterRejected(errs)
+	_, span = tracer.Start(ctx, "Filter Rejected Errors")
+	filtered := filterRejected(errs)
+	span.End()
+
+	return payload, filtered
 }
 
 func filterRejected(errs gqlerror.List) gqlerror.List {
@@ -151,19 +172,30 @@ func filterRejected(errs gqlerror.List) gqlerror.List {
 	return filtered
 }
 
-func (p *GraphQLProtect) ValidateQuery(data gql.RequestData) gqlerror.List {
+func (p *GraphQLProtect) ValidateQuery(ctx context.Context, data gql.RequestData) gqlerror.List {
+	ctx, span := tracer.Start(ctx, "Create Operation Source")
 	operationSource := &ast.Source{
 		Input: data.Query,
 	}
+	span.End()
+
+	ctx, span = tracer.Start(ctx, "Validate Token Limits")
 	err := p.tokens.Validate(operationSource, data.OperationName)
+	span.End()
 	if err != nil {
 		return gqlerror.List{gqlerror.Wrap(err)}
 	}
 
+	ctx, span = tracer.Start(ctx, "Parse GraphQL Query")
 	query, err := parser.ParseQuery(operationSource)
+	span.End()
 	if err != nil {
 		return gqlerror.List{gqlerror.Wrap(err)}
 	}
 
-	return validator.ValidateWithRules(p.schema.Get(), query, p.rules)
+	_, span = tracer.Start(ctx, "Validate with Protection Rules")
+	result := validator.ValidateWithRules(p.schema.Get(), query, p.rules)
+	span.End()
+
+	return result
 }
