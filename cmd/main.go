@@ -4,15 +4,16 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/ldebruijn/graphql-protect/internal/app/config"
-	"github.com/ldebruijn/graphql-protect/internal/app/log"
-	"github.com/prometheus/client_golang/prometheus"
 	log2 "log"
 	"os"
 	"os/signal"
 	"runtime"
 	"strings"
 	"syscall"
+
+	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	"github.com/ldebruijn/graphql-protect/internal/app/log"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -28,7 +29,7 @@ var (
 		[]string{"version", "go_version", "short_hash"},
 	)
 
-	ErrNoSubCommand = errors.New("Subcommand expected. Options are `serve`, `validate`, `version` or `help`")
+	ErrNoSubCommand = errors.New("subcommand expected. options are `serve`, `validate`, `version` or `help`")
 )
 
 func init() {

@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/ldebruijn/graphql-protect/internal/business/protect"
 	"github.com/ldebruijn/graphql-protect/internal/business/schema"
 	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
 	"github.com/ldebruijn/graphql-protect/internal/business/validation"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"io"
 	"log/slog"
 	"os"
@@ -46,7 +49,11 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 	}
 
 	// Validate if the fields that are defined in the operation exist in our schema (this protects us from clients moving to pro before the data is there)
-	errs := persistedOperations.Validate(protectChain.ValidateQuery)
+	ctx := context.Background()
+	validateWrapper := func(data gql.RequestData) gqlerror.List {
+		return protectChain.ValidateQuery(ctx, data)
+	}
+	errs := persistedOperations.Validate(validateWrapper)
 	if len(errs) > 0 {
 		log.Warn("Errors found during validation of operations")
 		formatErrors(os.Stdout, errs)
