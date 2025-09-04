@@ -11,14 +11,12 @@ import (
 )
 
 var (
-	droppedLogsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	droppedLogsCounter = prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace: "graphql_protect",
 		Subsystem: "access_logging",
 		Name:      "dropped_logs_total",
 		Help:      "The total number of access log entries dropped due to full channel buffer",
-	},
-		[]string{"reason"},
-	)
+	})
 )
 
 func init() {
@@ -102,7 +100,7 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 			// Successfully queued
 		default:
 			// Channel is full, drop the log entry to avoid blocking
-			droppedLogsCounter.WithLabelValues("channel_full").Inc()
+			droppedLogsCounter.Inc()
 		}
 	} else {
 		// Synchronous logging (original behavior)
