@@ -2,23 +2,26 @@ package accesslogging
 
 import (
 	"context"
-	"github.com/ldebruijn/graphql-protect/internal/business/gql"
-	"github.com/stretchr/testify/assert"
 	"log/slog"
 	"net/http"
+	"sync/atomic"
 	"testing"
+	"time"
+
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
+	"github.com/stretchr/testify/assert"
 )
 
 type testLogHandler struct {
 	assert func(ctx context.Context, record slog.Record) error
-	count  int
+	count  int64 // Use atomic for thread safety in async tests
 }
 
 func (t *testLogHandler) Enabled(context.Context, slog.Level) bool {
 	return true
 }
 func (t *testLogHandler) Handle(ctx context.Context, record slog.Record) error {
-	t.count++
+	atomic.AddInt64(&t.count, 1)
 	return t.assert(ctx, record)
 }
 func (t *testLogHandler) WithAttrs(_ []slog.Attr) slog.Handler {
@@ -33,7 +36,7 @@ func TestAccessLogging_Log(t *testing.T) {
 		cfg      Config
 		payloads []gql.RequestData
 		headers  http.Header
-		count    int
+		count    int64
 	}
 	tests := []struct {
 		name string
@@ -121,15 +124,46 @@ func TestAccessLogging_Log(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			handler := &testLogHandler{assert: tt.want}
-			log := slog.New(handler)
-
-			a := NewAccessLogging(tt.args.cfg, log)
-			a.log = log
-			a.Log(tt.args.payloads, tt.args.headers)
-
-			assert.Equal(t, tt.args.count, a.log.Handler().(*testLogHandler).count)
+		// Test both sync and async modes
+		t.Run(tt.name+" (sync)", func(t *testing.T) {
+			runAccessLoggingTest(t, tt.args, tt.want, false)
+		})
+		t.Run(tt.name+" (async)", func(t *testing.T) {
+			runAccessLoggingTest(t, tt.args, tt.want, true)
 		})
 	}
+}
+
+func runAccessLoggingTest(t *testing.T, args struct {
+	cfg      Config
+	payloads []gql.RequestData
+	headers  http.Header
+	count    int64
+}, want func(ctx context.Context, record slog.Record) error, async bool) {
+	handler := &testLogHandler{assert: want}
+	log := slog.New(handler)
+
+	// Set async mode based on parameter
+	cfg := args.cfg
+	cfg.Async = async
+	cfg.BufferSize = 100 // Small buffer for testing
+
+	a := NewAccessLogging(cfg, log)
+	defer func() {
+		if async {
+			// Gracefully shutdown async logger
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			defer cancel()
+			_ = a.Shutdown(ctx)
+		}
+	}()
+
+	a.Log(args.payloads, args.headers)
+
+	if async {
+		// For async mode, wait a bit for the background goroutine to process
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	assert.Equal(t, args.count, atomic.LoadInt64(&handler.count))
 }
