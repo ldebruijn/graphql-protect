@@ -17,10 +17,24 @@ var (
 		Name:      "dropped_logs_total",
 		Help:      "The total number of access log entries dropped due to full channel buffer",
 	})
+
+	bufferUsageGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "access_logging",
+		Name:      "buffer_usage_current",
+		Help:      "The current number of log entries in the async buffer",
+	})
+
+	bufferSizeGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "access_logging",
+		Name:      "buffer_size_limit",
+		Help:      "The maximum capacity of the async logging buffer",
+	})
 )
 
 func init() {
-	prometheus.MustRegister(droppedLogsCounter)
+	prometheus.MustRegister(droppedLogsCounter, bufferUsageGauge, bufferSizeGauge)
 }
 
 type Config struct {
@@ -83,6 +97,12 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 	if cfg.Async && cfg.Enabled {
 		al.logChan = make(chan logEntry, cfg.BufferSize)
 		al.startAsyncLogger()
+		// Set the buffer size limit metric
+		bufferSizeGauge.Set(float64(cfg.BufferSize))
+	} else {
+		// Reset buffer metrics when not using async logging
+		bufferSizeGauge.Set(0)
+		bufferUsageGauge.Set(0)
 	}
 
 	return al
@@ -97,7 +117,8 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 		// Non-blocking send to channel
 		select {
 		case a.logChan <- logEntry{payloads: payloads, headers: headers}:
-			// Successfully queued
+			// Successfully queued - update buffer usage metric
+			bufferUsageGauge.Set(float64(len(a.logChan)))
 		default:
 			// Channel is full, drop the log entry to avoid blocking
 			droppedLogsCounter.Inc()
@@ -140,6 +161,8 @@ func (a *AccessLogging) startAsyncLogger() {
 			case entry := <-a.logChan:
 				// Process each log entry immediately
 				a.logSync(entry.payloads, entry.headers)
+				// Update buffer usage metric after processing
+				bufferUsageGauge.Set(float64(len(a.logChan)))
 
 			case <-a.shutdown:
 				// Drain remaining entries and exit
@@ -147,6 +170,8 @@ func (a *AccessLogging) startAsyncLogger() {
 					select {
 					case entry := <-a.logChan:
 						a.logSync(entry.payloads, entry.headers)
+						// Update buffer usage metric after processing
+						bufferUsageGauge.Set(float64(len(a.logChan)))
 					default:
 						return
 					}
