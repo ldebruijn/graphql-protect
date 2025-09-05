@@ -1,10 +1,41 @@
 package accesslogging
 
 import (
-	"github.com/ldebruijn/graphql-protect/internal/business/gql"
+	"context"
 	"log/slog"
 	"net/http"
+	"sync"
+
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	droppedLogsCounter = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "access_logging",
+		Name:      "dropped_logs_total",
+		Help:      "The total number of access log entries dropped due to full channel buffer",
+	})
+
+	bufferUsageGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "access_logging",
+		Name:      "buffer_usage_current",
+		Help:      "The current number of log entries in the async buffer",
+	})
+
+	bufferSizeGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "access_logging",
+		Name:      "buffer_size_limit",
+		Help:      "The maximum capacity of the async logging buffer",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(droppedLogsCounter, bufferUsageGauge, bufferSizeGauge)
+}
 
 type Config struct {
 	Enabled              bool     `yaml:"enabled"`
@@ -12,6 +43,8 @@ type Config struct {
 	IncludeOperationName bool     `yaml:"include_operation_name"`
 	IncludeVariables     bool     `yaml:"include_variables"`
 	IncludePayload       bool     `yaml:"include_payload"`
+	Async                bool     `yaml:"async"`
+	BufferSize           int      `yaml:"buffer_size"`
 }
 
 func DefaultConfig() Config {
@@ -21,7 +54,14 @@ func DefaultConfig() Config {
 		IncludeOperationName: true,
 		IncludeVariables:     true,
 		IncludePayload:       false,
+		Async:                false,
+		BufferSize:           1000,
 	}
+}
+
+type logEntry struct {
+	payloads []gql.RequestData
+	headers  http.Header
 }
 
 type AccessLogging struct {
@@ -31,6 +71,10 @@ type AccessLogging struct {
 	includeOperationName bool
 	includeVariables     bool
 	includePayload       bool
+	async                bool
+	logChan              chan logEntry
+	shutdown             chan struct{}
+	wg                   sync.WaitGroup
 }
 
 func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
@@ -39,14 +83,29 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 		headers[header] = true
 	}
 
-	return &AccessLogging{
+	al := &AccessLogging{
 		log:                  log.WithGroup("access-logging"),
 		enabled:              cfg.Enabled,
 		includeHeaders:       headers,
 		includeOperationName: cfg.IncludeOperationName,
 		includeVariables:     cfg.IncludeVariables,
 		includePayload:       cfg.IncludePayload,
+		async:                cfg.Async,
+		shutdown:             make(chan struct{}),
 	}
+
+	if cfg.Async && cfg.Enabled {
+		al.logChan = make(chan logEntry, cfg.BufferSize)
+		al.startAsyncLogger()
+		// Set the buffer size limit metric
+		bufferSizeGauge.Set(float64(cfg.BufferSize))
+	} else {
+		// Reset buffer metrics when not using async logging
+		bufferSizeGauge.Set(0)
+		bufferUsageGauge.Set(0)
+	}
+
+	return al
 }
 
 func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
@@ -54,6 +113,23 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 		return
 	}
 
+	if a.async {
+		// Non-blocking send to channel
+		select {
+		case a.logChan <- logEntry{payloads: payloads, headers: headers}:
+			// Successfully queued - update buffer usage metric
+			bufferUsageGauge.Set(float64(len(a.logChan)))
+		default:
+			// Channel is full, drop the log entry to avoid blocking
+			droppedLogsCounter.Inc()
+		}
+	} else {
+		// Synchronous logging (original behavior)
+		a.logSync(payloads, headers)
+	}
+}
+
+func (a *AccessLogging) logSync(payloads []gql.RequestData, headers http.Header) {
 	headersToInclude := map[string]interface{}{}
 	for key := range a.includeHeaders {
 		headersToInclude[key] = headers.Values(key)
@@ -75,5 +151,56 @@ func (a *AccessLogging) Log(payloads []gql.RequestData, headers http.Header) {
 		al.WithHeaders(headersToInclude)
 
 		a.log.Info("record", "payload", al)
+	}
+}
+
+func (a *AccessLogging) startAsyncLogger() {
+	a.wg.Go(func() {
+		for {
+			select {
+			case entry := <-a.logChan:
+				// Process each log entry immediately
+				a.logSync(entry.payloads, entry.headers)
+				// Update buffer usage metric after processing
+				bufferUsageGauge.Set(float64(len(a.logChan)))
+
+			case <-a.shutdown:
+				// Drain remaining entries and exit
+				for {
+					select {
+					case entry := <-a.logChan:
+						a.logSync(entry.payloads, entry.headers)
+						// Update buffer usage metric after processing
+						bufferUsageGauge.Set(float64(len(a.logChan)))
+					default:
+						return
+					}
+				}
+			}
+		}
+	})
+}
+
+// Shutdown gracefully stops the async logger
+func (a *AccessLogging) Shutdown(ctx context.Context) error {
+	if !a.async || !a.enabled {
+		return nil
+	}
+
+	// Signal shutdown
+	close(a.shutdown)
+
+	// Wait for goroutine to finish with timeout
+	done := make(chan struct{})
+	go func() {
+		a.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 }

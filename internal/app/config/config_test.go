@@ -1,6 +1,10 @@
 package config
 
 import (
+	"os"
+	"testing"
+	"time"
+
 	"github.com/ldebruijn/graphql-protect/internal/app/http"
 	"github.com/ldebruijn/graphql-protect/internal/app/log"
 	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
@@ -15,9 +19,6 @@ import (
 	"github.com/ldebruijn/graphql-protect/internal/http/proxy"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
-	"os"
-	"testing"
-	"time"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -211,6 +212,8 @@ log:
 					IncludeOperationName: false,
 					IncludeVariables:     false,
 					IncludePayload:       true,
+					Async:                false,
+					BufferSize:           1000,
 				},
 				Log: log.Config{
 					Format: log.TextFormat,
