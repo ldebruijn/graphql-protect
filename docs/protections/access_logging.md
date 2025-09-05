@@ -35,4 +35,4 @@ For each operation we'll produce an access log record according to your provided
 If used in conjunction with persisted operations the access log will be produced after the operation is swapped for the payload, meaning you have full access to the operation name and payload.
 
 If async is enabled, every access log record will be put on a channel and the logging is processed async. This way there is no waiting for slog to actually log the entry, but the request can be proxied immediately after. The amount of requests that can be buffered is configurable.
-A metric is available to see if you buffer overflows and logs are dropped. If this number is going up, you need to increase your buffersize.
+Metrics are available to see if you buffer overflows and logs are dropped, and how much of your configured buffer size is used. If this number is going up, you need to increase your buffersize.
