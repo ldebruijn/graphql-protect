@@ -90,11 +90,11 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 	stdoutWriter := bufio.NewWriterSize(os.Stdout, cfg.BufferSize)
 	if !cfg.Async {
 		// use buffered stdout writer for access logs, always use json format for access logs
-		log = slog.New(slog.NewJSONHandler(stdoutWriter, nil)).WithGroup("access-logging")
+		log = slog.New(slog.NewJSONHandler(stdoutWriter, nil))
 	}
 
 	al := &AccessLogging{
-		log:                  log,
+		log:                  log.WithGroup("access-logging"),
 		enabled:              cfg.Enabled,
 		includeHeaders:       headers,
 		includeOperationName: cfg.IncludeOperationName,
