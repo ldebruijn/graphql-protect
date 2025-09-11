@@ -87,7 +87,7 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 	}
 
 	// construct a buffered writer on stdout to prevent backpressure on stdout from heavy access logs volumes
-	stdoutWriter := bufio.NewWriter(os.Stdout)
+	stdoutWriter := bufio.NewWriterSize(os.Stdout, cfg.BufferSize)
 	if !cfg.Async {
 		// use buffered stdout writer for access logs, always use json format for access logs
 		log = slog.New(slog.NewJSONHandler(stdoutWriter, nil)).WithGroup("access-logging")
