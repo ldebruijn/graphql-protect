@@ -1,9 +1,11 @@
 package accesslogging
 
 import (
+	"bufio"
 	"context"
 	"log/slog"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
@@ -75,6 +77,7 @@ type AccessLogging struct {
 	logChan              chan logEntry
 	shutdown             chan struct{}
 	wg                   sync.WaitGroup
+	stdoutWriter         *bufio.Writer
 }
 
 func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
@@ -83,8 +86,15 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 		headers[header] = true
 	}
 
+	// construct a buffered writer on stdout to prevent backpressure on stdout from heavy access logs volumes
+	stdoutWriter := bufio.NewWriter(os.Stdout)
+	if !cfg.Async {
+		// use buffered stdout writer for access logs, always use json format for access logs
+		log = slog.New(slog.NewJSONHandler(stdoutWriter, nil)).WithGroup("access-logging")
+	}
+
 	al := &AccessLogging{
-		log:                  log.WithGroup("access-logging"),
+		log:                  log,
 		enabled:              cfg.Enabled,
 		includeHeaders:       headers,
 		includeOperationName: cfg.IncludeOperationName,
@@ -92,6 +102,7 @@ func NewAccessLogging(cfg Config, log *slog.Logger) *AccessLogging {
 		includePayload:       cfg.IncludePayload,
 		async:                cfg.Async,
 		shutdown:             make(chan struct{}),
+		stdoutWriter:         stdoutWriter,
 	}
 
 	if cfg.Async && cfg.Enabled {
@@ -183,8 +194,13 @@ func (a *AccessLogging) startAsyncLogger() {
 
 // Shutdown gracefully stops the async logger
 func (a *AccessLogging) Shutdown(ctx context.Context) error {
-	if !a.async || !a.enabled {
+	if !a.enabled {
 		return nil
+	}
+
+	if !a.async {
+		// ensure last logs are flushed upon shutdown
+		return a.stdoutWriter.Flush()
 	}
 
 	// Signal shutdown
