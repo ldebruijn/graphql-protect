@@ -3,7 +3,7 @@ module github.com/ldebruijn/graphql-protect
 go 1.25.0
 
 require (
-	cloud.google.com/go/storage v1.56.1
+	cloud.google.com/go/storage v1.56.2
 	github.com/jedib0t/go-pretty/v6 v6.6.8
 	github.com/prometheus/client_golang v1.23.2
 	github.com/stretchr/testify v1.11.1
@@ -14,7 +14,7 @@ require (
 	go.opentelemetry.io/contrib/propagators/autoprop v0.63.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/sdk v1.38.0
-	google.golang.org/api v0.248.0
+	google.golang.org/api v0.249.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
