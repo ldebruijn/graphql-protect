@@ -2,10 +2,11 @@ package main
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/ldebruijn/graphql-protect/internal/business/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"testing"
 )
 
 func Test_formatErrors(t *testing.T) {
@@ -26,7 +27,6 @@ func Test_formatErrors(t *testing.T) {
 			},
 			want: `+-------+------+---------------+------+-------+--------+
 |     # | HASH | OPERATIONNAME | RULE | ERROR | RESULT |
-+-------+------+---------------+------+-------+--------+
 +-------+------+---------------+------+-------+--------+
 | TOTAL |    0 |               |      |       |        |
 +-------+------+---------------+------+-------+--------+
