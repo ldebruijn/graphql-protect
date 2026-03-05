@@ -44,7 +44,7 @@ func main() {
 		return
 	}
 
-	log2.Println("Reading configuration from", configPath)
+	log2.Println("Reading configuration from", configPath) //nolint:gosec // configPath is from CLI flags, not untrusted input
 
 	err = startup(action, configPath)
 	if err != nil {
@@ -58,7 +58,7 @@ func parseFlags(args []string) (string, string, error) {
 	if len(args) < 2 {
 		return "", "", ErrNoSubCommand
 	}
-	log2.Println("Initialized with arguments: ", args)
+	log2.Println("Initialized with arguments: ", args) //nolint:gosec // args are CLI arguments
 
 	action := strings.ToLower(args[1])
 
@@ -81,7 +81,7 @@ func startup(action string, path string) error {
 		}
 	}
 	log2.Println("Configuration:")
-	log2.Println(cfg)
+	log2.Println(cfg) //nolint:gosec // cfg is the parsed configuration
 
 	logger := log.NewLogger(cfg.Log)
 	logger.Info("Starting Protect", "version", build)
