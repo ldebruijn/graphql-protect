@@ -54,7 +54,7 @@ func (c Config) String() string {
 func NewConfig(configPath string) (*Config, error) {
 	cfg := defaults()
 
-	bts, err := os.ReadFile(configPath)
+	bts, err := os.ReadFile(configPath) //nolint:gosec // configPath is from CLI flags
 	if err != nil {
 		return &cfg, errors.Join(ErrConfigFileNotFound, err)
 	}
