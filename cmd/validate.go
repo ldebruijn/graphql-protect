@@ -31,14 +31,14 @@ func validate(log *slog.Logger, cfg *config.Config, _ chan os.Signal) error {
 	persistedOperations, err := trusteddocuments.NewPersistedOperations(log, cfg.PersistedOperations, loader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
-		return nil
+		return err
 	}
 
 	// Build up the schema
 	schemaProvider, err := schema.NewSchema(cfg.Schema, log)
 	if err != nil {
 		log.Error("Error initializing schema", "err", err)
-		return nil
+		return err
 	}
 
 	// Validate if the operations in the manifests adhere to our 'rules' (e.g. max depth/aliases/..)

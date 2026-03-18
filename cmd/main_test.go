@@ -5,9 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ldebruijn/graphql-protect/internal/app/config"
-	"github.com/ldebruijn/graphql-protect/internal/business/protect"
-	"github.com/stretchr/testify/assert"
 	"io"
 	log2 "log"
 	"log/slog"
@@ -18,6 +15,10 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	"github.com/ldebruijn/graphql-protect/internal/business/protect"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHttpServerIntegration(t *testing.T) {
@@ -835,6 +836,90 @@ func TestMainInitialization(t *testing.T) {
 			err = startup(tt.args.action, config.Name())
 			if tt.want != nil {
 				assert.Equal(t, err.Error(), tt.want.Error())
+			}
+		})
+	}
+}
+
+func TestHttpServerReturnsInitializationErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		cfgOverride func(cfg *config.Config)
+		wantErr     bool
+	}{
+		{
+			name: "returns error when schema path does not exist",
+			cfgOverride: func(cfg *config.Config) {
+				cfg.Schema.Path = "/nonexistent/schema.graphql"
+			},
+			wantErr: true,
+		},
+		{
+			name: "returns error when persisted operations reload interval is too short",
+			cfgOverride: func(cfg *config.Config) {
+				cfg.PersistedOperations.Enabled = true
+				cfg.PersistedOperations.Loader.Reload.Enabled = true
+				cfg.PersistedOperations.Loader.Reload.Interval = 1 * time.Second
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, _ := config.NewConfig("")
+			tt.cfgOverride(cfg)
+
+			shutdown := make(chan os.Signal, 1)
+			err := httpServer(slog.Default(), cfg, shutdown)
+
+			if tt.wantErr && err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestValidateReturnsInitializationErrors(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name        string
+		cfgOverride func(cfg *config.Config)
+		wantErr     bool
+	}{
+		{
+			name: "returns error when schema path does not exist",
+			cfgOverride: func(cfg *config.Config) {
+				cfg.Schema.Path = "/nonexistent/schema.graphql"
+			},
+			wantErr: true,
+		},
+		{
+			name: "returns error when persisted operations reload interval is too short",
+			cfgOverride: func(cfg *config.Config) {
+				cfg.PersistedOperations.Enabled = true
+				cfg.PersistedOperations.Loader.Reload.Enabled = true
+				cfg.PersistedOperations.Loader.Reload.Interval = 1 * time.Second
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			cfg, _ := config.NewConfig("")
+			tt.cfgOverride(cfg)
+
+			shutdown := make(chan os.Signal, 1)
+			err := validate(slog.Default(), cfg, shutdown)
+
+			if tt.wantErr && err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
 			}
 		})
 	}
