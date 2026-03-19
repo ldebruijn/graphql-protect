@@ -39,7 +39,7 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 	pxy, err := proxy.NewProxy(cfg.Target, blockFieldSuggestions, obfuscateUpstreamErrors, cfg.LogGraphqlErrors, log)
 	if err != nil {
 		log.Error("ErrorPayload creating proxy", "err", err)
-		return nil
+		return err
 	}
 
 	loader, err := trusteddocuments.NewLoaderFromConfig(cfg.PersistedOperations, log)
@@ -51,13 +51,13 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 	po, err := trusteddocuments.NewPersistedOperations(log, cfg.PersistedOperations, loader)
 	if err != nil {
 		log.Error("Error initializing Persisted Operations", "err", err)
-		return nil
+		return err
 	}
 
 	schemaProvider, err := schema.NewSchema(cfg.Schema, log)
 	if err != nil {
 		log.Error("Error initializing schema", "err", err)
-		return nil
+		return err
 	}
 
 	protectHandler, err := protect.NewGraphQLProtect(log, cfg, po, schemaProvider, pxy)
