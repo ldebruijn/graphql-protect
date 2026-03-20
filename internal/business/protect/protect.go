@@ -23,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 var (
@@ -73,7 +74,10 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocument
 }
 
 func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx, span := tracer.Start(r.Context(), "Handle Request")
+	tc := NewTimingContext()
+	ctx := WithTimingContext(r.Context(), tc)
+
+	ctx, span := tracer.Start(ctx, "Handle Request")
 	defer span.End()
 	p.preFilterChain(http.HandlerFunc(p.handle)).ServeHTTP(w, r.WithContext(ctx))
 }
@@ -111,33 +115,74 @@ func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tc := TimingContextFromContext(ctx)
+	if tc != nil {
+		tc.MarkProtectEnd()
+	}
+
 	ctx, span = tracer.Start(ctx, "Proxy to Upstream")
 	p.next.ServeHTTP(w, r.WithContext(ctx))
 	span.End()
 }
 
 func (p *GraphQLProtect) validateRequest(r *http.Request) ([]gql.RequestData, gqlerror.List) {
-	ctx, span := tracer.Start(r.Context(), "Parse Request Payload")
-	payload, err := gql.ParseRequestPayload(r)
-	span.End()
+	tc := TimingContextFromContext(r.Context())
+
+	payload, err := p.parseAndTimeRequest(r, tc)
 	if err != nil {
 		return nil, gqlerror.List{gqlerror.Wrap(err)}
 	}
 
 	var errs gqlerror.List
 
-	ctx, span = tracer.Start(ctx, "Validate Batch Limits")
-	err = p.maxBatch.Validate(payload)
-	span.End()
+	err = p.validateBatchAndTime(r.Context(), payload, tc)
 	if err != nil {
 		errs = append(errs, gqlerror.Wrap(err))
-	}
-
-	if err != nil {
 		return nil, errs
 	}
 
-	ctx, span = tracer.Start(ctx, "Validate Individual Queries")
+	errs = p.validateQueriesAndTime(r.Context(), payload, tc)
+
+	_, span := tracer.Start(r.Context(), "Filter Rejected Errors")
+	filtered := filterRejected(errs)
+	span.End()
+
+	return payload, filtered
+}
+
+func (p *GraphQLProtect) parseAndTimeRequest(r *http.Request, tc *TimingContext) ([]gql.RequestData, error) {
+	_, span := tracer.Start(r.Context(), "Parse Request Payload")
+	start := time.Now()
+	payload, err := gql.ParseRequestPayload(r)
+	duration := time.Since(start)
+	span.End()
+
+	if tc != nil {
+		tc.RecordPhase("parse_request", duration)
+		RecordValidationDuration("parse_request", resultFromError(err), duration)
+	}
+	return payload, err
+}
+
+func (p *GraphQLProtect) validateBatchAndTime(ctx context.Context, payload []gql.RequestData, tc *TimingContext) error {
+	_, span := tracer.Start(ctx, "Validate Batch Limits")
+	start := time.Now()
+	err := p.maxBatch.Validate(payload)
+	duration := time.Since(start)
+	span.End()
+
+	if tc != nil {
+		tc.RecordPhase("batch_check", duration)
+		RecordValidationDuration("batch_check", resultFromError(err), duration)
+	}
+	return err
+}
+
+func (p *GraphQLProtect) validateQueriesAndTime(ctx context.Context, payload []gql.RequestData, tc *TimingContext) gqlerror.List {
+	_, span := tracer.Start(ctx, "Validate Individual Queries")
+	start := time.Now()
+
+	var errs gqlerror.List
 	for _, data := range payload {
 		_, querySpan := tracer.Start(ctx, "Validate Query")
 		validationErrors := p.ValidateQuery(ctx, data)
@@ -146,13 +191,16 @@ func (p *GraphQLProtect) validateRequest(r *http.Request) ([]gql.RequestData, gq
 		}
 		querySpan.End()
 	}
+
+	duration := time.Since(start)
 	span.End()
 
-	_, span = tracer.Start(ctx, "Filter Rejected Errors")
-	filtered := filterRejected(errs)
-	span.End()
+	if tc != nil {
+		tc.RecordPhase("validation", duration)
+		RecordValidationDuration("validation", resultFromErrors(errs), duration)
+	}
 
-	return payload, filtered
+	return errs
 }
 
 func filterRejected(errs gqlerror.List) gqlerror.List {
@@ -173,6 +221,8 @@ func filterRejected(errs gqlerror.List) gqlerror.List {
 }
 
 func (p *GraphQLProtect) ValidateQuery(ctx context.Context, data gql.RequestData) gqlerror.List {
+	tc := TimingContextFromContext(ctx)
+
 	ctx, span := tracer.Start(ctx, "Create Operation Source")
 	operationSource := &ast.Source{
 		Input: data.Query,
@@ -180,22 +230,51 @@ func (p *GraphQLProtect) ValidateQuery(ctx context.Context, data gql.RequestData
 	span.End()
 
 	ctx, span = tracer.Start(ctx, "Validate Token Limits")
+	start := time.Now()
 	err := p.tokens.Validate(operationSource, data.OperationName)
+	duration := time.Since(start)
 	span.End()
+	if tc != nil {
+		RecordValidationDuration("tokens", resultFromError(err), duration)
+	}
 	if err != nil {
 		return gqlerror.List{gqlerror.Wrap(err)}
 	}
 
 	ctx, span = tracer.Start(ctx, "Parse GraphQL Query")
+	start = time.Now()
 	query, err := parser.ParseQuery(operationSource)
+	duration = time.Since(start)
 	span.End()
+	if tc != nil {
+		RecordValidationDuration("parse_gql", resultFromError(err), duration)
+	}
 	if err != nil {
 		return gqlerror.List{gqlerror.Wrap(err)}
 	}
 
 	_, span = tracer.Start(ctx, "Validate with Protection Rules")
+	start = time.Now()
 	result := validator.ValidateWithRules(p.schema.Get(), query, p.rules)
+	duration = time.Since(start)
 	span.End()
+	if tc != nil {
+		RecordValidationDuration("schema_validate", resultFromErrors(result), duration)
+	}
 
 	return result
+}
+
+func resultFromError(err error) string {
+	if err != nil {
+		return "error"
+	}
+	return "success"
+}
+
+func resultFromErrors(errs gqlerror.List) string {
+	if len(errs) > 0 {
+		return "error"
+	}
+	return "success"
 }

@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -160,3 +161,182 @@ type noop struct {
 }
 
 func (n *noop) ServeHTTP(_ http.ResponseWriter, _ *http.Request) {}
+
+func createTestSchemaProvider(t *testing.T) *schema.Provider {
+	t.Helper()
+
+	// Create temporary schema file
+	tmpFile, err := os.CreateTemp("", "schema-*.graphql")
+	if err != nil {
+		t.Fatalf("Failed to create temp schema file: %v", err)
+	}
+	t.Cleanup(func() { os.Remove(tmpFile.Name()) })
+
+	schemaContent := `type Query { hello: String }`
+	if _, err := tmpFile.WriteString(schemaContent); err != nil {
+		t.Fatalf("Failed to write schema: %v", err)
+	}
+	tmpFile.Close()
+
+	provider, err := schema.NewSchema(schema.Config{
+		Path: tmpFile.Name(),
+		AutoReload: struct {
+			Enabled  bool          `yaml:"enabled"`
+			Interval time.Duration `yaml:"interval"`
+		}{
+			Enabled:  false,
+			Interval: 0,
+		},
+	}, slog.Default())
+	if err != nil {
+		t.Fatalf("Failed to create schema provider: %v", err)
+	}
+
+	return provider
+}
+
+func TestGraphQLProtect_TimingContextPropagation(t *testing.T) {
+	log := slog.Default()
+
+	// Create a handler that checks for TimingContext
+	var capturedTC *TimingContext
+	upstreamHandler := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		capturedTC = TimingContextFromContext(r.Context())
+	})
+
+	maxBatch, _ := batch.NewMaxBatch(batch.Config{
+		Enabled:         true,
+		Max:             10,
+		RejectOnFailure: true,
+	})
+
+	schemaProvider := createTestSchemaProvider(t)
+
+	p := &GraphQLProtect{
+		log: log,
+		cfg: &config.Config{
+			Web: _http.Config{
+				RequestBodyMaxBytes: 0,
+			},
+		},
+		schema:        schemaProvider,
+		maxBatch:      maxBatch,
+		tokens:        tokens.MaxTokens(tokens.DefaultConfig()),
+		accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+		next:          upstreamHandler,
+		preFilterChain: func(next http.Handler) http.Handler {
+			return next
+		},
+	}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/graphql", strings.NewReader(`{"query":"{ hello }"}`))
+
+	p.ServeHTTP(w, r)
+
+	assert.NotNil(t, capturedTC, "TimingContext should be propagated to upstream handler")
+	assert.NotZero(t, capturedTC.Start, "Start time should be set")
+}
+
+func TestGraphQLProtect_MarkProtectEndBeforeUpstream(t *testing.T) {
+	log := slog.Default()
+
+	// Create a handler that checks ProtectEnd is marked
+	var capturedTC *TimingContext
+	upstreamHandler := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		capturedTC = TimingContextFromContext(r.Context())
+	})
+
+	maxBatch, _ := batch.NewMaxBatch(batch.Config{
+		Enabled:         true,
+		Max:             10,
+		RejectOnFailure: true,
+	})
+
+	schemaProvider := createTestSchemaProvider(t)
+
+	p := &GraphQLProtect{
+		log: log,
+		cfg: &config.Config{
+			Web: _http.Config{
+				RequestBodyMaxBytes: 0,
+			},
+		},
+		schema:        schemaProvider,
+		maxBatch:      maxBatch,
+		tokens:        tokens.MaxTokens(tokens.DefaultConfig()),
+		accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+		next:          upstreamHandler,
+		preFilterChain: func(next http.Handler) http.Handler {
+			return next
+		},
+	}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/graphql", strings.NewReader(`{"query":"{ hello }"}`))
+
+	p.ServeHTTP(w, r)
+
+	assert.NotNil(t, capturedTC, "TimingContext should exist")
+	assert.False(t, capturedTC.ProtectEnd.IsZero(), "ProtectEnd should be marked before proxying to upstream")
+	assert.True(t, capturedTC.ProtectEnd.After(capturedTC.Start), "ProtectEnd should be after Start")
+}
+
+func TestGraphQLProtect_OverheadCalculation(t *testing.T) {
+	log := slog.Default()
+
+	// Capture timing context from upstream handler
+	var capturedTC *TimingContext
+	var upstreamStart time.Time
+
+	upstreamHandler := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		capturedTC = TimingContextFromContext(r.Context())
+		upstreamStart = time.Now()
+		time.Sleep(50 * time.Millisecond)
+	})
+
+	maxBatch, _ := batch.NewMaxBatch(batch.Config{
+		Enabled:         true,
+		Max:             10,
+		RejectOnFailure: true,
+	})
+
+	schemaProvider := createTestSchemaProvider(t)
+
+	p := &GraphQLProtect{
+		log: log,
+		cfg: &config.Config{
+			Web: _http.Config{
+				RequestBodyMaxBytes: 0,
+			},
+		},
+		schema:        schemaProvider,
+		maxBatch:      maxBatch,
+		tokens:        tokens.MaxTokens(tokens.DefaultConfig()),
+		accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+		next:          upstreamHandler,
+		preFilterChain: func(next http.Handler) http.Handler {
+			return next
+		},
+	}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/graphql", strings.NewReader(`{"query":"{ hello }"}`))
+
+	start := time.Now()
+	p.ServeHTTP(w, r)
+	totalDuration := time.Since(start)
+
+	assert.NotNil(t, capturedTC, "TimingContext should exist")
+
+	protectDuration := capturedTC.ProtectDuration()
+	assert.Greater(t, totalDuration, protectDuration, "Total duration should be greater than protect duration")
+
+	// Verify protect ended before upstream started
+	assert.True(t, capturedTC.ProtectEnd.Before(upstreamStart) || capturedTC.ProtectEnd.Equal(upstreamStart),
+		"ProtectEnd should be before or equal to upstream start")
+
+	overheadRatio := capturedTC.OverheadRatio(totalDuration)
+	assert.Greater(t, overheadRatio, 0.0, "Overhead ratio should be positive")
+	assert.Less(t, overheadRatio, 1.0, "Overhead ratio should be less than 1.0")
+}
