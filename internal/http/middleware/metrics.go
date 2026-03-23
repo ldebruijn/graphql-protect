@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"github.com/ldebruijn/graphql-protect/internal/business/protect"
-	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
 	"time"
+
+	"github.com/ldebruijn/graphql-protect/internal/business/protect"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -39,7 +40,7 @@ func RequestMetricMiddleware() func(next http.Handler) http.Handler {
 			// Extract timing context to calculate protect vs upstream
 			tc := protect.TimingContextFromContext(r.Context())
 			if tc != nil && !tc.ProtectEnd.IsZero() {
-				protectDuration := tc.ProtectDuration()
+				protectDuration := tc.Duration()
 				upstreamDuration := totalDuration - protectDuration
 
 				// Record component durations

@@ -2,8 +2,9 @@ package protect
 
 import (
 	"context"
-	"github.com/prometheus/client_golang/prometheus"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -55,13 +56,13 @@ func (tc *TimingContext) RecordPhase(phase string, duration time.Duration) {
 	tc.Phases[phase] = duration
 }
 
-// MarkProtectEnd marks the end of protect validation (before proxying upstream)
-func (tc *TimingContext) MarkProtectEnd() {
+// End marks the end of protect validation (before proxying upstream)
+func (tc *TimingContext) End() {
 	tc.ProtectEnd = time.Now()
 }
 
-// ProtectDuration returns the total duration spent in protect validation
-func (tc *TimingContext) ProtectDuration() time.Duration {
+// Duration returns the total duration spent in protect validation
+func (tc *TimingContext) Duration() time.Duration {
 	if tc.ProtectEnd.IsZero() {
 		return 0
 	}

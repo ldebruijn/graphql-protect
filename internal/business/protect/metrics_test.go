@@ -28,7 +28,7 @@ func TestTimingContext_RecordPhase(t *testing.T) {
 func TestTimingContext_MarkProtectEnd(t *testing.T) {
 	tc := NewTimingContext()
 
-	tc.MarkProtectEnd()
+	tc.End()
 
 	assert.False(t, tc.ProtectEnd.IsZero())
 	assert.True(t, tc.ProtectEnd.After(tc.Start))
@@ -46,17 +46,17 @@ func TestTimingContext_ProtectDuration(t *testing.T) {
 				// Don't mark protect end
 			},
 			expectedResult: func(tc *TimingContext) bool {
-				return tc.ProtectDuration() == 0
+				return tc.Duration() == 0
 			},
 		},
 		{
 			name: "positive duration when protect end marked",
 			setupFunc: func(tc *TimingContext) {
 				time.Sleep(10 * time.Millisecond)
-				tc.MarkProtectEnd()
+				tc.End()
 			},
 			expectedResult: func(tc *TimingContext) bool {
-				duration := tc.ProtectDuration()
+				duration := tc.Duration()
 				return duration > 0 && duration < 1*time.Second
 			},
 		},

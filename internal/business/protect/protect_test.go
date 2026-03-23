@@ -329,7 +329,7 @@ func TestGraphQLProtect_DurationCalculation(t *testing.T) {
 
 	assert.NotNil(t, capturedTC, "TimingContext should exist")
 
-	protectDuration := capturedTC.ProtectDuration()
+	protectDuration := capturedTC.Duration()
 	assert.Greater(t, totalDuration, protectDuration, "Total duration should be greater than protect duration")
 
 	// Verify protect ended before upstream started
