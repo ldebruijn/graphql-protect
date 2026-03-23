@@ -46,8 +46,7 @@ func RequestMetricMiddleware() func(next http.Handler) http.Handler {
 				httpDuration.WithLabelValues(route, "protect").Observe(protectDuration.Seconds())
 				httpDuration.WithLabelValues(route, "upstream").Observe(upstreamDuration.Seconds())
 
-				// Record overhead ratio and upstream duration
-				protect.RecordOverheadRatio(route, tc.OverheadRatio(totalDuration))
+				// Record upstream duration
 				protect.RecordUpstreamDuration(route, upstreamDuration)
 			}
 		}

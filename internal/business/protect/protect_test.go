@@ -282,7 +282,7 @@ func TestGraphQLProtect_MarkProtectEndBeforeUpstream(t *testing.T) {
 	assert.True(t, capturedTC.ProtectEnd.After(capturedTC.Start), "ProtectEnd should be after Start")
 }
 
-func TestGraphQLProtect_OverheadCalculation(t *testing.T) {
+func TestGraphQLProtect_DurationCalculation(t *testing.T) {
 	log := slog.Default()
 
 	// Capture timing context from upstream handler
@@ -336,7 +336,6 @@ func TestGraphQLProtect_OverheadCalculation(t *testing.T) {
 	assert.True(t, capturedTC.ProtectEnd.Before(upstreamStart) || capturedTC.ProtectEnd.Equal(upstreamStart),
 		"ProtectEnd should be before or equal to upstream start")
 
-	overheadRatio := capturedTC.OverheadRatio(totalDuration)
-	assert.Greater(t, overheadRatio, 0.0, "Overhead ratio should be positive")
-	assert.Less(t, overheadRatio, 1.0, "Overhead ratio should be less than 1.0")
+	// Verify protect duration is positive
+	assert.Greater(t, protectDuration, time.Duration(0), "Protect duration should be positive")
 }

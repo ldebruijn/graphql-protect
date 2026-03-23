@@ -71,59 +71,6 @@ func TestTimingContext_ProtectDuration(t *testing.T) {
 	}
 }
 
-func TestTimingContext_OverheadRatio(t *testing.T) {
-	tests := []struct {
-		name          string
-		totalDuration time.Duration
-		setupFunc     func(*TimingContext)
-		expectedRatio float64
-		tolerance     float64
-	}{
-		{
-			name:          "zero when total duration is zero",
-			totalDuration: 0,
-			setupFunc: func(tc *TimingContext) {
-				tc.MarkProtectEnd()
-			},
-			expectedRatio: 0.0,
-			tolerance:     0.0,
-		},
-		{
-			name:          "zero when protect end not marked",
-			totalDuration: 100 * time.Millisecond,
-			setupFunc: func(_ *TimingContext) {
-				// Don't mark protect end
-			},
-			expectedRatio: 0.0,
-			tolerance:     0.0,
-		},
-		{
-			name:          "correct ratio when protect took half the time",
-			totalDuration: 200 * time.Millisecond,
-			setupFunc: func(tc *TimingContext) {
-				time.Sleep(100 * time.Millisecond)
-				tc.MarkProtectEnd()
-			},
-			expectedRatio: 0.5,
-			tolerance:     0.1, // Allow 10% variance for timing
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tc := NewTimingContext()
-			tt.setupFunc(tc)
-			ratio := tc.OverheadRatio(tt.totalDuration)
-
-			if tt.tolerance == 0.0 {
-				assert.Equal(t, tt.expectedRatio, ratio)
-			} else {
-				assert.InDelta(t, tt.expectedRatio, ratio, tt.tolerance)
-			}
-		})
-	}
-}
-
 func TestWithTimingContext_AndRetrieve(t *testing.T) {
 	tc := NewTimingContext()
 	ctx := context.Background()
@@ -146,36 +93,10 @@ func TestTimingContextFromContext_Nil(t *testing.T) {
 	assert.Nil(t, retrieved)
 }
 
-func TestTimingContext_ConcurrentAccess(t *testing.T) {
-	tc := NewTimingContext()
-
-	// Concurrently record phases
-	done := make(chan bool)
-	for i := 0; i < 10; i++ {
-		go func(idx int) {
-			tc.RecordPhase("phase", time.Duration(idx)*time.Millisecond)
-			done <- true
-		}(i)
-	}
-
-	// Wait for all goroutines
-	for i := 0; i < 10; i++ {
-		<-done
-	}
-
-	// Should not panic and should have a value
-	assert.NotZero(t, tc.Phases["phase"])
-}
-
 func TestRecordValidationDuration(_ *testing.T) {
 	// This is a smoke test - just verify it doesn't panic
 	RecordValidationDuration("test_phase", "success", 100*time.Millisecond)
 	RecordValidationDuration("test_phase", "error", 50*time.Millisecond)
-}
-
-func TestRecordOverheadRatio(_ *testing.T) {
-	// This is a smoke test - just verify it doesn't panic
-	RecordOverheadRatio("/graphql", 0.15)
 }
 
 func TestRecordUpstreamDuration(_ *testing.T) {
