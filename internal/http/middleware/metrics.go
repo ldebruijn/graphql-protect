@@ -39,7 +39,7 @@ func RequestMetricMiddleware() func(next http.Handler) http.Handler {
 
 			// Extract timing context to calculate protect vs upstream
 			tc := protect.TimingContextFromContext(r.Context())
-			if tc != nil && !tc.ProtectEnd.IsZero() {
+			if tc != nil && !tc.End.IsZero() {
 				protectDuration := tc.Duration()
 				upstreamDuration := totalDuration - protectDuration
 

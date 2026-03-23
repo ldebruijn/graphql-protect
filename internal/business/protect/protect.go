@@ -118,7 +118,7 @@ func (p *GraphQLProtect) handle(w http.ResponseWriter, r *http.Request) {
 
 	tc := TimingContextFromContext(ctx)
 	if tc != nil {
-		tc.End()
+		tc.MarkEnd()
 	}
 
 	ctx, span = tracer.Start(ctx, "Proxy to Upstream")

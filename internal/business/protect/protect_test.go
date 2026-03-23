@@ -241,7 +241,7 @@ func TestGraphQLProtect_TimingContextPropagation(t *testing.T) {
 func TestGraphQLProtect_MarkProtectEndBeforeUpstream(t *testing.T) {
 	log := slog.Default()
 
-	// Create a handler that checks ProtectEnd is marked
+	// Create a handler that checks End is marked
 	var capturedTC *TimingContext
 	upstreamHandler := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		capturedTC = TimingContextFromContext(r.Context())
@@ -278,8 +278,8 @@ func TestGraphQLProtect_MarkProtectEndBeforeUpstream(t *testing.T) {
 	p.ServeHTTP(w, r)
 
 	assert.NotNil(t, capturedTC, "TimingContext should exist")
-	assert.False(t, capturedTC.ProtectEnd.IsZero(), "ProtectEnd should be marked before proxying to upstream")
-	assert.True(t, capturedTC.ProtectEnd.After(capturedTC.Start), "ProtectEnd should be after Start")
+	assert.False(t, capturedTC.End.IsZero(), "End should be marked before proxying to upstream")
+	assert.True(t, capturedTC.End.After(capturedTC.Start), "End should be after Start")
 }
 
 func TestGraphQLProtect_DurationCalculation(t *testing.T) {
@@ -333,8 +333,8 @@ func TestGraphQLProtect_DurationCalculation(t *testing.T) {
 	assert.Greater(t, totalDuration, protectDuration, "Total duration should be greater than protect duration")
 
 	// Verify protect ended before upstream started
-	assert.True(t, capturedTC.ProtectEnd.Before(upstreamStart) || capturedTC.ProtectEnd.Equal(upstreamStart),
-		"ProtectEnd should be before or equal to upstream start")
+	assert.True(t, capturedTC.End.Before(upstreamStart) || capturedTC.End.Equal(upstreamStart),
+		"End should be before or equal to upstream start")
 
 	// Verify protect duration is positive
 	assert.Greater(t, protectDuration, time.Duration(0), "Protect duration should be positive")

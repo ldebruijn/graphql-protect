@@ -38,9 +38,9 @@ type timingContextKey struct{}
 
 // TimingContext tracks request timing through the validation pipeline
 type TimingContext struct {
-	Start      time.Time
-	Phases     map[string]time.Duration
-	ProtectEnd time.Time
+	Start  time.Time
+	Phases map[string]time.Duration
+	End    time.Time
 }
 
 // NewTimingContext creates a new timing context
@@ -56,17 +56,17 @@ func (tc *TimingContext) RecordPhase(phase string, duration time.Duration) {
 	tc.Phases[phase] = duration
 }
 
-// End marks the end of protect validation (before proxying upstream)
-func (tc *TimingContext) End() {
-	tc.ProtectEnd = time.Now()
+// MarkEnd marks the end of protect validation (before proxying upstream)
+func (tc *TimingContext) MarkEnd() {
+	tc.End = time.Now()
 }
 
 // Duration returns the total duration spent in protect validation
 func (tc *TimingContext) Duration() time.Duration {
-	if tc.ProtectEnd.IsZero() {
+	if tc.End.IsZero() {
 		return 0
 	}
-	return tc.ProtectEnd.Sub(tc.Start)
+	return tc.End.Sub(tc.Start)
 }
 
 // WithTimingContext adds a TimingContext to the request context
