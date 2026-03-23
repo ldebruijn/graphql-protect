@@ -11,7 +11,7 @@ var (
 		Namespace: "graphql_protect",
 		Subsystem: "validation",
 		Name:      "duration_seconds",
-		Help:      "Duration of validation phases in seconds",
+		Help:      "Duration of validation phases, excluding upstream latency, in seconds",
 		Buckets:   []float64{0.0001, 0.0005, 0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.5, 1.0},
 	},
 		[]string{"phase", "result"},
