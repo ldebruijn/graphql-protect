@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/prometheus/client_golang/prometheus"
 	"io"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -46,8 +47,7 @@ func ParseRequestPayload(r *http.Request) ([]RequestData, error) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		var maxBytesError *http.MaxBytesError
-		if errors.As(err, &maxBytesError) {
+		if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
 			requestMaxBodyBytesExceededCounter.WithLabelValues().Inc()
 		}
 		return []RequestData{}, err
@@ -56,7 +56,7 @@ func ParseRequestPayload(r *http.Request) ([]RequestData, error) {
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	body = bytes.TrimSpace(body)
-	// assume its a batch request
+	// assume it's a batch request
 	if body[0] == '[' {
 		var data []RequestData
 		err = json.Unmarshal(body, &data)
