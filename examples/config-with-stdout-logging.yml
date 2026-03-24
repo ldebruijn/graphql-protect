@@ -1,0 +1,108 @@
+# Example configuration for graphql-protect with stdout access logging
+#
+# This configuration demonstrates the default logging mode where all logs
+# (access logs + application logs) are written to stdout.
+#
+# For more details, see: docs/protections/access_logging.md
+
+web:
+  read_timeout: 5s
+  write_timeout: 10s
+  idle_timeout: 120s
+  shutdown_timeout: 20s
+  host: 0.0.0.0:8080
+  path: /graphql
+  request_body_max_bytes: 102400
+
+target:
+  host: http://localhost:8081
+  timeout: 10s
+  keep_alive: 180s
+
+schema:
+  path: "./schema.graphql"
+  auto_reload:
+    enabled: true
+    interval: 5m
+
+# Access Logging to Stdout with Async Mode
+access_logging:
+  # Enable access logging
+  enabled: true
+  # Headers to include in access logs
+  include_headers:
+    - Authorization
+    - User-Agent
+  # Include operation name in access logs
+  include_operation_name: true
+  # Include variables in access logs
+  include_variables: true
+  # Include payload in access logs (disable in production for performance)
+  include_payload: false
+  # Enable async logging for high throughput (stdout only)
+  async: true
+  # Buffer size for async logging - increase if logs are being dropped
+  buffer_size: 1000
+  # Google Cloud Logging disabled (default)
+  google_cloud_logging:
+    enabled: false
+
+# Note: With async enabled
+# - All logs (access + application) go to stdout
+# - Access logs are buffered and written asynchronously
+# - Monitor using Prometheus metrics:
+#   - graphql_protect_access_logging_dropped_logs_total
+#   - graphql_protect_access_logging_buffer_usage_current
+#   - graphql_protect_access_logging_buffer_size_limit
+
+obfuscate_validation_errors: false
+obfuscate_upstream_errors: true
+
+persisted_operations:
+  enabled: false
+  enable_debug_endpoint: false
+  reject_on_failure: true
+  loader:
+    type: local
+    location: ./store
+    reload:
+      enabled: true
+      interval: 5m0s
+      timeout: 10s
+
+block_field_suggestions:
+  enabled: true
+  mask: "[redacted]"
+
+max_aliases:
+  enabled: true
+  max: 15
+  reject_on_failure: true
+
+max_depth:
+  field:
+    enabled: true
+    max: 15
+    reject_on_failure: true
+  list:
+    enabled: true
+    max: 15
+    reject_on_failure: true
+
+max_tokens:
+  enabled: true
+  max: 10000
+  reject_on_failure: true
+
+max_batch:
+  enabled: true
+  max: 5
+  reject_on_failure: true
+
+enforce_post:
+  enabled: true
+
+log_graphql_errors: false
+
+log:
+  format: json

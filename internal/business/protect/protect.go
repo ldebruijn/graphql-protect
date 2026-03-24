@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
+
+	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/ldebruijn/graphql-protect/internal/app/config"
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
@@ -55,7 +57,10 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocument
 		log.Warn("Error initializing maximum batch protection", "err", err)
 	}
 
-	accessLogging := accesslogging.NewAccessLogging(cfg.AccessLogging, log)
+	accessLogging, err := accesslogging.NewAccessLogging(cfg.AccessLogging, log)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize access logging: %w", err)
+	}
 
 	enforcePostMethod := enforce_post.EnforcePostMethod(cfg.EnforcePost)
 
@@ -277,4 +282,9 @@ func resultFromErrors(errs gqlerror.List) string {
 		return "error"
 	}
 	return "success"
+}
+
+// ShutdownAccessLogging gracefully shuts down access logging
+func (p *GraphQLProtect) ShutdownAccessLogging(ctx context.Context) error {
+	return p.accessLogging.Shutdown(ctx)
 }

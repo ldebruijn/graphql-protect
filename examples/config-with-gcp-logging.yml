@@ -1,0 +1,117 @@
+# Example configuration for graphql-protect with Google Cloud Logging enabled
+#
+# This configuration demonstrates how to send access logs to Google Cloud Logging
+# while keeping application logs on stdout.
+#
+# For more details, see: docs/protections/access_logging.md
+
+web:
+  read_timeout: 5s
+  write_timeout: 10s
+  idle_timeout: 120s
+  shutdown_timeout: 20s
+  host: 0.0.0.0:8080
+  path: /graphql
+  request_body_max_bytes: 102400
+
+target:
+  host: http://localhost:8081
+  timeout: 10s
+  keep_alive: 180s
+
+schema:
+  path: "./schema.graphql"
+  auto_reload:
+    enabled: true
+    interval: 5m
+
+# Access Logging with Google Cloud Logging
+access_logging:
+  # Enable access logging
+  enabled: true
+  # Headers to include in access logs
+  include_headers:
+    - Authorization
+    - User-Agent
+  # Include operation name in access logs
+  include_operation_name: true
+  # Include variables in access logs
+  include_variables: true
+  # Include payload in access logs (disable in production for performance)
+  include_payload: false
+  # Async is automatically disabled when using Google Cloud Logging
+  # (you can set this to true, but it will be ignored)
+  async: false
+  buffer_size: 1000
+  # Google Cloud Logging configuration
+  google_cloud_logging:
+    # Enable sending access logs to Google Cloud Logging
+    enabled: true
+    # GCP Project ID
+    # Can also be set via environment variables (in priority order):
+    # - GOOGLE_CLOUD_PROJECT
+    # - GCP_PROJECT
+    # - GCLOUD_PROJECT
+    project_id: "my-gcp-project"
+    # Log name in Google Cloud Logging
+    # Defaults to "graphql-protect-access-logs" if not specified
+    log_name: "graphql-protect-access-logs"
+
+# Note: With google_cloud_logging.enabled: true
+# - Access logs go to Google Cloud Logging
+# - Application logs (startup, errors, etc.) still go to stdout
+# - Monitor using Prometheus metrics:
+#   - graphql_protect_access_logging_gcp_writes_total
+#   - graphql_protect_access_logging_gcp_errors_total
+
+obfuscate_validation_errors: false
+obfuscate_upstream_errors: true
+
+persisted_operations:
+  enabled: false
+  enable_debug_endpoint: false
+  reject_on_failure: true
+  loader:
+    type: local
+    location: ./store
+    reload:
+      enabled: true
+      interval: 5m0s
+      timeout: 10s
+
+block_field_suggestions:
+  enabled: true
+  mask: "[redacted]"
+
+max_aliases:
+  enabled: true
+  max: 15
+  reject_on_failure: true
+
+max_depth:
+  field:
+    enabled: true
+    max: 15
+    reject_on_failure: true
+  list:
+    enabled: true
+    max: 15
+    reject_on_failure: true
+
+max_tokens:
+  enabled: true
+  max: 10000
+  reject_on_failure: true
+
+max_batch:
+  enabled: true
+  max: 5
+  reject_on_failure: true
+
+enforce_post:
+  enabled: true
+
+log_graphql_errors: false
+
+log:
+  format: json
