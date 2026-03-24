@@ -11,7 +11,7 @@ type LogWriter interface {
 	// Write writes log entries to the backend
 	Write(data LogEntryData)
 
-	// Shutdown performs cleanup and flushes any pending logs
+	// Shutdown performs clean-up and flushes any pending logs
 	Shutdown(ctx context.Context) error
 }
 

@@ -66,17 +66,14 @@ func NewAccessLogging(cfg Config, log *slog.Logger) (*AccessLogging, error) {
 	var writer LogWriter
 	var err error
 
+	writer = NewStdoutWriter(log)
 	if cfg.GoogleCloudLogging.Enabled {
 		// Use Google Cloud Logging writer
 		writer, err = NewGoogleCloudWriter(cfg.GoogleCloudLogging, log)
 		if err != nil {
 			// Fall back to stdout and warn the user
 			log.Warn("Failed to initialize Google Cloud Logging, falling back to stdout", "error", err)
-			writer = NewStdoutWriter(log)
 		}
-	} else {
-		// Use stdout writer (default)
-		writer = NewStdoutWriter(log)
 	}
 
 	al := &AccessLogging{
