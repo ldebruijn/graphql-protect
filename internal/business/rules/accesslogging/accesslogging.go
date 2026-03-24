@@ -2,7 +2,6 @@ package accesslogging
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -71,7 +70,9 @@ func NewAccessLogging(cfg Config, log *slog.Logger) (*AccessLogging, error) {
 		// Use Google Cloud Logging writer
 		writer, err = NewGoogleCloudWriter(cfg.GoogleCloudLogging, log)
 		if err != nil {
-			return nil, fmt.Errorf("failed to initialize Google Cloud Logging writer: %w", err)
+			// Fall back to stdout and warn the user
+			log.Warn("Failed to initialize Google Cloud Logging, falling back to stdout", "error", err)
+			writer = NewStdoutWriter(log)
 		}
 	} else {
 		// Use stdout writer (default)
