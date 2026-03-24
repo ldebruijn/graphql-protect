@@ -15,6 +15,7 @@ import (
 type testLogHandler struct {
 	assert func(ctx context.Context, record slog.Record) error
 	count  int64 // Use atomic for thread safety in async tests
+	log    *slog.Logger
 }
 
 func (t *testLogHandler) Enabled(context.Context, slog.Level) bool {
@@ -22,7 +23,8 @@ func (t *testLogHandler) Enabled(context.Context, slog.Level) bool {
 }
 func (t *testLogHandler) Handle(ctx context.Context, record slog.Record) error {
 	atomic.AddInt64(&t.count, 1)
-	return t.assert(ctx, record)
+	_ = t.assert(ctx, record)
+	return t.log.Handler().Handle(ctx, record)
 }
 func (t *testLogHandler) WithAttrs(_ []slog.Attr) slog.Handler {
 	return t
@@ -140,15 +142,15 @@ func runAccessLoggingTest(t *testing.T, args struct {
 	headers  http.Header
 	count    int64
 }, want func(ctx context.Context, record slog.Record) error, async bool) {
-	handler := &testLogHandler{assert: want}
-	log := slog.New(handler)
-
 	// Set async mode based on parameter
 	cfg := args.cfg
 	cfg.Async = async
 	cfg.BufferSize = 100 // Small buffer for testing
 
-	a := NewAccessLogging(cfg, log)
+	a := NewAccessLogging(cfg, slog.Default())
+	handler := &testLogHandler{assert: want, count: 0, log: a.log}
+	a.log = slog.New(handler)
+
 	defer func() {
 		if async {
 			// Gracefully shutdown async logger
@@ -163,6 +165,8 @@ func runAccessLoggingTest(t *testing.T, args struct {
 	if async {
 		// For async mode, wait a bit for the background goroutine to process
 		time.Sleep(50 * time.Millisecond)
+	} else {
+		a.stdoutWriter.Flush()
 	}
 
 	assert.Equal(t, args.count, atomic.LoadInt64(&handler.count))
