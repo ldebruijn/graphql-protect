@@ -148,7 +148,8 @@ func runAccessLoggingTest(t *testing.T, args struct {
 	cfg.Async = async
 	cfg.BufferSize = 100 // Small buffer for testing
 
-	a := NewAccessLogging(cfg, log)
+	a, err := NewAccessLogging(cfg, log)
+	assert.NoError(t, err)
 	defer func() {
 		if async {
 			// Gracefully shutdown async logger
@@ -166,4 +167,63 @@ func runAccessLoggingTest(t *testing.T, args struct {
 	}
 
 	assert.Equal(t, args.count, atomic.LoadInt64(&handler.count))
+}
+
+func TestAccessLogging_Shutdown(t *testing.T) {
+	handler := &testLogHandler{
+		assert: func(_ context.Context, _ slog.Record) error {
+			return nil
+		},
+	}
+	log := slog.New(handler)
+
+	t.Run("shutdown with disabled logging", func(t *testing.T) {
+		cfg := Config{
+			Enabled: false,
+		}
+		a, err := NewAccessLogging(cfg, log)
+		assert.NoError(t, err)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		err = a.Shutdown(ctx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("shutdown with sync stdout logging", func(t *testing.T) {
+		cfg := Config{
+			Enabled: true,
+			Async:   false,
+		}
+		a, err := NewAccessLogging(cfg, log)
+		assert.NoError(t, err)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		err = a.Shutdown(ctx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("shutdown with async stdout logging", func(t *testing.T) {
+		cfg := Config{
+			Enabled:    true,
+			Async:      true,
+			BufferSize: 100,
+		}
+		a, err := NewAccessLogging(cfg, log)
+		assert.NoError(t, err)
+
+		// Log some entries
+		a.Log([]gql.RequestData{
+			{OperationName: "TestOp"},
+		}, http.Header{})
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		err = a.Shutdown(ctx)
+		assert.NoError(t, err)
+	})
 }

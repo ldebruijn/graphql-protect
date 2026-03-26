@@ -135,6 +135,30 @@ log_graphql_errors: false
 log:
   # text, or json for structured logging
   format: text
+
+access_logging:
+  # Enable access logging
+  enabled: false
+  # Headers to include in access logs
+  include_headers: []
+  # Include operation name in access logs
+  include_operation_name: true
+  # Include variables in access logs
+  include_variables: true
+  # Include payload in access logs
+  include_payload: false
+  # Enable async logging (stdout only, not supported with GCP)
+  async: false
+  # Buffer size for async logging
+  buffer_size: 1000
+  # Google Cloud Logging configuration
+  google_cloud_logging:
+    # Enable Google Cloud Logging
+    enabled: false
+    # GCP Project ID (required when google_cloud_logging is enabled)
+    project_id: ""
+    # Log name in GCP (defaults to "graphql-protect-access-logs")
+    log_name: ""
 ```
 
 For a more in-depth view of each option visit the accompanying documentation page of each individual protection.

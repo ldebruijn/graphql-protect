@@ -104,6 +104,10 @@ func httpServer(log *slog.Logger, cfg *config.Config, shutdown chan os.Signal) e
 
 		po.Shutdown()
 
+		if err := protectHandler.ShutdownAccessLogging(ctx); err != nil {
+			log.Error("Error shutting down access logging", "err", err)
+		}
+
 		if err := api.Shutdown(ctx); err != nil {
 			_ = api.Close()
 			return fmt.Errorf("could not stop server gracefully: %w", err)

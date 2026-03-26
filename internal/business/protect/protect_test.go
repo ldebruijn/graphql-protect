@@ -18,6 +18,14 @@ import (
 	"time"
 )
 
+func mustNewAccessLogging(cfg accesslogging.Config, log *slog.Logger) *accesslogging.AccessLogging {
+	al, err := accesslogging.NewAccessLogging(cfg, log)
+	if err != nil {
+		panic(err)
+	}
+	return al
+}
+
 func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 	log := slog.Default()
 
@@ -54,7 +62,7 @@ func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 				schema:        nil,
 				tokens:        nil,
 				maxBatch:      nil,
-				accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+				accessLogging: mustNewAccessLogging(accesslogging.Config{}, log),
 				next:          &noop{},
 				preFilterChain: func(next http.Handler) http.Handler {
 					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +91,7 @@ func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 				schema:        nil,
 				tokens:        nil,
 				maxBatch:      nil,
-				accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+				accessLogging: mustNewAccessLogging(accesslogging.Config{}, log),
 				next:          &noop{},
 				preFilterChain: func(next http.Handler) http.Handler {
 					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +122,7 @@ func TestGraphQLProtect_ServeHTTP(t *testing.T) {
 				schema:        nil,
 				tokens:        nil,
 				maxBatch:      nil,
-				accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+				accessLogging: mustNewAccessLogging(accesslogging.Config{}, log),
 				next:          &noop{},
 				preFilterChain: func(next http.Handler) http.Handler {
 					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -222,7 +230,7 @@ func TestGraphQLProtect_TimingContextPropagation(t *testing.T) {
 		schema:        schemaProvider,
 		maxBatch:      maxBatch,
 		tokens:        tokens.MaxTokens(tokens.DefaultConfig()),
-		accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+		accessLogging: mustNewAccessLogging(accesslogging.Config{}, log),
 		next:          upstreamHandler,
 		preFilterChain: func(next http.Handler) http.Handler {
 			return next
@@ -265,7 +273,7 @@ func TestGraphQLProtect_MarkProtectEndBeforeUpstream(t *testing.T) {
 		schema:        schemaProvider,
 		maxBatch:      maxBatch,
 		tokens:        tokens.MaxTokens(tokens.DefaultConfig()),
-		accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+		accessLogging: mustNewAccessLogging(accesslogging.Config{}, log),
 		next:          upstreamHandler,
 		preFilterChain: func(next http.Handler) http.Handler {
 			return next
@@ -313,7 +321,7 @@ func TestGraphQLProtect_DurationCalculation(t *testing.T) {
 		schema:        schemaProvider,
 		maxBatch:      maxBatch,
 		tokens:        tokens.MaxTokens(tokens.DefaultConfig()),
-		accessLogging: accesslogging.NewAccessLogging(accesslogging.Config{}, log),
+		accessLogging: mustNewAccessLogging(accesslogging.Config{}, log),
 		next:          upstreamHandler,
 		preFilterChain: func(next http.Handler) http.Handler {
 			return next
