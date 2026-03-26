@@ -155,7 +155,7 @@ access_logging:
   google_cloud_logging:
     # Enable Google Cloud Logging
     enabled: false
-    # GCP Project ID (optional if GOOGLE_CLOUD_PROJECT env var is set)
+    # GCP Project ID (required when google_cloud_logging is enabled)
     project_id: ""
     # Log name in GCP (defaults to "graphql-protect-access-logs")
     log_name: ""

@@ -70,7 +70,7 @@ access_logging:
   google_cloud_logging:
     # Enable Google Cloud Logging
     enabled: true
-    # GCP Project ID (optional if GOOGLE_CLOUD_PROJECT env var is set)
+    # GCP Project ID (required when google_cloud_logging is enabled)
     project_id: "my-gcp-project"
     # Log name in Google Cloud Logging (optional, defaults to "graphql-protect-access-logs")
     log_name: "graphql-protect-access-logs"
@@ -86,17 +86,6 @@ If used in conjunction with persisted operations the access log will be produced
 
 If async is enabled, every access log record will be put on a channel and the logging is processed async. This way there is no waiting for slog to actually log the entry, but the request can be proxied immediately after. The amount of requests that can be buffered is configurable.
 Metrics are available to see if you buffer overflows and logs are dropped, and how much of your configured buffer size is used. If this number is going up, you need to increase your buffersize.
-
-## Environment Variables
-
-When using Google Cloud Logging, the GCP Project ID can be provided via configuration or environment variables. The following priority order is used:
-
-1. `google_cloud_logging.project_id` in configuration file
-2. `GOOGLE_CLOUD_PROJECT` environment variable
-3. `GCP_PROJECT` environment variable
-4. `GCLOUD_PROJECT` environment variable
-
-If no project ID is found through any of these methods, the server will fail to start with an error message.
 
 ## Metrics
 

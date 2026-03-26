@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
 
 	"cloud.google.com/go/logging"
 	"github.com/prometheus/client_golang/prometheus"
@@ -114,26 +113,10 @@ func (w *GoogleCloudWriter) Shutdown(_ context.Context) error {
 	return nil
 }
 
-// detectProjectID detects the GCP project ID from config or environment
-// Follows the same pattern as the GCP Storage loader
+// detectProjectID requires the GCP project ID from config
 func detectProjectID(configProjectID string) (string, error) {
-	// If provided in config, use it
-	if configProjectID != "" {
-		return configProjectID, nil
+	if configProjectID == "" {
+		return "", fmt.Errorf("GCP project ID not configured. Set project_id in the google_cloud_logging configuration")
 	}
-
-	// Check environment variables in order
-	envVars := []string{
-		"GOOGLE_CLOUD_PROJECT",
-		"GCP_PROJECT",
-		"GCLOUD_PROJECT",
-	}
-
-	for _, envVar := range envVars {
-		if projectID := os.Getenv(envVar); projectID != "" {
-			return projectID, nil
-		}
-	}
-
-	return "", fmt.Errorf("GCP project ID not found. Set GOOGLE_CLOUD_PROJECT environment variable or configure project_id in YAML")
+	return configProjectID, nil
 }

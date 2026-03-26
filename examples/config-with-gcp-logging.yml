@@ -47,11 +47,7 @@ access_logging:
   google_cloud_logging:
     # Enable sending access logs to Google Cloud Logging
     enabled: true
-    # GCP Project ID
-    # Can also be set via environment variables (in priority order):
-    # - GOOGLE_CLOUD_PROJECT
-    # - GCP_PROJECT
-    # - GCLOUD_PROJECT
+    # GCP Project ID (required when google_cloud_logging is enabled)
     project_id: "my-gcp-project"
     # Log name in Google Cloud Logging
     # Defaults to "graphql-protect-access-logs" if not specified
