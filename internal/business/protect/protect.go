@@ -75,8 +75,13 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocument
 }
 
 func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	tc := NewTimingContext()
-	ctx := WithTimingContext(r.Context(), tc)
+	ctx := r.Context()
+
+	// Create timing context if not already present (middleware normally provides this)
+	if TimingContextFromContext(ctx) == nil {
+		tc := NewTimingContext()
+		ctx = WithTimingContext(ctx, tc)
+	}
 
 	ctx, span := tracer.Start(ctx, "Handle Request")
 	defer span.End()

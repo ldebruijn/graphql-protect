@@ -29,7 +29,11 @@ func RequestMetricMiddleware() func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			next.ServeHTTP(w, r)
+			// Create timing context and inject it into the request
+			tc := protect.NewTimingContext()
+			ctx := protect.WithTimingContext(r.Context(), tc)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 
 			totalDuration := time.Since(start)
 			route := r.URL.Path
@@ -38,7 +42,6 @@ func RequestMetricMiddleware() func(next http.Handler) http.Handler {
 			httpDuration.WithLabelValues(route, "total").Observe(totalDuration.Seconds())
 
 			// Extract timing context to calculate protect vs upstream
-			tc := protect.TimingContextFromContext(r.Context())
 			if tc != nil && !tc.End.IsZero() {
 				protectDuration := tc.Duration()
 				upstreamDuration := totalDuration - protectDuration
