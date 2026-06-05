@@ -63,16 +63,14 @@ func NewAccessLogging(cfg Config, log *slog.Logger) (*AccessLogging, error) {
 	}
 
 	// Select writer based on configuration
-	var writer LogWriter
-	var err error
-
-	writer = NewStdoutWriter(log)
+	var writer LogWriter = NewStdoutWriter(log)
 	if cfg.GoogleCloudLogging.Enabled {
-		// Use Google Cloud Logging writer
-		writer, err = NewGoogleCloudWriter(cfg.GoogleCloudLogging, log)
+		gcpWriter, err := NewGoogleCloudWriter(cfg.GoogleCloudLogging, log)
 		if err != nil {
 			// Fall back to stdout and warn the user
 			log.Warn("Failed to initialize Google Cloud Logging, falling back to stdout", "error", err)
+		} else {
+			writer = gcpWriter
 		}
 	}
 
@@ -83,7 +81,7 @@ func NewAccessLogging(cfg Config, log *slog.Logger) (*AccessLogging, error) {
 		includeOperationName: cfg.IncludeOperationName,
 		includeVariables:     cfg.IncludeVariables,
 		includePayload:       cfg.IncludePayload,
-		async:                cfg.Async,
+		async:                cfg.Async && !cfg.GoogleCloudLogging.Enabled,
 		writer:               writer,
 		shutdown:             make(chan struct{}),
 	}
