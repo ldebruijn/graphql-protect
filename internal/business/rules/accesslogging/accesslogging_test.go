@@ -227,3 +227,72 @@ func TestAccessLogging_Shutdown(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+// mockLogWriter counts Write invocations so regression tests can assert
+// delivery without contacting an external backend.
+type mockLogWriter struct {
+	writes int
+}
+
+func (m *mockLogWriter) Write(_ LogEntryData)             { m.writes++ }
+func (m *mockLogWriter) Shutdown(_ context.Context) error { return nil }
+
+// Regression: enabling both Async and Google Cloud Logging used to silently
+// drop every log entry. The async buffer is intentionally not created when
+// GCP is the backend (the GCP client batches internally), but the `async`
+// field was left true — so Log() routed into the async branch, hit a nil
+// channel, and fell through to the dropped_logs default case. After the fix,
+// `async` is effectively disabled when GCP is enabled and logs flow
+// synchronously to the writer.
+func TestAccessLogging_GCPWithAsyncDoesNotDropLogs(t *testing.T) {
+	cfg := Config{
+		Enabled:    true,
+		Async:      true,
+		BufferSize: 100,
+		GoogleCloudLogging: GoogleCloudConfig{
+			Enabled: true,
+			// Empty ProjectID makes NewGoogleCloudWriter fail before any
+			// network IO, keeping the test hermetic. We swap the writer below.
+		},
+	}
+	log := slog.New(&testLogHandler{assert: func(_ context.Context, _ slog.Record) error { return nil }})
+
+	a, err := NewAccessLogging(cfg, log)
+	assert.NoError(t, err)
+	assert.False(t, a.async, "async must be disabled when GCP is enabled")
+	assert.Nil(t, a.logChan, "async channel must not be created when GCP is enabled")
+
+	mock := &mockLogWriter{}
+	a.writer = mock
+
+	a.Log([]gql.RequestData{{OperationName: "Test"}}, http.Header{})
+
+	assert.Equal(t, 1, mock.writes, "log must reach the writer instead of being dropped")
+}
+
+// Regression: when GCP writer construction fails, the constructor must fall
+// back to the stdout writer as the warning message promises. Previously the
+// initial `writer = NewStdoutWriter(log)` assignment was clobbered by the
+// failed `NewGoogleCloudWriter` call (which returns a nil pointer alongside
+// the error), leaving the writer field holding an interface that wraps a nil
+// concrete pointer — every subsequent Log() call would NPE.
+func TestAccessLogging_FallsBackToStdoutWhenGCPInitFails(t *testing.T) {
+	cfg := Config{
+		Enabled: true,
+		GoogleCloudLogging: GoogleCloudConfig{
+			Enabled: true,
+			// Empty ProjectID makes NewGoogleCloudWriter return an error before
+			// any network IO, triggering the fallback path.
+		},
+	}
+	log := slog.New(&testLogHandler{assert: func(_ context.Context, _ slog.Record) error { return nil }})
+
+	a, err := NewAccessLogging(cfg, log)
+	assert.NoError(t, err)
+	assert.IsType(t, &StdoutWriter{}, a.writer, "must fall back to stdout writer when GCP init fails")
+
+	// Calling Log() must not panic on the nil GCP writer.
+	assert.NotPanics(t, func() {
+		a.Log([]gql.RequestData{{OperationName: "Test"}}, http.Header{})
+	})
+}
