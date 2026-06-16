@@ -79,7 +79,7 @@ func (t *MaxTokensRule) Validate(source *ast.Source, operationName string) error
 		if t.cfg.RejectOnFailure {
 			resultCounter.WithLabelValues("rejected").Inc()
 			return validation.RuleValidationResult{
-				Rule:          "max-aliases",
+				Rule:          "max-tokens",
 				OperationName: operationName,
 				Result:        validation.REJECTED,
 				Message:       fmt.Sprintf("operation has exceeded maximum tokens. found [%d], max [%d]", count, maxTokens),
@@ -87,7 +87,7 @@ func (t *MaxTokensRule) Validate(source *ast.Source, operationName string) error
 		}
 		resultCounter.WithLabelValues("failed").Inc()
 		return validation.RuleValidationResult{
-			Rule:          "max-aliases",
+			Rule:          "max-tokens",
 			OperationName: operationName,
 			Result:        validation.FAILED,
 			Message:       fmt.Sprintf("operation has exceeded maximum tokens. found [%d], max [%d]", count, maxTokens),

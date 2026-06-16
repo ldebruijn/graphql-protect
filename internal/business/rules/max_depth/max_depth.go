@@ -91,7 +91,7 @@ func NewMaxDepthRule(cfg Config, rules *validatorrules.Rules) {
 						addError(validation.RuleValidationResult{
 							Rule:          "max-depth",
 							OperationName: operation.Name,
-							Result:        "REJECTED",
+							Result:        validation.REJECTED,
 							Message:       fmt.Sprintf("list depth limit of %d exceeded, found %d", cfg.List.Max, listDepth),
 						}.Wrap())
 						resultCounter.WithLabelValues("list", "rejected", operationName).Inc()
@@ -155,9 +155,5 @@ func isList(t *ast.Type) bool {
 	if t == nil {
 		return false
 	}
-
-	if t.NamedType != "" {
-		return false
-	}
-	return true
+	return t.Elem != nil
 }

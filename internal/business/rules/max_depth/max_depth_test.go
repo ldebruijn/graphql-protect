@@ -271,7 +271,7 @@ type Price {
 				schema: schema,
 			},
 			want: validation.RuleValidationResult{
-				Rule:          "max-aliases",
+				Rule:          "max-depth",
 				OperationName: "",
 				Result:        validation.REJECTED,
 				Message:       fmt.Sprintf("field depth limit of %d exceeded, found %d", 2, 3),
@@ -302,7 +302,7 @@ type Price {
 				schema: schema,
 			},
 			want: validation.RuleValidationResult{
-				Rule:          "max-aliases",
+				Rule:          "max-depth",
 				OperationName: "",
 				Result:        validation.REJECTED,
 				Message:       fmt.Sprintf("field depth limit of %d exceeded, found %d", 2, 3),
