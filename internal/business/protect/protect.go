@@ -218,7 +218,7 @@ func filterRejected(errs gqlerror.List) gqlerror.List {
 	var filtered gqlerror.List
 	for _, err := range errs {
 		if ruleResult, ok := errors.AsType[validation.RuleValidationResult](err); ok {
-			if ruleResult.Result == ("REJECTED") {
+			if ruleResult.Result == validation.REJECTED {
 				filtered = append(filtered, err)
 			}
 			continue
