@@ -6,15 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ldebruijn/graphql-protect/internal/business/gql"
-	"github.com/ldebruijn/graphql-protect/internal/business/validation"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 	"io"
 	"log/slog"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/ldebruijn/graphql-protect/internal/business/gql"
+	"github.com/ldebruijn/graphql-protect/internal/business/validation"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 var (
@@ -175,6 +176,13 @@ func (p *Handler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:f
 		payload, err := gql.ParseRequestPayload(r)
 		if err != nil {
 			p.log.Warn("error decoding payload", "err", err)
+			if p.cfg.RejectOnFailure {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				res, _ := json.Marshal(ErrorPayload{Errors: gqlerror.List{gqlerror.Wrap(err)}})
+				_, _ = w.Write(res)
+				return
+			}
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -213,10 +221,10 @@ func (p *Handler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:f
 
 		if len(errs) > 0 {
 			// if any error occurred we fail
-			res, _ := json.Marshal(ErrorPayload{
-				Errors: errs,
-			})
-			http.Error(w, string(res), 200)
+			res, _ := json.Marshal(ErrorPayload{Errors: errs})
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(res)
 			return
 		}
 
@@ -249,10 +257,14 @@ func (p *Handler) SwapHashForQuery(next http.Handler) http.Handler { // nolint:f
 }
 
 func (p *Handler) GetTrustedDocuments() map[string]PersistedOperation {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
 	return p.cache
 }
 
 func (p *Handler) Validate(validate func(data gql.RequestData) gqlerror.List) []validation.Error {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
 	var errs []validation.Error
 	for hash, operation := range p.cache {
 		data := gql.RequestData{
@@ -282,9 +294,11 @@ func (p *Handler) load(failureStrategy ReloadFailureStrategy) error {
 		// implicit fall through for other failure types
 	}
 
-	p.lock.Lock()
-	p.cache = newState
-	p.lock.Unlock()
+	if newState != nil {
+		p.lock.Lock()
+		p.cache = newState
+		p.lock.Unlock()
+	}
 
 	p.log.Info(fmt.Sprintf("Total number of unique operation hashes: %d", len(newState)))
 	uniqueHashesInMemGauge.WithLabelValues().Set(float64(len(newState)))

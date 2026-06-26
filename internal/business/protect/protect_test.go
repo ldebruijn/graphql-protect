@@ -1,13 +1,6 @@
 package protect
 
 import (
-	"github.com/ldebruijn/graphql-protect/internal/app/config"
-	_http "github.com/ldebruijn/graphql-protect/internal/app/http"
-	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
-	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
-	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
-	"github.com/ldebruijn/graphql-protect/internal/business/schema"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"log/slog"
 	"net/http"
@@ -16,6 +9,17 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ldebruijn/graphql-protect/internal/app/config"
+	_http "github.com/ldebruijn/graphql-protect/internal/app/http"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/accesslogging"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/batch"
+	block_field_suggestions "github.com/ldebruijn/graphql-protect/internal/business/rules/block_field_suggestions"
+	"github.com/ldebruijn/graphql-protect/internal/business/rules/tokens"
+	"github.com/ldebruijn/graphql-protect/internal/business/schema"
+	"github.com/ldebruijn/graphql-protect/internal/business/trusteddocuments"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func mustNewAccessLogging(cfg accesslogging.Config, log *slog.Logger) *accesslogging.AccessLogging {
@@ -346,4 +350,73 @@ func TestGraphQLProtect_DurationCalculation(t *testing.T) {
 
 	// Verify protect duration is positive
 	assert.Greater(t, protectDuration, time.Duration(0), "Protect duration should be positive")
+}
+
+func TestGraphQLProtect_BlocksWebSocketUpgrades(t *testing.T) {
+	log := slog.Default()
+	schemaProvider := createTestSchemaProvider(t)
+
+	maxBatch, _ := batch.NewMaxBatch(batch.Config{Enabled: true, Max: 10, RejectOnFailure: true})
+
+	p := &GraphQLProtect{
+		log:           log,
+		cfg:           &config.Config{},
+		schema:        schemaProvider,
+		maxBatch:      maxBatch,
+		tokens:        tokens.MaxTokens(tokens.DefaultConfig()),
+		accessLogging: mustNewAccessLogging(accesslogging.Config{}, log),
+		next:          &noop{},
+		preFilterChain: func(next http.Handler) http.Handler {
+			return next
+		},
+	}
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/graphql", nil)
+	r.Header.Set("Upgrade", "websocket")
+	r.Header.Set("Connection", "Upgrade")
+
+	p.ServeHTTP(w, r)
+
+	assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
+	body, _ := io.ReadAll(w.Result().Body)
+	assert.Contains(t, string(body), "websocket")
+}
+
+func TestNewGraphQLProtect_BlockFieldSuggestionsEnabled_NoSuggestionsInValidationErrors(t *testing.T) {
+	log := slog.Default()
+	schemaProvider := createTestSchemaProvider(t)
+
+	noopLoader, err := trusteddocuments.NewNoOpLoader()
+	require.NoError(t, err)
+	po, err := trusteddocuments.NewPersistedOperations(log, trusteddocuments.Config{
+		Enabled: false,
+		Loader: trusteddocuments.LoaderConfig{
+			Reload: struct {
+				Enabled  bool          `yaml:"enabled"`
+				Interval time.Duration `yaml:"interval"`
+				Timeout  time.Duration `yaml:"timeout"`
+			}{Enabled: false},
+		},
+	}, noopLoader)
+	require.NoError(t, err)
+
+	cfg := &config.Config{
+		BlockFieldSuggestions: block_field_suggestions.Config{
+			Enabled: true,
+			Mask:    "[redacted]",
+		},
+	}
+
+	p, err := NewGraphQLProtect(log, cfg, po, schemaProvider, &noop{})
+	require.NoError(t, err)
+
+	// "hell" is close enough to "hello" that gqlparser would normally suggest it.
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/graphql", strings.NewReader(`{"query":"{ hell }"}`))
+	p.ServeHTTP(w, r)
+
+	body, _ := io.ReadAll(w.Result().Body)
+	assert.NotContains(t, string(body), "Did you mean",
+		"protect-layer validation errors must not leak field suggestions when BlockFieldSuggestions is enabled")
 }

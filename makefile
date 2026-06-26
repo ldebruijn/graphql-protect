@@ -22,7 +22,7 @@ x-build:
 
 .PHONY: test
 test:
-	go test -v ./...
+	go test -race -v ./...
 
 .PHONY: lint
 ## Runs a linter over the code

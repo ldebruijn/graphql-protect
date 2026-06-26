@@ -5,13 +5,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+
 	"github.com/ldebruijn/graphql-protect/internal/business/gql"
 	"github.com/stretchr/testify/assert"
+	"github.com/vektah/gqlparser/v2/gqlerror"
+
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestNewPersistedOperations(t *testing.T) {
@@ -202,6 +207,53 @@ func TestNewPersistedOperations(t *testing.T) {
 			},
 		},
 		{
+			name: "returns application/json Content-Type on persisted operation error",
+			args: args{
+				cfg: Config{
+					Enabled:         true,
+					RejectOnFailure: false,
+				},
+				payload: func() []byte {
+					data := gql.RequestData{
+						Extensions: gql.Extensions{
+							PersistedQuery: &gql.PersistedQuery{
+								Sha256Hash: "unknown-hash",
+							},
+						},
+					}
+					bts, _ := json.Marshal(data)
+					return bts
+				}(),
+				cache: map[string]PersistedOperation{},
+			},
+			want: func(_ *testing.T) http.Handler {
+				return http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {})
+			},
+			resWant: func(t *testing.T, res *http.Response) {
+				assert.Equal(t, 200, res.StatusCode)
+				assert.Equal(t, "application/json", res.Header.Get("Content-Type"))
+			},
+		},
+		{
+			name: "rejects request on parse error when trusted documents is enabled",
+			args: args{
+				cfg: Config{
+					Enabled:         true,
+					RejectOnFailure: true,
+				},
+				payload: []byte(`not valid json`),
+			},
+			want: func(t *testing.T) http.Handler {
+				fn := func(_ http.ResponseWriter, _ *http.Request) {
+					assert.Fail(t, "upstream should not be called when parse fails with trusted docs enabled")
+				}
+				return http.HandlerFunc(fn)
+			},
+			resWant: func(t *testing.T, res *http.Response) {
+				assert.Equal(t, 400, res.StatusCode)
+			},
+		},
+		{
 			name: "fails entire batch if one operation is unknown",
 			args: args{
 				cfg: Config{
@@ -241,7 +293,7 @@ func TestNewPersistedOperations(t *testing.T) {
 				assert.Equal(t, 200, res.StatusCode)
 				payload, err := io.ReadAll(res.Body)
 				assert.NoError(t, err)
-				assert.Equal(t, "{\"errors\":[{\"message\":\"PersistedOperationNotFound\"}]}\n", string(payload))
+				assert.Equal(t, "{\"errors\":[{\"message\":\"PersistedOperationNotFound\"}]}", string(payload))
 			},
 		},
 	}
@@ -405,6 +457,120 @@ func TestLoader(t *testing.T) {
 			assert.Equal(t, tt.want, po.cache)
 		})
 	}
+}
+
+// TestLoadNilDoesNotWipeCache verifies that a loader returning (nil, err) with the Ignore
+// strategy does not overwrite the existing in-memory cache.
+func TestLoadNilDoesNotWipeCache(t *testing.T) {
+	existing := map[string]PersistedOperation{
+		"abc": {Operation: "{ existing }", Name: "existing"},
+	}
+	nilLoader := &testLoader{
+		data:            nil,
+		err:             errors.New("storage unavailable"),
+		willReturnError: true,
+	}
+	po, err := NewPersistedOperations(slog.Default(), Config{}, nilLoader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	po.cache = existing
+
+	_ = po.load(ReloadFailureStrategyIgnore)
+
+	if po.cache == nil {
+		t.Fatal("load() with nil newState and Ignore strategy wiped the existing cache")
+	}
+	if _, ok := po.cache["abc"]; !ok {
+		t.Errorf("existing cache entry was removed after failed load; cache is now %v", po.cache)
+	}
+}
+
+// TestGetTrustedDocumentsNoRace exercises GetTrustedDocuments concurrently with
+// cache writes to expose the missing lock (run with -race).
+func TestGetTrustedDocumentsNoRace(t *testing.T) {
+	loader := newMemoryLoader(map[string]PersistedOperation{
+		"h1": {Operation: "{ q }", Name: "q"},
+	})
+	po, err := NewPersistedOperations(slog.Default(), Config{}, loader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				po.lock.Lock()
+				po.cache = map[string]PersistedOperation{"h2": {Operation: "{ q2 }", Name: "q2"}}
+				po.lock.Unlock()
+			}
+		}
+	}()
+
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 300; j++ {
+				_ = po.GetTrustedDocuments()
+			}
+		}()
+	}
+
+	time.Sleep(30 * time.Millisecond)
+	close(stop)
+	wg.Wait()
+}
+
+// TestValidateNoRace exercises Validate concurrently with cache writes to expose the missing lock.
+func TestValidateNoRace(t *testing.T) {
+	loader := newMemoryLoader(map[string]PersistedOperation{
+		"h1": {Operation: "{ q }", Name: "q"},
+	})
+	po, err := NewPersistedOperations(slog.Default(), Config{}, loader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				po.lock.Lock()
+				po.cache = map[string]PersistedOperation{"h2": {Operation: "{ q2 }", Name: "q2"}}
+				po.lock.Unlock()
+			}
+		}
+	}()
+
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 50; j++ {
+				_ = po.Validate(func(_ gql.RequestData) gqlerror.List { return nil })
+			}
+		}()
+	}
+
+	time.Sleep(30 * time.Millisecond)
+	close(stop)
+	wg.Wait()
 }
 
 var _ Loader = &testLoader{}

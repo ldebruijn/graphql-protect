@@ -79,7 +79,7 @@ func (b *BlockFieldSuggestionsHandler) processError(err map[string]interface{}) 
 }
 
 func (b *BlockFieldSuggestionsHandler) replaceSuggestions(message string) string {
-	if strings.HasPrefix(message, "Did you mean") {
+	if strings.Contains(message, "Did you mean") {
 		resultCounter.WithLabelValues("masked").Inc()
 		return b.cfg.Mask
 	}

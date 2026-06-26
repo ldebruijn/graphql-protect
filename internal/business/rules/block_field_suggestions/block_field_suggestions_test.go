@@ -64,12 +64,31 @@ func TestProcessBody(t *testing.T) {
 			},
 		},
 		{
-			name: "Replaces suggestions when found",
+			name: "Replaces suggestions when found at start of message",
 			args: args{
 				payload: map[string]interface{}{
 					"errors": []map[string]interface{}{
 						{
 							"message": "Did you mean 'foobar'?",
+						},
+					},
+				},
+			},
+			want: map[string]interface{}{
+				"errors": []map[string]interface{}{
+					{
+						"message": "[redacted]",
+					},
+				},
+			},
+		},
+		{
+			name: "Replaces suggestions when embedded mid-message (common gqlparser format)",
+			args: args{
+				payload: map[string]interface{}{
+					"errors": []map[string]interface{}{
+						{
+							"message": `Cannot query field "hell" on type "Query". Did you mean "hello"?`,
 						},
 					},
 				},

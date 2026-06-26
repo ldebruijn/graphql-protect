@@ -43,9 +43,12 @@ func init() {
 func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 	if cfg.Enabled {
 		rules.AddRule("MaxAliases", func(observers *validator.Events, addError validator.AddErrFunc) {
-			aliases := 0
-			// keep track of # of aliases per fragment definition
+			// keep track of # of aliases per fragment definition (memo cache, shared across operations)
 			visitedFragments := make(map[string]int)
+
+			// aliases is declared per-operation inside OnOperation so it doesn't accumulate across
+			// multiple operation definitions in the same document.
+			var operationFragmentAliases int
 
 			observers.OnFragmentSpread(func(_ *validator.Walker, fragmentSpread *ast.FragmentSpread) {
 				definition := fragmentSpread.Definition
@@ -54,11 +57,12 @@ func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 					visitedFragments[definition.Name] = count
 				}
 
-				aliases += visitedFragments[definition.Name]
+				operationFragmentAliases += visitedFragments[definition.Name]
 			})
 
 			observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
-				aliases += countAliases(operation)
+				aliases := countAliases(operation) + operationFragmentAliases
+				operationFragmentAliases = 0 // reset for next operation
 
 				maxAliases := cfg.Max
 				if override, ok := cfg.Overrides[operation.Name]; ok {

@@ -223,3 +223,58 @@ type Book {
 		})
 	}
 }
+
+// Test_MaxAliasesRule_MultiOperationAccumulation verifies that the alias limit is enforced
+// per-operation and that the counter is not carried over between operations.
+func Test_MaxAliasesRule_MultiOperationAccumulation(t *testing.T) {
+	schemaStr := `
+type Query {
+   getBook(title: String): Book
+}
+
+type Book {
+	id: ID!
+	title: String
+	author: String
+}`
+
+	// Each operation has 6 aliases, limit is 10.
+	// A per-operation check should allow both; accumulated check would reject the second.
+	query := `
+query OpA {
+    a1: getBook(title: "1") { title }
+    a2: getBook(title: "2") { title }
+    a3: getBook(title: "3") { title }
+    a4: getBook(title: "4") { title }
+    a5: getBook(title: "5") { title }
+    a6: getBook(title: "6") { title }
+}
+query OpB {
+    b1: getBook(title: "1") { title }
+    b2: getBook(title: "2") { title }
+    b3: getBook(title: "3") { title }
+    b4: getBook(title: "4") { title }
+    b5: getBook(title: "5") { title }
+    b6: getBook(title: "6") { title }
+}`
+
+	cfg := Config{
+		Enabled:         true,
+		Max:             10,
+		RejectOnFailure: true,
+	}
+
+	rules := validatorrules.NewDefaultRules()
+	NewMaxAliasesRule(cfg, rules)
+
+	parsedQuery, _ := parser.ParseQuery(&ast.Source{Name: "ff", Input: query})
+	schema := gqlparser.MustLoadSchema(&ast.Source{
+		Name:    "graph/schema.graphqls",
+		Input:   schemaStr,
+		BuiltIn: false,
+	})
+
+	errs := validator.ValidateWithRules(schema, parsedQuery, rules)
+
+	assert.Empty(t, errs, "each operation has 6 aliases which is below the limit of 10; both should be allowed")
+}

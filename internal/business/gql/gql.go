@@ -41,7 +41,8 @@ type PersistedQuery struct {
 }
 
 func ParseRequestPayload(r *http.Request) ([]RequestData, error) {
-	if r.ContentLength < 1 {
+	// ContentLength == 0 means empty body; -1 means unknown (e.g. chunked encoding) so we must read it.
+	if r.ContentLength == 0 {
 		return []RequestData{}, nil
 	}
 
@@ -56,6 +57,9 @@ func ParseRequestPayload(r *http.Request) ([]RequestData, error) {
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	body = bytes.TrimSpace(body)
+	if len(body) == 0 {
+		return []RequestData{}, nil
+	}
 	// assume it's a batch request
 	if body[0] == '[' {
 		var data []RequestData
