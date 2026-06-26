@@ -21,9 +21,10 @@ var (
 )
 
 type Config struct {
-	Enabled         bool `yaml:"enabled"`
-	Max             int  `yaml:"max"`
-	RejectOnFailure bool `yaml:"reject_on_failure"`
+	Enabled         bool           `yaml:"enabled"`
+	Max             int            `yaml:"max"`
+	RejectOnFailure bool           `yaml:"reject_on_failure"`
+	Overrides       map[string]int `yaml:"overrides"`
 }
 
 func DefaultConfig() Config {
@@ -31,6 +32,7 @@ func DefaultConfig() Config {
 		Enabled:         true,
 		Max:             15,
 		RejectOnFailure: true,
+		Overrides:       make(map[string]int),
 	}
 }
 
@@ -58,13 +60,18 @@ func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 			observers.OnOperation(func(_ *validator.Walker, operation *ast.OperationDefinition) {
 				aliases += countAliases(operation)
 
-				if aliases > cfg.Max {
+				maxAliases := cfg.Max
+				if override, ok := cfg.Overrides[operation.Name]; ok {
+					maxAliases = override
+				}
+
+				if aliases > maxAliases {
 					if cfg.RejectOnFailure {
 						addError(validation.RuleValidationResult{
 							Rule:          "max-aliases",
 							OperationName: operation.Name,
 							Result:        validation.REJECTED,
-							Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", cfg.Max, aliases),
+							Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", maxAliases, aliases),
 						}.Wrap())
 						resultCounter.WithLabelValues("rejected").Inc()
 					} else {
@@ -72,7 +79,7 @@ func NewMaxAliasesRule(cfg Config, rules *validatorrules.Rules) {
 							Rule:          "max-aliases",
 							OperationName: operation.Name,
 							Result:        validation.FAILED,
-							Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", cfg.Max, aliases),
+							Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", maxAliases, aliases),
 						}.Wrap())
 						resultCounter.WithLabelValues("failed").Inc()
 					}

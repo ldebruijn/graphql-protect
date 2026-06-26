@@ -95,6 +95,85 @@ type Book {
 			}.AsGqlError(),
 		},
 		{
+			name: "override allows more aliases for named operation",
+			args: args{
+				query: `query MyOp {
+    firstBooks: getBook(title: "null") {
+      author
+      title
+    }
+    secondBooks: getBook(title: "null") {
+      author
+      title
+    }
+  }`,
+				schema: schema,
+				cfg: Config{
+					Max:             1,
+					Enabled:         true,
+					RejectOnFailure: true,
+					Overrides:       map[string]int{"MyOp": 5},
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "override allows fewer aliases for named operation",
+			args: args{
+				query: `query MyOp {
+    firstBooks: getBook(title: "null") {
+      author
+      title
+    }
+    secondBooks: getBook(title: "null") {
+      author
+      title
+    }
+  }`,
+				schema: schema,
+				cfg: Config{
+					Max:             15,
+					Enabled:         true,
+					RejectOnFailure: true,
+					Overrides:       map[string]int{"MyOp": 1},
+				},
+			},
+			want: validation.RuleValidationResult{
+				Rule:          "max-aliases",
+				OperationName: "MyOp",
+				Result:        validation.REJECTED,
+				Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", 1, 2),
+			}.AsGqlError(),
+		},
+		{
+			name: "override does not apply to other operations",
+			args: args{
+				query: `query OtherOp {
+    firstBooks: getBook(title: "null") {
+      author
+      title
+    }
+    secondBooks: getBook(title: "null") {
+      author
+      title
+    }
+  }`,
+				schema: schema,
+				cfg: Config{
+					Max:             1,
+					Enabled:         true,
+					RejectOnFailure: true,
+					Overrides:       map[string]int{"MyOp": 5},
+				},
+			},
+			want: validation.RuleValidationResult{
+				Rule:          "max-aliases",
+				OperationName: "OtherOp",
+				Result:        validation.REJECTED,
+				Message:       fmt.Sprintf("aliases limit of %d exceeded, found %d", 1, 2),
+			}.AsGqlError(),
+		},
+		{
 			name: "respects fragment aliases",
 			args: args{
 				query: `query A {
