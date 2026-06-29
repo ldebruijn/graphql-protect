@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	cloud.google.com/go/logging v1.18.0
-	cloud.google.com/go/storage v1.62.3
+	cloud.google.com/go/storage v1.63.0
 	github.com/jedib0t/go-pretty/v6 v6.8.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/stretchr/testify v1.11.1
