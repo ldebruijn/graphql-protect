@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"fmt"
@@ -50,6 +51,10 @@ type GraphQLProtect struct {
 func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocuments.Handler, schema *schema.Provider, upstreamHandler http.Handler) (*GraphQLProtect, error) {
 	rules := validatorrules.NewDefaultRules()
 
+	if cfg.BlockFieldSuggestions.Enabled {
+		rules.ReplaceRule("FieldsOnCorrectType", validatorrules.FieldsOnCorrectTypeRuleWithoutSuggestions.RuleFunc)
+	}
+
 	aliases.NewMaxAliasesRule(cfg.MaxAliases, rules)
 	max_depth.NewMaxDepthRule(cfg.MaxDepth, rules)
 	maxBatch, err := batch.NewMaxBatch(cfg.MaxBatch)
@@ -80,6 +85,13 @@ func NewGraphQLProtect(log *slog.Logger, cfg *config.Config, po *trusteddocument
 }
 
 func (p *GraphQLProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if strings.EqualFold(r.Header.Get("Upgrade"), "websocket") {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"errors":[{"message":"websocket connections are not supported"}]}`))
+		return
+	}
+
 	ctx := r.Context()
 
 	// Create timing context if not already present (middleware normally provides this)

@@ -7,6 +7,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"log/slog"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -45,6 +46,7 @@ func DefaultConfig() Config {
 
 type Provider struct {
 	cfg           Config
+	mu            sync.RWMutex
 	schema        *ast.Schema
 	done          chan bool
 	refreshTicker *time.Ticker
@@ -90,7 +92,9 @@ func (p *Provider) load(contents string) error {
 		return err
 	}
 
+	p.mu.Lock()
 	p.schema = schema
+	p.mu.Unlock()
 	return nil
 }
 
@@ -104,6 +108,8 @@ func (p *Provider) loadFromFs() error {
 }
 
 func (p *Provider) Get() *ast.Schema {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
 	return p.schema
 }
 

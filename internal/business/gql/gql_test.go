@@ -107,6 +107,32 @@ func TestParseRequestPayload(t *testing.T) {
 			want:    []RequestData{},
 			wantErr: false,
 		},
+		{
+			name: "Handles whitespace-only body without panicking",
+			args: args{
+				r: func() *http.Request {
+					body := bytes.NewBuffer([]byte("   \t\n  "))
+					return httptest.NewRequest("POST", "/graphql", body)
+				}(),
+			},
+			want:    []RequestData{},
+			wantErr: false,
+		},
+		{
+			name: "Handles chunked body (ContentLength -1) without bypassing validation",
+			args: args{
+				r: func() *http.Request {
+					body := bytes.NewBuffer([]byte(`{"query":"{ __typename }"}`))
+					req := httptest.NewRequest("POST", "/graphql", body)
+					req.ContentLength = -1
+					return req
+				}(),
+			},
+			want: []RequestData{
+				{Query: "{ __typename }"},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
