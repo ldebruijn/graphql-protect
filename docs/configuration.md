@@ -159,6 +159,8 @@ access_logging:
     project_id: ""
     # Log name in GCP (defaults to "graphql-protect-access-logs")
     log_name: ""
+    # Max in-memory buffer size for pending GCP log entries, in MB (defaults to 1000 ≈ 1GiB)
+    log_buffer_max_size_mb: 1000
 ```
 
 For a more in-depth view of each option visit the accompanying documentation page of each individual protection.

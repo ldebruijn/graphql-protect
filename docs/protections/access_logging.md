@@ -74,6 +74,8 @@ access_logging:
     project_id: "my-gcp-project"
     # Log name in Google Cloud Logging (optional, defaults to "graphql-protect-access-logs")
     log_name: "graphql-protect-access-logs"
+    # Max in-memory buffer size for pending GCP log entries, in MB (defaults to 1000 ≈ 1GiB)
+    log_buffer_max_size_mb: 1000
 ```
 
 **Note**: When `google_cloud_logging.enabled: true`, the `async` option is automatically disabled (even if set to true). The GCP Cloud Logging client handles batching internally.
@@ -101,6 +103,7 @@ Access logging provides the following Prometheus metrics:
 
 - `graphql_protect_access_logging_gcp_writes_total` - Total number of access log entries written to Google Cloud Logging
 - `graphql_protect_access_logging_gcp_errors_total` - Total number of errors encountered while writing to Google Cloud Logging
+- `graphql_protect_access_logging_gcp_dropped_total` - Total number of messages dropped while writing to Google Cloud Logging
 
 These metrics help you monitor the health and performance of your access logging system.
 

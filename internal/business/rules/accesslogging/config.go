@@ -14,9 +14,10 @@ type Config struct {
 
 // GoogleCloudConfig represents Google Cloud Logging configuration
 type GoogleCloudConfig struct {
-	Enabled   bool   `yaml:"enabled"`
-	ProjectID string `yaml:"project_id"`
-	LogName   string `yaml:"log_name"`
+	Enabled           bool   `yaml:"enabled"`
+	ProjectID         string `yaml:"project_id"`
+	LogName           string `yaml:"log_name"`
+	BufferedByteLimit int    `yaml:"log_buffer_max_size_mb"`
 }
 
 // DefaultConfig returns default configuration for access logging
@@ -30,9 +31,10 @@ func DefaultConfig() Config {
 		Async:                false,
 		BufferSize:           1000,
 		GoogleCloudLogging: GoogleCloudConfig{
-			Enabled:   false,
-			ProjectID: "",
-			LogName:   "",
+			Enabled:           false,
+			ProjectID:         "",
+			LogName:           "",
+			BufferedByteLimit: 1000,
 		},
 	}
 }

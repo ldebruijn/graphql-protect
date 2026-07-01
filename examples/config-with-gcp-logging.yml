@@ -52,6 +52,8 @@ access_logging:
     # Log name in Google Cloud Logging
     # Defaults to "graphql-protect-access-logs" if not specified
     log_name: "graphql-protect-access-logs"
+    # Max in-memory buffer size for pending GCP log entries, in MB (defaults to 1000 ≈ 1GiB)
+    log_buffer_max_size_mb: 1000
 
 # Note: With google_cloud_logging.enabled: true
 # - Access logs go to Google Cloud Logging
@@ -59,6 +61,7 @@ access_logging:
 # - Monitor using Prometheus metrics:
 #   - graphql_protect_access_logging_gcp_writes_total
 #   - graphql_protect_access_logging_gcp_errors_total
+#   - graphql_protect_access_logging_gcp_dropped_total
 
 obfuscate_validation_errors: false
 obfuscate_upstream_errors: true
