@@ -215,6 +215,9 @@ log:
 					IncludePayload:       true,
 					Async:                false,
 					BufferSize:           1000,
+					GoogleCloudLogging: accesslogging.GoogleCloudConfig{
+						BufferedByteLimit: 1000,
+					},
 				},
 				Log: log.Config{
 					Format: log.TextFormat,

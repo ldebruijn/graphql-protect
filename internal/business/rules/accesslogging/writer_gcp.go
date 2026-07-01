@@ -26,10 +26,17 @@ var (
 		Name:      "gcp_errors_total",
 		Help:      "The total number of errors encountered while writing to Google Cloud Logging",
 	})
+
+	gcpDroppedCounter = prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace: "graphql_protect",
+		Subsystem: "access_logging",
+		Name:      "gcp_dropped_total",
+		Help:      "The total number of messages dropped while writing to Google Cloud Logging",
+	})
 )
 
 func init() {
-	prometheus.MustRegister(gcpWritesCounter, gcpErrorsCounter)
+	prometheus.MustRegister(gcpWritesCounter, gcpErrorsCounter, gcpDroppedCounter)
 }
 
 // GoogleCloudWriter writes access logs to Google Cloud Logging
@@ -57,7 +64,15 @@ func NewGoogleCloudWriter(cfg GoogleCloudConfig, log *slog.Logger) (*GoogleCloud
 		logName = "graphql-protect-access-logs"
 	}
 
-	logger := client.Logger(logName)
+	logger := client.Logger(logName, logging.BufferedByteLimit(cfg.BufferedByteLimit<<20))
+	client.OnError = func(err error) {
+		if errors.Is(err, logging.ErrOverflow) {
+			gcpDroppedCounter.Inc()
+			return
+		}
+		gcpErrorsCounter.Inc()
+		log.Warn("Google Cloud Logging error", "err", err)
+	}
 
 	log.Info("Google Cloud Logging initialized",
 		"project_id", projectID,
