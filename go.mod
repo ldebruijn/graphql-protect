@@ -4,9 +4,9 @@ go 1.26.4
 
 require (
 	cloud.google.com/go/logging v1.19.0
-	cloud.google.com/go/storage v1.63.1
+	cloud.google.com/go/storage v1.64.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
-	github.com/prometheus/client_golang v1.24.0
+	github.com/prometheus/client_golang v1.24.1
 	github.com/stretchr/testify v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.36
 	go.opentelemetry.io/contrib/exporters/autoexport v0.69.0
@@ -15,7 +15,7 @@ require (
 	go.opentelemetry.io/contrib/propagators/autoprop v0.69.0
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/sdk v1.44.0
-	google.golang.org/api v0.289.0
+	google.golang.org/api v0.290.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -54,7 +54,7 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20250313105119-ba97887b0a25 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.70.0 // indirect
+	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.8.1 // indirect
