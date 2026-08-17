@@ -20,8 +20,14 @@ var reloadGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 },
 	[]string{"state"})
 
+type LoaderConfig struct {
+	Type     string `yaml:"type"`     // "local" (default) or "gcp"
+	Location string `yaml:"location"` // GCS bucket name when type is "gcp"
+}
+
 type Config struct {
-	Path       string `yaml:"path"`
+	Path       string       `yaml:"path"`
+	Loader     LoaderConfig `yaml:"loader"`
 	AutoReload struct {
 		Enabled  bool          `yaml:"enabled"`
 		Interval time.Duration `yaml:"interval"`
@@ -31,6 +37,9 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		Path: "./schema.graphql",
+		Loader: LoaderConfig{
+			Type: "local",
+		},
 		AutoReload: struct {
 			Enabled  bool          `yaml:"enabled"`
 			Interval time.Duration `yaml:"interval"`
@@ -51,6 +60,7 @@ type Provider struct {
 	done          chan bool
 	refreshTicker *time.Ticker
 	log           *slog.Logger
+	loadFn        func() error
 }
 
 func NewSchema(cfg Config, log *slog.Logger) (*Provider, error) {
@@ -61,7 +71,7 @@ func NewSchema(cfg Config, log *slog.Logger) (*Provider, error) {
 		return time.NewTicker(cfg.AutoReload.Interval)
 	}()
 
-	p := Provider{
+	p := &Provider{
 		cfg: cfg,
 		// nil until we load
 		schema: nil,
@@ -71,15 +81,31 @@ func NewSchema(cfg Config, log *slog.Logger) (*Provider, error) {
 		log:           log,
 	}
 
-	err := p.loadFromFs()
-	if err != nil {
-		return nil, fmt.Errorf("unable to load schema from disk [%s]: %w", p.cfg.Path, err)
+	switch cfg.Loader.Type {
+	case "gcp":
+		gcpLoader, err := newGcpSchemaLoader(cfg.Loader.Location, cfg.Path, log)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create GCP schema loader: %w", err)
+		}
+		p.loadFn = func() error {
+			contents, err := gcpLoader.fetch()
+			if err != nil {
+				return err
+			}
+			return p.load(contents)
+		}
+	default:
+		p.loadFn = p.loadFromFs
+	}
+
+	if err := p.loadFn(); err != nil {
+		return nil, fmt.Errorf("unable to load schema [%s]: %w", cfg.Path, err)
 	}
 
 	// initiate auto reloading
 	p.reload()
 
-	return &p, nil
+	return p, nil
 }
 
 func (p *Provider) load(contents string) error {
@@ -102,7 +128,6 @@ func (p *Provider) loadFromFs() error {
 	contents, err := os.ReadFile(p.cfg.Path)
 	if err != nil {
 		return err
-
 	}
 	return p.load(string(contents))
 }
@@ -124,9 +149,9 @@ func (p *Provider) reload() {
 			case <-p.done:
 				return
 			case <-p.refreshTicker.C:
-				err := p.loadFromFs()
+				err := p.loadFn()
 				if err != nil {
-					p.log.Warn("Error loading from local dir", "err", err)
+					p.log.Warn("Error reloading schema", "err", err)
 					reloadGauge.WithLabelValues("failed").Inc()
 					continue
 				}

@@ -6,6 +6,9 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func writeTempSchema(t *testing.T, content string) string {
@@ -22,6 +25,61 @@ func writeTempSchema(t *testing.T, content string) string {
 }
 
 const minimalSchema = `type Query { hello: String }`
+
+func TestNewSchema_PathOnly(t *testing.T) {
+	// Backward-compat: Config with only Path set (no Loader field) must load from the filesystem.
+	path := writeTempSchema(t, minimalSchema)
+
+	p, err := NewSchema(Config{Path: path}, slog.Default())
+
+	require.NoError(t, err)
+	assert.NotNil(t, p.Get())
+}
+
+func TestNewSchema_ExplicitLocalLoader(t *testing.T) {
+	path := writeTempSchema(t, minimalSchema)
+
+	cfg := Config{
+		Path:   path,
+		Loader: LoaderConfig{Type: "local"},
+	}
+
+	p, err := NewSchema(cfg, slog.Default())
+
+	require.NoError(t, err)
+	assert.NotNil(t, p.Get())
+}
+
+func TestNewSchema_UnknownLoaderTypeFallsBackToLocal(t *testing.T) {
+	// Any unrecognised loader type falls back to local file loading.
+	path := writeTempSchema(t, minimalSchema)
+
+	cfg := Config{
+		Path:   path,
+		Loader: LoaderConfig{Type: "s3"},
+	}
+
+	p, err := NewSchema(cfg, slog.Default())
+
+	require.NoError(t, err)
+	assert.NotNil(t, p.Get())
+}
+
+func TestNewSchema_FileNotFound(t *testing.T) {
+	cfg := Config{Path: "/nonexistent/schema.graphql"}
+
+	_, err := NewSchema(cfg, slog.Default())
+
+	assert.Error(t, err)
+}
+
+func TestNewSchema_InvalidGraphQL(t *testing.T) {
+	path := writeTempSchema(t, "this is not valid graphql {{{")
+
+	_, err := NewSchema(Config{Path: path}, slog.Default())
+
+	assert.Error(t, err)
+}
 
 func TestSchemaGetNoRaceWithReload(t *testing.T) {
 	path := writeTempSchema(t, minimalSchema)

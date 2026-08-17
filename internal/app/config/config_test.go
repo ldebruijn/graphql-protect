@@ -139,7 +139,8 @@ log:
 				ObfuscateValidationErrors: true,
 				ObfuscateUpstreamErrors:   false,
 				Schema: schema.Config{
-					Path: "path",
+					Path:   "path",
+					Loader: schema.LoaderConfig{Type: "local"},
 					AutoReload: struct {
 						Enabled  bool          `yaml:"enabled"`
 						Interval time.Duration `yaml:"interval"`
