@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	cloud.google.com/go/logging v1.19.1
-	cloud.google.com/go/storage v1.67.0
+	cloud.google.com/go/storage v1.68.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
 	github.com/prometheus/client_golang v1.24.1
 	github.com/stretchr/testify v1.12.1
@@ -15,7 +15,7 @@ require (
 	go.opentelemetry.io/contrib/propagators/autoprop v0.71.0
 	go.opentelemetry.io/otel v1.46.0
 	go.opentelemetry.io/otel/sdk v1.46.0
-	google.golang.org/api v0.297.0
+	google.golang.org/api v0.298.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
