@@ -26,7 +26,7 @@ func Test_formatErrors(t *testing.T) {
 				w:    &bytes.Buffer{},
 			},
 			want: `+-------+------+---------------+------+-------+--------+
-|     # | HASH | OPERATIONNAME | RULE | ERROR | RESULT |
+| #     | HASH | OPERATIONNAME | RULE | ERROR | RESULT |
 +-------+------+---------------+------+-------+--------+
 | TOTAL |    0 |               |      |       |        |
 +-------+------+---------------+------+-------+--------+
